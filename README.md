@@ -1,13 +1,12 @@
-
 # AetherVista Weather ✨
 
 Welcome to **AetherVista**, a beautifully designed weather application focused on simplicity, privacy, and elegance. Powered entirely by free, open-source data, it requires **no API keys or setup**—just open and enjoy!
 
 <p align="center">
-  <img src="https://placehold.co/700x450/72afd3/ffffff?text=AetherVista+Main+UI" alt="AetherVista Main UI" width="700"/>
+  <img src="./banner.gif" alt="AetherVista Banner" width="700"/>
 </p>
 <p align="center">
-  <em>The clean, dynamic interface of AetherVista.</em>
+  <em>A beautiful, key-free weather application designed for elegance and simplicity.</em>
 </p>
 
 ---
@@ -42,7 +41,7 @@ Welcome to **AetherVista**, a beautifully designed weather application focused o
 
 ## 🚀 How to Use
 
-- **Live Demo:** [[Visit the live version hosted on GitHub Pages](https://hayagriva0.github.io/AetherVista/)]<!-- Update with your actual link -->
+- **Live Demo:** [Visit the live version hosted on GitHub Pages](#) <!-- Update with your actual link -->
 - **Run Locally:**  
   1. Download `index.html`.
   2. Open it in any modern web browser.
@@ -54,11 +53,10 @@ Welcome to **AetherVista**, a beautifully designed weather application focused o
 
 <details>
   <summary>Click to expand</summary>
-  <img width="958" height="515" alt="Screenshot From 2025-09-27 08-55-50" src="https://github.com/user-attachments/assets/7ffbc3e2-0c20-4222-be7e-2545dd3ec65f" />
-<img width="958" height="644" alt="Screenshot From 2025-09-27 08-56-13" src="https://github.com/user-attachments/assets/38da6e72-6796-49e4-aecb-fbe466baa993" />
-<img width="819" height="441" alt="Screenshot From 2025-09-27 08-56-43" src="https://github.com/user-attachments/assets/7abf7199-d245-4802-a24b-82219cb144a4" />
-
- 
+  
+  <img src="https://user-images.githubusercontent.com/123456789/your-image-1.png" alt="Main Weather UI" width="700"/>
+  <img src="https://user-images.githubusercontent.com/123456789/your-image-2.png" alt="Hourly & Weekly Forecasts" width="700"/>
+  <img src="https://user-images.githubusercontent.com/123456789/your-image-3.png" alt="Today's Highlights" width="700"/>
 </details>
 
 ---
