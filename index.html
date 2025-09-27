@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherVista Weather</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Cormorant+Garamond:ital,wght@1,600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg-light: 240 240 250 / 0.1;
+            --border-light: 255 255 255 / 0.2;
+            --text-light: #ffffff;
+            --text-muted-light: #e2e8f0;
+
+            --bg-dark: 22 28 42 / 0.1;
+            --border-dark: 0 0 0 / 0.2;
+            --text-dark: #1e293b;
+            --text-muted-dark: #475569;
+        }
+
+        html.dark {
+            --bg-light: 22 28 42 / 0.5;
+            --border-light: 255 255 255 / 0.1;
+            --text-light: #1e293b;
+            --text-muted-light: #475569;
+
+            --bg-dark: 240 240 250 / 0.8;
+            --border-dark: 255 255 255 / 0.2;
+            --text-dark: #ffffff;
+            --text-muted-dark: #e2e8f0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background 1.5s ease-in-out;
+            color: var(--text-dark);
+        }
+        html.dark body { color: var(--text-light); }
+
+        .elegant-script { font-family: 'Cormorant Garamond', serif; }
+        .card-enter { animation: card-enter 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes card-enter { to { opacity: 1; transform: translateY(0); } }
+        
+        .backdrop-blur-lg { -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .icon-sun { animation: spin 12s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .icon-cloud { animation: drift 5s ease-in-out infinite alternate; }
+        @keyframes drift { from { transform: translateX(-5px); } to { transform: translateX(5px); } }
+        .icon-rain-drop { animation: fall 1.5s linear infinite; opacity: 0; }
+        @keyframes fall { 0% { transform: translateY(-20px); opacity: 1; } 100% { transform: translateY(30px); opacity: 0; } }
+        .icon-rain-drop:nth-child(2) { animation-delay: 0.5s; }
+        .icon-rain-drop:nth-child(3) { animation-delay: 1s; }
+        .icon-snow-flake { animation: snowfall 3s linear infinite; opacity: 0; }
+        @keyframes snowfall { 0% { transform: translate(0, -10px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translate(10px, 20px); opacity: 0; } }
+        .icon-snow-flake:nth-child(2) { animation-delay: 1s; } .icon-snow-flake:nth-child(3) { animation-delay: 2s; }
+
+        /* Loader Animation */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 3px solid;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            box-sizing: border-box;
+            animation:-spin 1s linear infinite;
+        }
+        .loader::after {
+            content: '';
+            box-sizing: border-box;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 3px solid;
+            border-color: #FF3D00 transparent;
+        }
+        @keyframes -spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-white overflow-hidden h-screen">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-5 rounded-lg shadow-lg text-sm opacity-0 translate-y-[-20px] transition-all duration-300 z-50">
+        <p id="toastMessage">Error message here</p>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loader" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="loader border-white/20"></div>
+    </div>
+    
+    <!-- Share Modal -->
+    <div id="shareModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-40 p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg rounded-3xl p-6 max-w-sm w-full shadow-2xl relative">
+            <button id="closeShareModal" class="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
+            <h2 class="text-xl font-bold mb-4 text-center">Share Weather</h2>
+            <div id="shareableCard" class="p-6 rounded-2xl text-white relative overflow-hidden">
+                <div id="shareableBg" class="absolute inset-0 -z-10"></div>
+                <div class="flex items-center justify-between">
+                    <div><h3 id="shareLocation" class="text-2xl font-bold">Durgapur</h3><p id="shareDate" class="text-sm opacity-80"></p></div>
+                    <div id="shareIcon" class="w-16 h-16"></div>
+                </div>
+                <div class="mt-4"><h1 id="shareTemp" class="text-6xl font-extrabold">--°</h1><p id="shareCondition" class="text-lg opacity-90"></p></div>
+                <div class="mt-6 text-center elegant-script text-lg opacity-80"><p>"Discover more with AetherVista ✨"</p></div>
+            </div>
+            <div class="mt-6 flex space-x-2">
+                <button id="generateImageBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-sm">Download</button>
+                <button id="webShareBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-sm">Share Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="h-full overflow-y-auto hide-scrollbar opacity-0 transition-opacity duration-500">
+        <div class="container mx-auto p-4 md:p-6 max-w-3xl">
+            <!-- Header: Search, GPS, Theme Toggle -->
+            <header class="flex items-center space-x-2 mb-6">
+                <div class="relative flex-grow">
+                    <input type="text" id="locationInput" class="w-full bg-black/5 dark:bg-white/5 backdrop-blur-lg rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50" placeholder="Search for a city..." autocomplete="off">
+                    <svg class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <div id="suggestionsBox" class="absolute top-full left-0 right-0 mt-2 bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-2xl shadow-lg overflow-hidden z-10 hidden"></div>
+                </div>
+                <button id="gpsBtn" class="p-3 bg-black/5 dark:bg-white/5 backdrop-blur-lg rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+                <button id="themeToggleBtn" class="p-3 bg-black/5 dark:bg-white/5 backdrop-blur-lg rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition"><svg id="themeIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg></button>
+                <button id="openShareModal" class="p-3 bg-black/5 dark:bg-white/5 backdrop-blur-lg rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition lg:hidden"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.368a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path></svg></button>
+            </header>
+
+            <div class="space-y-6">
+                <!-- Current Weather -->
+                <section id="currentWeatherCard" class="bg-black/5 dark:bg-white/5 backdrop-blur-lg p-6 rounded-3xl card-enter">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 id="locationName" class="text-3xl font-bold">Durgapur</h2>
+                            <p id="currentDate" class="opacity-70">Loading...</p>
+                            <p id="weatherCondition" class="text-xl mt-2 capitalize">Loading...</p>
+                        </div>
+                        <div id="weatherIcon" class="w-24 h-24 -mt-4 -mr-2"></div>
+                    </div>
+                    <div class="flex items-end justify-between mt-4">
+                        <div class="flex items-start"><h1 id="temperature" class="text-8xl font-extrabold leading-none">--</h1><span class="text-4xl font-bold mt-2">°C</span></div>
+                        <div class="text-right">
+                            <p class="text-lg">High: <span id="highTemp" class="font-semibold">--°</span></p>
+                            <p class="text-lg">Low: <span id="lowTemp" class="font-semibold">--°</span></p>
+                            <p class="text-sm opacity-70 mt-1">Feels like <span id="feelsLike">--</span>°</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Weather Insights Mini-Model -->
+                <section class="bg-black/5 dark:bg-white/5 backdrop-blur-lg p-6 rounded-3xl card-enter text-center" style="animation-delay: 100ms;">
+                    <button id="getInsightsBtn" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        ✨ Get Weather Insights
+                    </button>
+                    <div id="insightsContent" class="mt-4 text-left opacity-90 min-h-[50px]">
+                        <!-- Insights will be injected here -->
+                    </div>
+                </section>
+
+                <!-- Hourly Forecast -->
+                <section class="bg-black/5 dark:bg-white/5 backdrop-blur-lg p-6 rounded-3xl card-enter" style="animation-delay: 200ms;">
+                    <h3 class="font-bold mb-4 opacity-70">Hourly Forecast</h3>
+                    <div id="hourlyForecast" class="flex space-x-4 overflow-x-auto hide-scrollbar pb-2"></div>
+                </section>
+
+                <!-- 7-Day Forecast -->
+                <section class="bg-black/5 dark:bg-white/5 backdrop-blur-lg p-6 rounded-3xl card-enter" style="animation-delay: 300ms;">
+                    <h3 class="font-bold mb-4 opacity-70">7-Day Forecast</h3>
+                    <div id="dailyForecast" class="space-y-2"></div>
+                </section>
+                
+                <!-- Details Grid -->
+                <section class="card-enter" style="animation-delay: 400ms;">
+                    <h3 class="font-bold mb-4 opacity-70 px-6">Today's Highlights</h3>
+                    <div id="detailsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                </section>
+            </div>
+            
+            <!-- Footer -->
+            <footer class="text-center mt-8 py-4 opacity-50 text-sm">
+                <p>AetherVista by Abhra</p>
+            </footer>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let currentWeatherData = null;
+        
+        const loader = document.getElementById('loader');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        const mainContent = document.getElementById('mainContent');
+        const locationInput = document.getElementById('locationInput');
+        const gpsBtn = document.getElementById('gpsBtn');
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const openShareModal = document.getElementById('openShareModal');
+        const getInsightsBtn = document.getElementById('getInsightsBtn');
+        const insightsContent = document.getElementById('insightsContent');
+        const suggestionsBox = document.getElementById('suggestionsBox');
+        let suggestionTimeout;
+        
+        const showToast = (message, isError = true) => {
+            toastMessage.textContent = message;
+            toast.className = toast.className.replace(/bg-\w+-\d+/, isError ? 'bg-red-500' : 'bg-green-500');
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 3000);
+        };
+
+        // --- Theme Management ---
+        const moonIcon = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>`;
+        const sunIcon = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>`;
+        
+        const applyTheme = (theme) => {
+            if (theme === 'dark') { document.documentElement.classList.add('dark'); themeIcon.innerHTML = sunIcon; } 
+            else { document.documentElement.classList.remove('dark'); themeIcon.innerHTML = moonIcon; }
+        };
+
+        themeToggleBtn.addEventListener('click', () => {
+            const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            localStorage.setItem('aetherVistaTheme', newTheme);
+            applyTheme(newTheme);
+        });
+
+        // --- Core App Logic & Weather Fetching ---
+        const init = () => {
+            const savedTheme = localStorage.getItem('aetherVistaTheme') || 'light';
+            applyTheme(savedTheme);
+            getWeatherByCity('Durgapur'); // Default location
+        };
+        
+        locationInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const city = locationInput.value.trim();
+                if (city) getWeatherByCity(city);
+                locationInput.value = '';
+                suggestionsBox.classList.add('hidden');
+                locationInput.blur();
+            }
+        });
+
+        locationInput.addEventListener('input', () => {
+            clearTimeout(suggestionTimeout);
+            const query = locationInput.value.trim();
+            if (query.length < 3) {
+                suggestionsBox.classList.add('hidden');
+                return;
+            }
+            suggestionTimeout = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300); // Debounce to avoid rapid API calls
+        });
+
+        const fetchSuggestions = async (query) => {
+            try {
+                const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=en&format=json`);
+                if (!response.ok) return;
+                const data = await response.json();
+                displaySuggestions(data.results || []);
+            } catch (error) {
+                console.error("Suggestion fetch error:", error);
+            }
+        };
+
+        const displaySuggestions = (suggestions) => {
+            if (suggestions.length === 0) {
+                suggestionsBox.classList.add('hidden');
+                return;
+            }
+            suggestionsBox.innerHTML = suggestions.map(loc => {
+                const name = loc.admin1 ? `${loc.name}, ${loc.admin1}, ${loc.country_code}` : `${loc.name}, ${loc.country_code}`;
+                return `<button class="w-full text-left px-4 py-3 hover:bg-black/10 dark:hover:bg-white/10 transition-colors" data-lat="${loc.latitude}" data-lon="${loc.longitude}" data-name="${loc.name}">${name}</button>`;
+            }).join('');
+            suggestionsBox.classList.remove('hidden');
+        };
+
+        suggestionsBox.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const { lat, lon, name } = e.target.dataset;
+                getWeatherData(lat, lon, name);
+                locationInput.value = '';
+                suggestionsBox.classList.add('hidden');
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!locationInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                suggestionsBox.classList.add('hidden');
+            }
+        });
+
+        gpsBtn.addEventListener('click', () => {
+            if (navigator.geolocation) {
+                loader.style.display = 'flex';
+                navigator.geolocation.getCurrentPosition(pos => {
+                    getWeatherByCoords(pos.coords.latitude, pos.coords.longitude);
+                }, () => {
+                    loader.style.display = 'none';
+                    showToast('Unable to retrieve your location.');
+                });
+            } else { showToast('Geolocation is not supported by your browser.'); }
+        });
+        
+        const getWeatherByCoords = async (lat, lon) => {
+             getWeatherData(lat, lon, "Current Location");
+        };
+        
+        const getWeatherByCity = async (city) => {
+            loader.style.display = 'flex';
+            try {
+                const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`);
+                if (!geoResponse.ok) throw new Error('Could not fetch location data.');
+                const geoData = await geoResponse.json();
+                if (!geoData.results || geoData.results.length === 0) throw new Error(`Could not find city: ${city}`);
+                const { latitude, longitude, name } = geoData.results[0];
+                getWeatherData(latitude, longitude, name);
+            } catch (error) {
+                showToast(error.message);
+                loader.style.display = 'none';
+            }
+        };
+
+        const getWeatherData = async (lat, lon, name) => {
+            loader.style.display = 'flex';
+            try {
+                const params = "current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto";
+                const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&${params}`);
+                if (!weatherResponse.ok) throw new Error('Could not fetch weather data.');
+                const weatherData = await weatherResponse.json();
+                updateUI(weatherData, name);
+            } catch (error) {
+                showToast(error.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        };
+
+        const updateUI = (data, cityName) => {
+            currentWeatherData = { ...data, cityName }; // Store for insights
+            insightsContent.innerHTML = ''; // Clear previous insights on new location
+            mainContent.style.opacity = '1';
+            
+            const { current, daily, hourly } = data;
+            
+            const weatherInfo = getWeatherInfoFromCode(current.weather_code, current.is_day);
+            updateBackground(weatherInfo);
+
+            // Update Current Weather
+            document.getElementById('locationName').textContent = cityName;
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('weatherCondition').textContent = weatherInfo.main;
+            document.getElementById('weatherIcon').innerHTML = getWeatherIcon(weatherInfo);
+            document.getElementById('temperature').textContent = Math.round(current.temperature_2m);
+            document.getElementById('highTemp').textContent = `${Math.round(daily.temperature_2m_max[0])}°`;
+            document.getElementById('lowTemp').textContent = `${Math.round(daily.temperature_2m_min[0])}°`;
+            document.getElementById('feelsLike').textContent = Math.round(current.apparent_temperature);
+
+            // Update Hourly Forecast
+            const now = new Date();
+            const currentHour = now.getHours();
+            const hourlyForecast = document.getElementById('hourlyForecast');
+            hourlyForecast.innerHTML = hourly.time.slice(currentHour, currentHour + 12).map((time, index) => {
+                const hourIndex = currentHour + index;
+                const hourWeatherInfo = getWeatherInfoFromCode(hourly.weather_code[hourIndex], new Date(time).getHours() > 6 && new Date(time).getHours() < 19);
+                return `
+                <div class="flex flex-col items-center space-y-2 flex-shrink-0 text-center w-20">
+                    <span class="text-sm opacity-80">${new Date(time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}</span>
+                    <div class="w-10 h-10">${getWeatherIcon(hourWeatherInfo)}</div>
+                    <span class="font-bold">${Math.round(hourly.temperature_2m[hourIndex])}°</span>
+                </div>`
+            }).join('');
+            
+            // Update Daily Forecast
+            const dailyForecast = document.getElementById('dailyForecast');
+            dailyForecast.innerHTML = daily.time.slice(1, 8).map((date, index) => {
+                const dayWeatherInfo = getWeatherInfoFromCode(daily.weather_code[index + 1], true);
+                return `
+                <div class="daily-item flex items-center justify-between p-3 rounded-2xl bg-black/0 dark:bg-white/0 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer">
+                    <span class="font-medium w-1/4">${new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                    <div class="w-8 h-8 flex-shrink-0">${getWeatherIcon(dayWeatherInfo)}</div>
+                    <div class="w-1/3 text-right">
+                       <span class="font-semibold">${Math.round(daily.temperature_2m_max[index + 1])}°</span>
+                       <span class="opacity-70"> / ${Math.round(daily.temperature_2m_min[index + 1])}°</span>
+                    </div>
+                </div>`
+            }).join('');
+            
+            // Update Details Grid
+            const details = [
+                { title: 'Humidity', value: `${current.relative_humidity_2m}%`, subtitle: current.relative_humidity_2m > 60 ? 'Humid' : 'Comfortable' },
+                { title: 'Wind', value: `${current.wind_speed_10m.toFixed(1)} km/h`, subtitle: `From ${getWindDirection(current.wind_direction_10m)}` },
+                { title: 'UV Index', value: daily.uv_index_max[0].toFixed(1), subtitle: getUVIRecommendation(daily.uv_index_max[0]) },
+                { title: 'Visibility', value: `N/A`, subtitle: 'Data unavailable' }, // Open-Meteo doesn't provide this directly
+                { title: 'Sunrise', value: new Date(daily.sunrise[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), subtitle: '' },
+                { title: 'Sunset', value: new Date(daily.sunset[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), subtitle: '' },
+            ];
+            document.getElementById('detailsGrid').innerHTML = details.map(d => `
+                <div class="bg-black/5 dark:bg-white/5 p-4 rounded-2xl">
+                    <p class="text-sm opacity-70">${d.title}</p>
+                    <p class="text-3xl font-bold my-1">${d.value}</p>
+                    <p class="text-xs opacity-60">${d.subtitle}</p>
+                </div>
+            `).join('');
+
+            // Setup Share Modal
+            document.getElementById('shareLocation').textContent = cityName;
+            document.getElementById('shareDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short'});
+            document.getElementById('shareIcon').innerHTML = getWeatherIcon(weatherInfo);
+            document.getElementById('shareTemp').textContent = `${Math.round(current.temperature_2m)}°`;
+            document.getElementById('shareCondition').textContent = weatherInfo.main;
+            document.getElementById('shareableBg').style.background = getBackgroundGradient(weatherInfo);
+        };
+        
+        // --- Insights Mini-Model ---
+        const insightsData = {
+            Clear: { hot: ["A perfect day for sunglasses and ice cream!", "The sun is shining! A great time for a walk in the park.", "Stay hydrated, it's a beautiful but warm day!"], warm: ["Clear skies and a gentle breeze. Enjoy the lovely weather!", "A fantastic day to be outdoors. Maybe a picnic?", "Enjoy the sunshine! It's a perfect t-shirt day."], cool: ["A crisp, clear day. A light jacket and a scenic walk would be perfect.", "The sun is out but the air is fresh. Beautiful!", "Enjoy the clear skies, but keep a sweater handy."], cold: ["A brilliantly sunny but cold day. Bundle up and enjoy the crisp air!", "The sun is sparkling on the frost. A beautiful winter day!", "Clear and cold! A perfect day for a hot drink by the window."] },
+            Clouds: { hot: ["The clouds are offering some welcome relief from the heat.", "A bit of cloud cover, but still very warm. A good day for a swim.", "Partly cloudy and humid. Find a cool spot in the shade."], warm: ["A pleasant day with some passing clouds. Perfect for any outdoor activity.", "Variable clouds today, making for a comfortable and interesting sky.", "A classic mix of sun and clouds. You can't go wrong!"], cool: ["A cool, cloudy day. Perfect for a cozy afternoon indoors with a book.", "The sky is a soft blanket of clouds today. A light jacket is a good idea.", "A calm and cool day. Great for a brisk walk."], cold: ["A grey and chilly day. Time to bundle up and stay warm.", "The clouds are keeping it cold. A good day for a movie marathon.", "A classic winter sky. Make sure you're dressed for the cold!"] },
+            Rain: { warm: ["A warm rain is falling. The world feels fresh and clean.", "Don't forget your umbrella! The rain is a welcome cool-down.", "A gentle, warm shower is passing through. A good day to listen to the rain."], cool: ["A cool, rainy day. Perfect for a museum or a cozy cafe.", "A steady, cool rain. A great excuse to stay in and relax.", "The sound of rain is the theme for today. Enjoy the calm."], cold: ["A cold rain is here. Stay dry and warm indoors!", "Chilly and wet! A perfect day for some hot soup.", "A miserable day to be out, but a great day to be cozy inside."] },
+            Snow: { cold: ["The snow is beautiful! A perfect day for a winter wonderland walk.", "It's a snowy day! Time for hot chocolate by the fire.", "The world is quiet and white. Enjoy the beauty of the snowfall."], cool: ["A light snow is falling. Magical!", "A bit of slushy snow. Watch your step!", "The first flakes of the season are here!"] },
+            Thunderstorm: { warm: ["A summer storm is rolling in. Stay safe indoors and enjoy the show!", "Thunder and lightning! A powerful and exciting weather day.", "The air is electric. A good time to unplug and watch the storm."], cool: ["A cool thunderstorm is passing by. A dramatic and moody day.", "Stay indoors and listen to the rumble of the thunder.", "A powerful storm is here. Best to wait it out in a safe place."] },
+            Default: ["The weather is certainly weather today!", "Whatever the weather, make it a great day.", "An interesting sky today. Be prepared for anything!"]
+        };
+        
+        getInsightsBtn.addEventListener('click', () => {
+            if (!currentWeatherData) { showToast("Weather data not available yet."); return; }
+            const temp = currentWeatherData.current.temperature_2m;
+            const weatherInfo = getWeatherInfoFromCode(currentWeatherData.current.weather_code, currentWeatherData.current.is_day);
+
+            let tempCategory = 'warm';
+            if (temp > 28) tempCategory = 'hot';
+            else if (temp < 15) tempCategory = 'cool';
+            if (temp < 5) tempCategory = 'cold';
+            
+            let insightsPool = insightsData[weatherInfo.main] || insightsData.Clouds; // Fallback to clouds for fog/drizzle
+            let selectedInsight = insightsPool[tempCategory] || insightsPool['warm'] || insightsData.Default;
+            
+            const randomIndex = Math.floor(Math.random() * selectedInsight.length);
+            insightsContent.innerHTML = `<p>${selectedInsight[randomIndex]}</p>`;
+        });
+        
+        // --- UI Helpers & WMO Code Mappings ---
+        const getWeatherInfoFromCode = (code, isDay = 1) => {
+            const map = { 0: {id: 800, main: 'Clear'}, 1: {id: 801, main: 'Clouds'}, 2: {id: 802, main: 'Clouds'}, 3: {id: 804, main: 'Clouds'}, 45: {id: 741, main: 'Clouds'}, 48: {id: 741, main: 'Clouds'}, 51: {id: 300, main: 'Rain'}, 53: {id: 301, main: 'Rain'}, 55: {id: 302, main: 'Rain'}, 61: {id: 500, main: 'Rain'}, 63: {id: 501, main: 'Rain'}, 65: {id: 502, main: 'Rain'}, 71: {id: 600, main: 'Snow'}, 73: {id: 601, main: 'Snow'}, 75: {id: 602, main: 'Snow'}, 80: {id: 520, main: 'Rain'}, 81: {id: 521, main: 'Rain'}, 82: {id: 522, main: 'Rain'}, 95: {id: 211, main: 'Thunderstorm'} };
+            let info = map[code];
+            if (!info) {
+                 if (code >= 96 && code <= 99) info = {id: 212, main: 'Thunderstorm'};
+                 else if (code >= 85 && code <= 86) info = {id: 611, main: 'Snow'};
+                 else if (code >= 77) info = {id: 601, main: 'Snow'};
+                 else if (code >= 66 && code <= 67) info = {id: 511, main: 'Rain'};
+                 else if (code >= 56 && code <= 57) info = {id: 310, main: 'Rain'};
+                 else info = {id: 800, main: 'Clear'}; // Default fallback
+            }
+            return { ...info, icon: isDay ? 'day' : 'night' };
+        };
+
+        const getBackgroundGradient = (weather) => { const id = weather.id; const icon = weather.icon; if (id < 300) return 'linear-gradient(to top, #434343 0%, #000000 100%)'; if (id < 600) return 'linear-gradient(to top, #6a85b6 0%, #bac8e0 100%)'; if (id < 700) return 'linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%)'; if (id < 800) return 'linear-gradient(to top, #d7d2cc 0%, #304352 100%)'; if (id === 800) return icon === 'day' ? 'linear-gradient(to top, #37ecba 0%, #72afd3 100%)' : 'linear-gradient(to top, #09203f 0%, #537895 100%)'; if (id > 800) return 'linear-gradient(to top, #accbee 0%, #e7f0fd 100%)'; return 'linear-gradient(to top, #30cfd0 0%, #330867 100%)'; };
+        const updateBackground = (weather) => { document.body.style.background = getBackgroundGradient(weather); };
+        const getWeatherIcon = (weather) => { const id = weather.id; const baseSVG = `<svg class="w-full h-full" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`; if (id < 300) return `${baseSVG}<path class="icon-cloud" d="M47.7 34.4c0-5.5-4.5-10-10-10h-1.1c-2.3-6.2-8.4-10.4-15.4-10.4-9.2 0-16.6 7.4-16.6 16.6 0 .8.1 1.7.2 2.5"/><polyline points="29 38 24 48 30 48 25 58"/></svg>`; if (id < 600) return `${baseSVG}<path class="icon-cloud" d="M47.7 34.4c0-5.5-4.5-10-10-10h-1.1c-2.3-6.2-8.4-10.4-15.4-10.4-9.2 0-16.6 7.4-16.6 16.6 0 .8.1 1.7.2 2.5"/><path class="icon-rain-drop" d="M30 42 L26 52"/><path class="icon-rain-drop" d="M38 42 L34 52"/><path class="icon-rain-drop" d="M22 42 L18 52"/></svg>`; if (id < 700) return `${baseSVG}<path class="icon-cloud" d="M47.7 34.4c0-5.5-4.5-10-10-10h-1.1c-2.3-6.2-8.4-10.4-15.4-10.4-9.2 0-16.6 7.4-16.6 16.6 0 .8.1 1.7.2 2.5"/><path class="icon-snow-flake" d="M28 44L32 48M30 42V50"/><path class="icon-snow-flake" d="M20 49L24 53M22 47V55"/><path class="icon-snow-flake" d="M36 49L40 53M38 47V55"/></svg>`; if (id < 800) return `${baseSVG}<path class="icon-cloud" d="M10 40 H54"/><path class="icon-cloud" style="animation-delay: 1s;" d="M12 48 H52"/><path class="icon-cloud" style="animation-delay: 0.5s;" d="M10 56 H54"/></svg>`; if (id === 800) return weather.icon === 'day' ? `${baseSVG}<circle cx="32" cy="32" r="12" class="icon-sun"/></svg>` : `${baseSVG}<path d="M21.1,43.9A17,17,0,0,1,38.9,26.1,17,17,0,1,0,21.1,43.9Z"/></svg>`; if (id > 800) return `${baseSVG}<path d="M17.6 40.8c-3.1 0-5.6 2.5-5.6 5.6s2.5 5.6 5.6 5.6h28.8c3.1 0 5.6-2.5 5.6-5.6s-2.5-5.6-5.6-5.6h-1.6c-2.3-6.9-8.8-11.7-16.4-11.7-6.8 0-12.7 4-15.4 9.7"/><path class="icon-cloud" d="M47.7 34.4c0-5.5-4.5-10-10-10h-1.1c-2.3-6.2-8.4-10.4-15.4-10.4-9.2 0-16.6 7.4-16.6 16.6 0 .8.1 1.7.2 2.5"/></svg>`; return ''; };
+        const getWindDirection = (deg) => { const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; return directions[Math.floor((deg + 11.25) / 22.5) % 16]; };
+        const getUVIRecommendation = (uvi) => { if (uvi < 3) return 'Low risk'; if (uvi < 6) return 'Moderate risk'; if (uvi < 8) return 'High risk'; return 'Very high risk'; };
+        
+        // --- Share Modal Logic ---
+        openShareModal.addEventListener('click', () => { document.getElementById('shareModal').classList.remove('opacity-0', 'pointer-events-none'); });
+        document.getElementById('closeShareModal').addEventListener('click', () => { document.getElementById('shareModal').classList.add('opacity-0', 'pointer-events-none'); });
+        document.getElementById('generateImageBtn').addEventListener('click', () => { html2canvas(document.getElementById('shareableCard'), { backgroundColor: null, useCORS: true }).then(c => { const l=document.createElement('a');l.download=`AetherVista_Weather.png`;l.href=c.toDataURL();l.click(); }); });
+        document.getElementById('webShareBtn').addEventListener('click', () => { const d={title:'AetherVista Weather',text:`Weather for ${document.getElementById('locationName').textContent}: ${document.getElementById('temperature').textContent}°C`,url:window.location.href}; if(navigator.share){navigator.share(d)}else{showToast('Web Share not supported.', false)} });
+
+        init();
+    });
+    </script>
+</body>
+</html>
+
