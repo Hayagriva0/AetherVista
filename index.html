@@ -86,10 +86,30 @@
             border-color: #FF3D00 transparent;
         }
         @keyframes -spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+        
+        /* Splash Screen Animation */
+        #splashScreen {
+            transition: opacity 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-white overflow-hidden h-screen">
+
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+        <div class="flex flex-col items-center space-y-6 animate-pulse">
+            <!-- Logo Icon -->
+            <div class="w-24 h-24 relative flex items-center justify-center">
+                <div class="absolute w-8 h-20 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full transform -rotate-12 origin-bottom-left shadow-lg"></div>
+                <div class="absolute w-7 h-16 bg-gradient-to-b from-sky-300 to-cyan-400 rounded-full transform rotate-12 origin-bottom-right right-0 bottom-4 shadow-md"></div>
+                <div class="absolute w-12 h-2 bg-sky-200 rounded-full bottom-8 shadow-inner"></div>
+            </div>
+            <!-- Logotype -->
+            <h1 class="text-4xl font-light text-white tracking-wider">
+                AetherVista
+            </h1>
+        </div>
+    </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-5 rounded-lg shadow-lg text-sm opacity-0 translate-y-[-20px] transition-all duration-300 z-50">
@@ -97,7 +117,7 @@
     </div>
 
     <!-- Loading Spinner -->
-    <div id="loader" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+    <div id="loader" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-40 hidden">
         <div class="loader border-white/20"></div>
     </div>
     
@@ -198,6 +218,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         let currentWeatherData = null;
         
+        const splashScreen = document.getElementById('splashScreen');
         const loader = document.getElementById('loader');
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
@@ -238,7 +259,15 @@
 
         // --- Core App Logic & Weather Fetching ---
         const init = () => {
-            const savedTheme = localStorage.getItem('aetherVistaTheme') || 'light';
+            // Hide splash screen after animation
+            setTimeout(() => {
+                splashScreen.style.opacity = '0';
+                setTimeout(() => {
+                    splashScreen.style.display = 'none';
+                }, 500);
+            }, 2500);
+
+            const savedTheme = localStorage.getItem('aetherVistaTheme') || 'dark'; // Set default to dark
             applyTheme(savedTheme);
             getWeatherByCity('Durgapur'); // Default location
         };
@@ -485,4 +514,5 @@
     </script>
 </body>
 </html>
+
 
