@@ -1,5 +1,5 @@
 
-# AetherVista Weather ✨
+# Weather pro ✨
 
 Welcome to **AetherVista**, a beautifully designed weather application focused on simplicity, privacy, and elegance. Powered entirely by free, open-source data, it requires **no API keys or setup**—just open and enjoy!
 
