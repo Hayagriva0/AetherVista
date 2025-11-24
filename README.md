@@ -9,7 +9,7 @@ Welcome to **AetherVista**, a beautifully designed weather application focused o
 
 </p>
 <p align="center">
-  <em>The clean, dynamic interface of AetherVista.</em>
+  <em>The clean, dynamic interface of weather pro </em>
 </p>
 
 ---
