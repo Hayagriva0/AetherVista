@@ -4,7 +4,8 @@
 Welcome to **AetherVista**, a beautifully designed weather application focused on simplicity, privacy, and elegance. Powered entirely by free, open-source data, it requires **no API keys or setup**—just open and enjoy!
 
 <p align="center">
-<img width="1344" height="768" alt="Gemini_Generated_Image_ddfp93ddfp93ddfp" src="https://github.com/user-attachments/assets/c80d6614-b4e1-4444-9dd3-b246e1b08d19" />
+<img width="1344" height="768" alt="Gemini_Generated_Image_ddfp93ddfp93ddfp" src="<img width="2560" height="941" alt="Generated image 1" src="https://github.com/user-attachments/assets/f0ac4599-46e8-4638-b134-310ba0236bd2" />
+
 
 </p>
 <p align="center">
@@ -55,9 +56,12 @@ Welcome to **AetherVista**, a beautifully designed weather application focused o
 
 <details>
   <summary>Click to expand</summary>
-  <img width="958" height="515" alt="Screenshot From 2025-09-27 08-55-50" src="https://github.com/user-attachments/assets/3cb09062-0835-4182-9a35-611f0a047920" />
-<img width="958" height="644" alt="Screenshot From 2025-09-27 08-56-13" src="https://github.com/user-attachments/assets/50de471f-76bc-4101-ac81-5c7af33e1c48" />
-<img width="819" height="441" alt="Screenshot From 2025-09-27 08-56-43" src="https://github.com/user-attachments/assets/17200d53-4113-4c46-a474-562b2aa32612" />
+  <img width="958" height="515" alt="Screenshot From 2025-09-27 08-55-50" src="![Screenshot_2025-11-24-18-47-16-65_40deb401b9ffe8e1df2f1cc5ba480b12](https://github.com/user-attachments/assets/4054f6e4-67eb-4fbd-85d2-002572b54e10)
+" />
+<img width="958" height="644" alt="Screenshot From 2025-09-27 08-56-13" src="![Screenshot_2025-11-24-18-46-57-08_40deb401b9ffe8e1df2f1cc5ba480b12](https://github.com/user-attachments/assets/d41c42f0-c9a5-40ee-ae63-b2b84be3984c)
+" />
+<img width="819" height="441" alt="Screenshot From 2025-09-27 08-56-43" src="![Screenshot_2025-11-24-18-46-34-43_40deb401b9ffe8e1df2f1cc5ba480b12](https://github.com/user-attachments/assets/153e0ce9-f8d6-4336-a129-5d4e1e48d4d1)
+" />
 
  
 </details>
