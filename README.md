@@ -56,10 +56,11 @@ Welcome to **AetherVista**, a beautifully designed weather application focused o
 
 <details>
   <summary>Click to expand</summary>
-<img width="958" height="515" alt="Screenshot From 2025-09-27 08-55-50" src="https://github.com/user-attachments/assets/4054f6e4-67eb-4fbd-85d2-002572b54e10" />
-<img width="958" height="644" alt="Screenshot From 2025-09-27 08-56-13" src="https://github.com/user-attachments/assets/d41c42f0-c9a5-40ee-ae63-b2b84be3984c" />
-<img width="819" height="441" alt="Screenshot From 2025-09-27 08-56-43" src="https://github.com/user-attachments/assets/153e0ce9-f8d6-4336-a129-5d4e1e48d4d1" />
-
+<p align="center">
+  <img width="32%" alt="Screenshot 1" src="https://github.com/user-attachments/assets/4054f6e4-67eb-4fbd-85d2-002572b54e10" />
+  <img width="32%" alt="Screenshot 2" src="https://github.com/user-attachments/assets/d41c42f0-c9a5-40ee-ae63-b2b84be3984c" />
+  <img width="32%" alt="Screenshot 3" src="https://github.com/user-attachments/assets/153e0ce9-f8d6-4336-a129-5d4e1e48d4d1" />
+</p>
  
 </details>
 
