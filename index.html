@@ -2,8 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aether Weather</title>
+    <!-- Viewport fit=cover is essential for iPhone Notches and Fullscreen PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Weather Pro</title>
+    <link rel="icon" href="https://fav.farm/⛅">
+    
+    <!-- ================= PWA CONFIGURATION ================= -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS Native Experience -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Weather Pro">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <!-- ===================================================== -->
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,21 +29,19 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
-                        'fade-in': 'fadeIn 0.5s ease-out forwards',
-                        'slide-up': 'slideUp 0.5s ease-out forwards',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'spin-slow': 'spin 12s linear infinite',
-                        'bounce-in': 'bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        'fade-in': 'fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'pulse-heart': 'pulseHeart 1.5s ease-in-out infinite',
+                        'glow': 'glow 3s ease-in-out infinite alternate',
                     },
                     keyframes: {
                         float: {
                             '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' },
+                            '50%': { transform: 'translateY(-8px)' },
                         },
                         fadeIn: {
                             '0%': { opacity: '0' },
@@ -41,9 +51,13 @@
                             '0%': { transform: 'translateY(20px)', opacity: '0' },
                             '100%': { transform: 'translateY(0)', opacity: '1' },
                         },
-                        bounceIn: {
-                            '0%': { transform: 'scale(0.8)', opacity: '0' },
-                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        pulseHeart: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.1)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 15px rgba(255, 255, 255, 0.1), inset 0 0 15px rgba(255, 255, 255, 0.1)' },
+                            '100%': { boxShadow: '0 0 30px rgba(255, 255, 255, 0.3), inset 0 0 30px rgba(255, 255, 255, 0.3)' },
                         }
                     },
                     colors: {
@@ -61,299 +75,189 @@
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Custom Scrollbar hide */
+        /* Performance Optimizations */
+        * { -webkit-tap-highlight-color: transparent; }
+        body { overscroll-behavior-y: none; touch-action: manipulation; }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         /* Enhanced Glassmorphism */
         .glass-panel {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
         }
         
         .glass-input {
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
-        /* Particle Canvas */
+        /* Skeleton Loading Effect */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
         #particle-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;
         }
-        
-        /* Active Tab Indicator Transition */
-        .tab-indicator {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body { overscroll-behavior-y: none; }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased bg-slate-950 text-white">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
+        const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
-        // --- Utils & Constants ---
+        // --- Optimized Icon Component ---
+        const Icon = React.memo(({ name, size = 24, className = "", fill = "none", color }) => {
+            useEffect(() => { lucide.createIcons(); }, [name]); 
+            return <i data-lucide={name} className={className} fill={fill} style={{ width: size, height: size, color: color }}></i>;
+        });
 
+        // --- Config & Helpers ---
         const getAQIStatus = (aqi) => {
-            if (aqi <= 50) return { label: "Good", color: "text-green-400", bar: "bg-green-400", desc: "Air quality is satisfactory." };
-            if (aqi <= 100) return { label: "Moderate", color: "text-yellow-400", bar: "bg-yellow-400", desc: "Air quality is acceptable." };
-            if (aqi <= 150) return { label: "Sensitive", color: "text-orange-400", bar: "bg-orange-400", desc: "Unhealthy for sensitive groups." };
-            if (aqi <= 200) return { label: "Unhealthy", color: "text-red-400", bar: "bg-red-400", desc: "Health effects may occur." };
-            if (aqi <= 300) return { label: "Very Unhealthy", color: "text-purple-400", bar: "bg-purple-400", desc: "Health alert triggered." };
-            return { label: "Hazardous", color: "text-rose-900", bar: "bg-rose-900", desc: "Emergency conditions." };
+            if (aqi <= 50) return { 
+                label: "Excellent", 
+                color: "text-emerald-400", 
+                bar: "bg-gradient-to-r from-emerald-400 to-green-500",
+                heartAdvice: "Air quality is ideal for your heart. Enjoy outdoor activities!",
+                riskLevel: "Low Risk"
+            };
+            if (aqi <= 100) return { 
+                label: "Moderate", 
+                color: "text-yellow-400", 
+                bar: "bg-gradient-to-r from-yellow-400 to-orange-500",
+                heartAdvice: "Air quality is acceptable. Sensitive individuals should check conditions.",
+                riskLevel: "Moderate Risk"
+            };
+            if (aqi <= 150) return { 
+                label: "Sensitive", 
+                color: "text-orange-400", 
+                bar: "bg-gradient-to-r from-orange-400 to-red-500",
+                heartAdvice: "Sensitive groups may feel effects. Reduce prolonged outdoor exertion.",
+                riskLevel: "Caution"
+            };
+            if (aqi <= 200) return { 
+                label: "Unhealthy", 
+                color: "text-red-500", 
+                bar: "bg-gradient-to-r from-red-500 to-purple-600",
+                heartAdvice: "Everyone may begin to experience health effects. Avoid outdoor exercise.",
+                riskLevel: "High Risk"
+            };
+            return { 
+                label: "Hazardous", 
+                color: "text-rose-500", 
+                bar: "bg-gradient-to-r from-red-500 to-purple-600",
+                heartAdvice: "Health warnings of emergency conditions. Stay indoors.",
+                riskLevel: "Critical"
+            };
         };
 
         const getWeatherConfig = (code, isDay) => {
-            const themeMap = {
+            const time = isDay ? 'day' : 'night';
+            // Updated configs with more specific icon colors for the "Cool" look
+            const configs = {
                 clear: {
-                    day: { gradient: "bg-gradient-to-b from-blue-400 via-blue-500 to-indigo-600", icon: "sun", label: "Clear Sky", accent: "text-yellow-300", type: "clear", textColor: "text-white" },
-                    night: { gradient: "bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900", icon: "moon", label: "Clear Night", accent: "text-blue-200", type: "clear", textColor: "text-white" }
-                },
-                partlyCloudy: {
-                    day: { gradient: "bg-gradient-to-b from-blue-400 via-sky-300 to-blue-500", icon: "cloud-sun", label: "Partly Cloudy", accent: "text-yellow-100", type: "cloudy", textColor: "text-white" },
-                    night: { gradient: "bg-gradient-to-b from-slate-800 via-purple-900 to-black", icon: "cloud-moon", label: "Partly Cloudy", accent: "text-indigo-200", type: "cloudy", textColor: "text-white" }
+                    day: { gradient: "bg-gradient-to-b from-sky-400 via-blue-500 to-indigo-600", icon: "sun", label: "Clear Sky", accent: "shadow-amber-300/50", textColor: "text-white", iconColor: "#FDB813" }, // Sunny Yellow
+                    night: { gradient: "bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950", icon: "moon", label: "Clear Night", accent: "shadow-blue-400/30", textColor: "text-white", iconColor: "#E0E7FF" } // Pale Blue Moon
                 },
                 cloudy: {
-                    day: { gradient: "bg-gradient-to-b from-slate-400 via-slate-500 to-blue-600", icon: "cloud", label: "Cloudy", accent: "text-white", type: "cloudy", textColor: "text-white" },
-                    night: { gradient: "bg-gradient-to-b from-slate-800 via-slate-900 to-black", icon: "cloud", label: "Cloudy", accent: "text-gray-400", type: "cloudy", textColor: "text-white" }
+                    day: { gradient: "bg-gradient-to-b from-slate-400 via-slate-500 to-blue-600", icon: "cloud", label: "Cloudy", accent: "shadow-white/30", textColor: "text-white", iconColor: "#F1F5F9" }, // White Cloud
+                    night: { gradient: "bg-gradient-to-b from-slate-800 via-slate-900 to-black", icon: "cloud", label: "Cloudy", accent: "shadow-slate-500/30", textColor: "text-white", iconColor: "#94A3B8" } // Gray Cloud
                 },
                 rain: {
-                    day: { gradient: "bg-gradient-to-b from-blue-600 via-indigo-700 to-purple-800", icon: "cloud-rain", label: "Rainy", accent: "text-blue-200", type: "rain", textColor: "text-white" },
-                    night: { gradient: "bg-gradient-to-b from-slate-900 via-indigo-950 to-purple-950", icon: "cloud-rain", label: "Rainy", accent: "text-blue-300", type: "rain", textColor: "text-white" }
+                    day: { gradient: "bg-gradient-to-b from-blue-600 via-indigo-700 to-purple-900", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-400/40", textColor: "text-white", iconColor: "#60A5FA" }, // Light Blue Rain
+                    night: { gradient: "bg-gradient-to-b from-slate-950 via-indigo-950 to-black", icon: "cloud-rain", label: "Rainy", accent: "shadow-indigo-500/30", textColor: "text-white", iconColor: "#3B82F6" } // Blue Rain
                 },
-                snow: {
-                    day: { gradient: "bg-gradient-to-b from-blue-200 via-blue-100 to-white", icon: "snowflake", label: "Snow", accent: "text-blue-500", type: "snow", textColor: "text-slate-800" }, 
-                    night: { gradient: "bg-gradient-to-b from-indigo-900 via-slate-800 to-slate-900", icon: "snowflake", label: "Snow", accent: "text-white", type: "snow", textColor: "text-white" }
-                },
-                thunder: {
-                    day: { gradient: "bg-gradient-to-b from-indigo-700 via-purple-800 to-slate-900", icon: "cloud-lightning", label: "Stormy", accent: "text-yellow-400", type: "rain", textColor: "text-white" },
-                    night: { gradient: "bg-gradient-to-b from-purple-900 via-indigo-950 to-black", icon: "cloud-lightning", label: "Stormy", accent: "text-yellow-400", type: "rain", textColor: "text-white" }
-                }
             };
-
-            const time = isDay ? 'day' : 'night';
-
-            if (code === 0) return themeMap.clear[time];
-            if ([1, 2].includes(code)) return themeMap.partlyCloudy[time];
-            if ([3, 45, 48].includes(code)) return themeMap.cloudy[time];
-            if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return themeMap.rain[time];
-            if ([71, 73, 75, 77, 85, 86].includes(code)) return themeMap.snow[time];
-            if ([95, 96, 99].includes(code)) return themeMap.thunder[time];
-
-            return themeMap.clear[time];
+            
+            if (code === 0) return configs.clear[time];
+            if ([1, 2, 3].includes(code)) return configs.cloudy[time];
+            if ([51, 61, 80].includes(code)) return configs.rain[time];
+            
+            return configs.clear[time];
         };
 
         const formatDayName = (dateString) => {
-            const date = new Date(dateString);
-            const today = new Date();
-            if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth()) return "Today";
-            return date.toLocaleDateString('en-US', { weekday: 'short' });
-        };
-        
-        const formatHour = (timeString) => {
-            return new Date(timeString).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
-        };
-
-        // --- Custom Hooks ---
-
-        const useWeatherParticles = (type) => {
-            const canvasRef = useRef(null);
-
-            useEffect(() => {
-                const canvas = canvasRef.current;
-                if (!canvas || (type !== 'rain' && type !== 'snow')) return;
-
-                const ctx = canvas.getContext('2d');
-                let animationFrameId;
-                let particles = [];
-                
-                const resize = () => {
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                };
-                window.addEventListener('resize', resize);
-                resize();
-
-                const createParticle = () => {
-                    return {
-                        x: Math.random() * canvas.width,
-                        y: Math.random() * canvas.height,
-                        speed: type === 'rain' ? Math.random() * 15 + 10 : Math.random() * 2 + 0.5,
-                        size: type === 'rain' ? Math.random() * 2 + 1 : Math.random() * 4 + 2,
-                        opacity: Math.random() * 0.5 + 0.1
-                    };
-                };
-
-                for (let i = 0; i < (type === 'rain' ? 100 : 50); i++) {
-                    particles.push(createParticle());
-                }
-
-                const draw = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                    ctx.lineWidth = 1;
-
-                    particles.forEach(p => {
-                        ctx.beginPath();
-                        if (type === 'rain') {
-                            ctx.moveTo(p.x, p.y);
-                            ctx.lineTo(p.x, p.y + p.size * 5);
-                            ctx.stroke();
-                        } else {
-                            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-
-                        p.y += p.speed;
-                        if (type === 'snow') p.x += Math.sin(p.y * 0.01) * 0.5;
-
-                        if (p.y > canvas.height) {
-                            p.y = -20;
-                            p.x = Math.random() * canvas.width;
-                        }
-                    });
-
-                    animationFrameId = requestAnimationFrame(draw);
-                };
-
-                draw();
-
-                return () => {
-                    window.removeEventListener('resize', resize);
-                    cancelAnimationFrame(animationFrameId);
-                };
-            }, [type]);
-
-            return canvasRef;
+            const d = new Date(dateString);
+            return d.toLocaleDateString('en-US', { weekday: 'short' });
         };
 
         // --- Components ---
 
-        const Icon = ({ name, size = 24, className = "" }) => {
-            useEffect(() => {
-                lucide.createIcons();
-            }, [name]); 
-            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
-        };
-
-        const LoadingSpinner = () => (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white">
-                <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-blue-200 animate-pulse font-medium tracking-wide">Forecast Loading...</p>
+        const WeatherSkeleton = () => (
+            <div className="flex flex-col items-center w-full animate-fade-in p-6">
+                <div className="w-32 h-6 skeleton mb-8 rounded-full"></div>
+                <div className="w-[180px] h-[220px] skeleton rounded-[2.5rem] mb-8 opacity-50"></div>
+                <div className="w-48 h-24 skeleton mb-4 rounded-2xl opacity-80"></div>
+                <div className="w-24 h-6 skeleton mb-12 rounded-full opacity-60"></div>
+                <div className="grid grid-cols-2 gap-4 w-full mb-8">
+                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+                </div>
             </div>
         );
 
-        const Toast = ({ message, type }) => {
-            return (
-                <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 animate-bounce-in">
-                    <div className={`glass-panel px-6 py-3 rounded-full flex items-center gap-3 shadow-xl ${type === 'success' ? 'bg-green-500/20 text-white' : 'bg-red-500/20 text-white'}`}>
-                        <Icon name={type === 'success' ? 'check-circle' : 'alert-circle'} size={18} />
-                        <span className="font-medium text-sm">{message}</span>
-                    </div>
-                </div>
-            );
-        };
-
-        const SearchBar = ({ onSearch, isLocating }) => {
+        const SearchBar = ({ onSearch, onLocate }) => {
             const [query, setQuery] = useState('');
             const [suggestions, setSuggestions] = useState([]);
-            const [showSuggestions, setShowSuggestions] = useState(false);
-            const wrapperRef = useRef(null);
-
+            
             useEffect(() => {
                 const timer = setTimeout(async () => {
                     if (query.length > 2) {
                         try {
-                            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+                            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=en&format=json`);
                             const data = await res.json();
                             if (data.results) setSuggestions(data.results);
-                        } catch (e) { console.error(e); }
-                    } else {
-                        setSuggestions([]);
-                    }
+                        } catch (e) {}
+                    } else { setSuggestions([]); }
                 }, 300);
                 return () => clearTimeout(timer);
             }, [query]);
 
-            const handleSelect = (city) => {
-                setQuery(`${city.name}, ${city.country_code}`);
-                setShowSuggestions(false);
-                onSearch({ lat: city.latitude, lon: city.longitude, name: city.name, country: city.country });
-            };
-
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                if (suggestions.length > 0) handleSelect(suggestions[0]);
-            };
-
-            useEffect(() => {
-                const handleClickOutside = (event) => {
-                    if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                        setShowSuggestions(false);
-                    }
-                };
-                document.addEventListener("mousedown", handleClickOutside);
-                return () => document.removeEventListener("mousedown", handleClickOutside);
-            }, [wrapperRef]);
-
             return (
-                <div ref={wrapperRef} className="relative w-full mb-6 z-50">
-                    <form onSubmit={handleSubmit} className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/60">
-                            <Icon name="search" size={18} />
-                        </div>
+                <div className="relative w-full mb-2 z-50 flex gap-2">
+                    <form onSubmit={(e) => { e.preventDefault(); if(suggestions[0]) onSearch(suggestions[0]); }} className="relative group flex-grow">
+                        <div className="absolute left-4 top-3.5 text-white/60"><Icon name="search" size={18} /></div>
                         <input
                             type="text"
                             value={query}
-                            onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); }}
-                            onFocus={() => setShowSuggestions(true)}
+                            onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search City..."
-                            className="w-full pl-11 pr-12 py-4 rounded-3xl glass-input bg-white/10 text-white placeholder-white/50 focus:outline-none focus:bg-white/20 transition-all shadow-lg font-medium"
+                            className="w-full pl-11 pr-4 py-3.5 rounded-2xl glass-input bg-black/20 text-white placeholder-white/50 focus:bg-black/30 outline-none ring-0 font-medium text-sm backdrop-blur-md"
                         />
-                        <button 
-                            type="button" 
-                            onClick={() => onSearch('CURRENT_LOCATION')}
-                            className="absolute inset-y-0 right-2 pr-2 flex items-center text-white/60 hover:text-white transition-colors"
-                            title="Use Current Location"
-                        >
-                            <div className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                                <Icon name="navigation" size={18} className={isLocating ? "animate-spin" : ""} />
-                            </div>
-                        </button>
                     </form>
                     
-                    {showSuggestions && suggestions.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 glass-panel bg-slate-900/80 rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
-                            {suggestions.map((city) => (
-                                <button
-                                    key={city.id}
-                                    onClick={() => handleSelect(city)}
-                                    className="w-full text-left px-5 py-3 text-white hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex items-center justify-between group"
-                                >
-                                    <span>
-                                        <span className="font-semibold">{city.name}</span>
-                                        <span className="opacity-60 text-sm ml-2">{city.admin1}, {city.country}</span>
-                                    </span>
-                                    <Icon name="arrow-right" size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                    <button 
+                        onClick={() => onSearch('CURRENT')}
+                        className="p-3.5 rounded-2xl glass-input bg-black/20 hover:bg-black/30 text-white transition-all active:scale-95 flex-shrink-0"
+                        title="Use Current Location"
+                    >
+                        <Icon name="crosshair" size={20} />
+                    </button>
+
+                    {suggestions.length > 0 && (
+                        <div className="absolute top-full mt-2 w-full glass-panel bg-black/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl animate-slide-up left-0">
+                            {suggestions.map(city => (
+                                <button key={city.id} onClick={() => { onSearch(city); setSuggestions([]); setQuery(''); }} className="w-full p-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex justify-between text-white">
+                                    <span className="font-medium text-sm">{city.name}, <span className="opacity-60">{city.country_code}</span></span>
                                 </button>
                             ))}
                         </div>
@@ -362,380 +266,264 @@
             );
         };
 
-        const AQICard = ({ aqi, theme, cardClass }) => {
-            if (aqi === null) return null;
-            const status = getAQIStatus(aqi);
-
-            return (
-                <div className={`glass-panel rounded-3xl p-6 ${cardClass} mb-6 animate-slide-up transition-all duration-500`}>
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 opacity-80">
-                            <Icon name="wind" size={18} />
-                            <span className="text-sm font-semibold uppercase tracking-wider">Air Quality</span>
-                        </div>
-                        <span className={`text-sm font-bold px-3 py-1 rounded-full bg-white/20 ${status.color}`}>
-                            {status.label}
-                        </span>
-                    </div>
-                    
-                    <div className="flex items-end gap-2 mt-4 mb-2">
-                        <span className="text-4xl font-bold">{aqi}</span>
-                        <span className="text-sm opacity-70 mb-1">US AQI</span>
-                    </div>
-
-                    <p className="text-sm opacity-80 mb-4">{status.desc}</p>
-
-                    <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                        <div 
-                            className={`h-full ${status.bar} transition-all duration-1000`} 
-                            style={{ width: `${Math.min((aqi / 300) * 100, 100)}%` }}
-                        ></div>
-                    </div>
-                </div>
-            );
-        };
-
-        const ForecastTabs = ({ daily, hourly, cardClass, isLight }) => {
-            const [activeTab, setActiveTab] = useState('hourly');
-
-            // Process hourly data: Get next 24 hours
-            const now = new Date();
-            const currentHourIndex = hourly.time.findIndex(t => new Date(t) >= now);
-            const next24Hours = hourly.time.slice(currentHourIndex, currentHourIndex + 24).map((time, i) => ({
-                time,
-                temp: hourly.temperature_2m[currentHourIndex + i],
-                code: hourly.weather_code[currentHourIndex + i],
-                isDay: new Date(time).getHours() >= 6 && new Date(time).getHours() <= 18 
-            }));
-
-            return (
-                <div className={`w-full glass-panel rounded-3xl p-6 ${cardClass} relative overflow-hidden transition-all duration-300`}>
-                    
-                    {/* Tab Header */}
-                    <div className="flex items-center justify-between mb-6 relative z-10">
-                        <div className="flex space-x-6 relative">
-                            <button 
-                                onClick={() => setActiveTab('hourly')}
-                                className={`text-lg font-bold transition-colors duration-300 ${activeTab === 'hourly' ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                            >
-                                Hourly
-                            </button>
-                            <button 
-                                onClick={() => setActiveTab('daily')}
-                                className={`text-lg font-bold transition-colors duration-300 ${activeTab === 'daily' ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                            >
-                                7-Day
-                            </button>
-                            
-                            {/* Active Dot Indicator */}
-                            <div className={`absolute -bottom-2 h-1 w-1 bg-current rounded-full transition-all duration-300 ${activeTab === 'hourly' ? 'left-6' : 'left-24'}`}></div>
-                        </div>
-                        <Icon name={activeTab === 'hourly' ? 'clock' : 'calendar-days'} size={20} className="opacity-60" />
-                    </div>
-
-                    {/* Content Area */}
-                    <div className="relative min-h-[140px]">
-                        
-                        {/* Hourly View */}
-                        <div className={`flex overflow-x-auto no-scrollbar gap-4 pb-2 -mx-2 px-2 transition-all duration-500 absolute inset-0 ${activeTab === 'hourly' ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 -translate-x-10 pointer-events-none'}`}>
-                            {next24Hours.map((hour, index) => {
-                                const hourConfig = getWeatherConfig(hour.code, hour.isDay);
-                                return (
-                                    <div key={hour.time} className={`flex flex-col items-center justify-between min-w-[70px] h-[130px] p-3 rounded-full ${isLight ? 'bg-white/40' : 'bg-white/5'}`}>
-                                        <span className="text-xs font-semibold opacity-70">{index === 0 ? 'Now' : formatHour(hour.time)}</span>
-                                        <Icon name={hourConfig.icon} size={24} />
-                                        <span className="font-bold text-lg">{Math.round(hour.temp)}°</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Daily View */}
-                        <div className={`flex overflow-x-auto no-scrollbar gap-4 pb-2 -mx-2 px-2 transition-all duration-500 absolute inset-0 ${activeTab === 'daily' ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 translate-x-10 pointer-events-none'}`}>
-                            {daily.time.slice(0, 7).map((date, index) => {
-                                const dailyConfig = getWeatherConfig(daily.weather_code[index], true);
-                                return (
-                                    <div key={date} className={`flex flex-col items-center justify-between min-w-[70px] h-[130px] p-3 rounded-full ${isLight ? 'bg-white/40' : 'bg-white/5'}`}>
-                                        <span className="text-xs font-semibold opacity-70">{formatDayName(date)}</span>
-                                        <Icon name={dailyConfig.icon} size={24} />
-                                        <div className="flex flex-col items-center leading-none">
-                                            <span className="font-bold text-lg">{Math.round(daily.temperature_2m_max[index])}°</span>
-                                            <span className="text-[10px] opacity-60 mt-1">{Math.round(daily.temperature_2m_min[index])}°</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const WeatherDisplay = ({ weather, aqi, locationName, config, themeMode, isSaved, onToggleSave }) => {
+        const BentoGrid = ({ current, daily, themeMode }) => {
             const isLight = themeMode === 'light';
+            const cardClass = isLight 
+                ? 'bg-white/60 border-white/50 text-slate-900 shadow-sm' 
+                : 'bg-slate-900/40 border-white/10 text-white shadow-lg';
             
-            const cardClass = isLight ? 'bg-white/40 border-white/40 text-slate-900' : 'bg-black/20 border-white/10 text-white';
-            const mainTextColor = config.textColor || 'text-white';
-            
+            const items = [
+                { icon: 'wind', label: 'Wind', val: `${Math.round(current.wind_speed_10m)}`, unit: 'km/h' },
+                { icon: 'droplets', label: 'Humidity', val: `${current.relative_humidity_2m}`, unit: '%' },
+                { icon: 'sun', label: 'UV Index', val: `${Math.round(daily.uv_index_max[0])}`, unit: '' },
+                { icon: 'thermometer', label: 'Feels Like', val: `${Math.round(current.apparent_temperature)}°`, unit: '' },
+            ];
+
             return (
-                <div className={`flex flex-col items-center justify-center pt-2 pb-6 animate-fade-in relative z-10`}>
-                    
-                    {/* Location Header with Save Button */}
-                    <div className={`text-center mb-10 ${mainTextColor} flex flex-col items-center`}>
-                        <div className="flex items-center gap-3">
-                            <div className="text-xl font-semibold tracking-wide flex items-center justify-center gap-2">
-                                <Icon name="map-pin" size={20} />
-                                {locationName}
+                <div className="grid grid-cols-2 gap-3 w-full mb-6">
+                    {items.map((item, i) => (
+                        <div key={i} className={`glass-panel p-4 rounded-3xl flex flex-col items-start justify-between h-28 transition-transform active:scale-95 duration-200 ${cardClass}`}>
+                            <div className="flex w-full justify-between opacity-70">
+                                <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>
+                                <Icon name={item.icon} size={16} />
                             </div>
-                            <button 
-                                onClick={onToggleSave}
-                                className={`ml-2 p-2 rounded-full transition-all duration-300 ${isSaved ? 'bg-yellow-400/20 text-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.4)]' : 'bg-white/10 text-white/40 hover:bg-white/20 hover:text-white'}`}
-                                title={isSaved ? "Saved as default location" : "Set as default location"}
-                            >
-                                <Icon name="star" fill={isSaved ? "currentColor" : "none"} size={18} />
-                            </button>
-                        </div>
-                        <div className="text-sm opacity-70 font-medium tracking-widest uppercase mt-1">
-                            {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
-                        </div>
-                    </div>
-                    
-                    {/* MAIN WEATHER DISPLAY */}
-                    <div className={`flex flex-col items-center justify-center mb-12 ${mainTextColor}`}>
-                        
-                        {/* 1. Icon in Glass Box (The "UI Thing") */}
-                        <div className="relative mb-6 group">
-                            {/* Glow Effect */}
-                            <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                            
-                            <div className={`relative w-[180px] h-[220px] rounded-[2.5rem] glass-panel border border-white/20 shadow-[0_0_30px_-5px_rgba(255,255,255,0.15)] flex items-center justify-center animate-float ${config.accent}`}>
-                                <Icon name={config.icon} size={110} className="drop-shadow-2xl" />
-                                
-                                {/* Inner decorative border */}
-                                <div className="absolute inset-4 rounded-[2rem] border border-white/10"></div>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold tracking-tight">{item.val}</span>
+                                <span className="text-xs font-medium opacity-60">{item.unit}</span>
                             </div>
                         </div>
-
-                        {/* 2. Big Temperature in Middle */}
-                        <h1 className="text-9xl font-bold tracking-tighter drop-shadow-lg leading-none mb-2">
-                            {Math.round(weather.current.temperature_2m)}°
-                        </h1>
-
-                        {/* 3. Condition Text */}
-                        <div className="text-2xl font-medium capitalize tracking-wide opacity-90 mb-2">
-                            {config.label}
-                        </div>
-
-                        {/* 4. High / Low Temp */}
-                        <div className="flex items-center space-x-4 opacity-80 text-lg">
-                            <span>Max: {Math.round(weather.daily.temperature_2m_max[0])}°</span>
-                            <span className="w-1 h-1 bg-current rounded-full"></span>
-                            <span>Min: {Math.round(weather.daily.temperature_2m_min[0])}°</span>
-                        </div>
-                    </div>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-4 w-full mb-8">
-                        {[
-                            { icon: "wind", val: Math.round(weather.current.wind_speed_10m), unit: "km/h", label: "Wind" },
-                            { icon: "droplets", val: weather.current.relative_humidity_2m, unit: "%", label: "Humidity" },
-                            { icon: "sun", val: Math.round(weather.daily.uv_index_max[0]), unit: "UV", label: "Index" }
-                        ].map((stat, i) => (
-                            <div key={i} className={`glass-panel rounded-3xl p-4 flex flex-col items-center justify-center aspect-square transition-transform hover:scale-105 ${cardClass}`}>
-                                <Icon name={stat.icon} size={24} className="mb-2 opacity-70" />
-                                <span className="text-2xl font-bold">{stat.val}</span>
-                                <span className="text-xs opacity-60 uppercase tracking-widest font-semibold">{stat.unit}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* AQI Meter */}
-                    <div className="w-full mb-8">
-                         <AQICard aqi={aqi} theme={themeMode} cardClass={cardClass} />
-                    </div>
-
-                    {/* Tabbed Forecast Card */}
-                    <ForecastTabs 
-                        daily={weather.daily} 
-                        hourly={weather.hourly} 
-                        cardClass={cardClass} 
-                        isLight={isLight} 
-                    />
+                    ))}
                 </div>
             );
         };
 
-        // --- Main App ---
+        const AQICard = ({ aqi, themeMode }) => {
+            if (!aqi) return null;
+            const status = getAQIStatus(aqi);
+            const isLight = themeMode === 'light';
+            const cardClass = isLight 
+                ? 'bg-white/60 border-white/50 text-slate-900 shadow-sm' 
+                : 'bg-slate-900/40 border-white/10 text-white shadow-lg';
+            
+            return (
+                <div className={`glass-panel w-full p-5 rounded-3xl mb-6 relative overflow-hidden ${cardClass}`}>
+                    <div className="flex justify-between items-center mb-4 relative z-10">
+                        <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-lg ${isLight ? 'bg-slate-900/10' : 'bg-white/10'}`}><Icon name="wind" size={16} /></div>
+                            <span className="text-sm font-bold uppercase tracking-wide opacity-70">Air Quality</span>
+                        </div>
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full bg-white/10 ${status.color} border border-white/5`}>{status.label}</span>
+                    </div>
+                    
+                    <div className="flex items-end gap-2 mb-4 relative z-10">
+                        <span className="text-4xl font-bold tracking-tighter">{aqi}</span>
+                        <span className="text-xs opacity-50 mb-1.5 font-medium">US AQI</span>
+                    </div>
+                    
+                    <div className="h-2 w-full bg-black/10 rounded-full overflow-hidden relative z-10 mb-6">
+                        <div className={`h-full ${status.bar} transition-all duration-1000 ease-out`} style={{ width: `${Math.min((aqi / 300) * 100, 100)}%` }}></div>
+                    </div>
+
+                    <div className={`relative p-4 rounded-2xl ${isLight ? 'bg-white/50' : 'bg-white/5'} border border-white/10 backdrop-blur-sm`}>
+                        <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-full bg-white/10 text-${status.color.split('-')[1]}-500 animate-pulse-heart`}>
+                                <Icon name="heart" size={20} fill="currentColor" />
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold uppercase tracking-wide opacity-60 mb-1">Heart Impact</h4>
+                                <p className="text-sm font-medium leading-snug opacity-90">{status.heartAdvice}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MainWeather = ({ weather, config, locationName, isSaved, onToggleSave }) => (
+            <div className="flex flex-col items-center w-full mb-8 animate-slide-up">
+                <div className="flex items-center gap-2 mb-1 text-white drop-shadow-md">
+                    <Icon name="map-pin" size={16} className="opacity-90" />
+                    <span className="text-lg font-semibold tracking-wide">{locationName}</span>
+                    <button onClick={onToggleSave} className={`ml-1 transition-transform active:scale-75 ${isSaved ? 'text-yellow-400' : 'opacity-50 hover:opacity-100'}`}>
+                        <Icon name="star" size={16} fill={isSaved ? "currentColor" : "none"} />
+                    </button>
+                </div>
+                <div className="text-xs font-medium opacity-70 uppercase tracking-widest mb-8 text-white">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </div>
+
+                {/* Updated Hero Glass Box with Glow Animation */}
+                <div className="relative group cursor-pointer perspective-1000">
+                    <div className={`absolute inset-0 blur-[60px] opacity-40 rounded-full ${config.accent.replace('shadow-', 'bg-')}`}></div>
+                    
+                    <div className={`relative w-[160px] h-[200px] glass-panel rounded-[2.5rem] flex items-center justify-center border border-white/20 shadow-2xl transition-transform duration-500 group-hover:-translate-y-2 group-hover:shadow-3xl bg-white/10 backdrop-blur-md animate-glow`}>
+                        <div className="animate-float">
+                            {/* Using the specific icon color from config */}
+                            <Icon name={config.icon} size={90} className="drop-shadow-xl" color={config.iconColor} />
+                        </div>
+                        <div className="absolute inset-3 border border-white/10 rounded-[2rem] pointer-events-none"></div>
+                    </div>
+                </div>
+
+                <div className="mt-8 text-center text-white">
+                    <h1 className="text-[5.5rem] font-bold leading-none tracking-tighter drop-shadow-lg">
+                        {Math.round(weather.current.temperature_2m)}°
+                    </h1>
+                    <p className="text-lg font-medium opacity-90 mt-2 capitalize drop-shadow-sm">{config.label}</p>
+                    <div className="flex gap-4 justify-center mt-2 text-sm font-medium opacity-80">
+                        <span>H: {Math.round(weather.daily.temperature_2m_max[0])}°</span>
+                        <span>L: {Math.round(weather.daily.temperature_2m_min[0])}°</span>
+                    </div>
+                </div>
+            </div>
+        );
 
         const App = () => {
             const [weather, setWeather] = useState(null);
             const [aqi, setAqi] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [error, setError] = useState(null);
-            const [locationName, setLocationName] = useState("Loading...");
-            const [themeMode, setThemeMode] = useState('dark');
-            const [savedLocation, setSavedLocation] = useState(null);
-            const [currentLocation, setCurrentLocation] = useState(null);
-            const [toast, setToast] = useState(null);
+            const [location, setLocation] = useState(null);
+            const [savedLoc, setSavedLoc] = useState(null);
+            const [theme, setTheme] = useState('dark');
 
-            const showToast = (message, type = 'success') => {
-                setToast({ message, type });
-                setTimeout(() => setToast(null), 3000);
-            };
-
-            const fetchAllData = async (lat, lon, name) => {
+            const fetchData = async (lat, lon, name) => {
                 setLoading(true);
-                setError(null);
+                await new Promise(r => setTimeout(r, 800));
+                
                 try {
-                    const weatherRes = await fetch(
-                        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset&timezone=auto`
-                    );
-                    if (!weatherRes.ok) throw new Error("Weather service unavailable");
-                    const weatherData = await weatherRes.json();
-
-                    const aqiRes = await fetch(
-                        `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`
-                    );
-                    let aqiVal = null;
-                    if (aqiRes.ok) {
-                        const aqiData = await aqiRes.json();
-                        aqiVal = aqiData.current?.us_aqi;
-                    }
-
-                    setWeather(weatherData);
-                    setAqi(aqiVal);
-                    setLocationName(name || "Current Location");
-                    setCurrentLocation({ lat, lon, name });
-                } catch (err) {
-                    setError("Could not load weather data.");
-                    console.error(err);
-                } finally {
-                    setLoading(false);
-                }
+                    const [wRes, aRes] = await Promise.all([
+                        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset&timezone=auto`),
+                        fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`)
+                    ]);
+                    
+                    const wData = await wRes.json();
+                    const aData = await aRes.json();
+                    
+                    setWeather(wData);
+                    setAqi(aData.current?.us_aqi);
+                    setLocation({ name, lat, lon });
+                } catch(e) { console.error(e); } 
+                finally { setLoading(false); }
             };
 
-            const handleSearch = (data) => {
-                if (data === 'CURRENT_LOCATION') {
-                    getGeoLocation();
-                } else {
-                    fetchAllData(data.lat, data.lon, `${data.name}, ${data.country || ''}`);
-                }
-            };
-
-            const getGeoLocation = () => {
-                setLoading(true);
-                if (navigator.geolocation) {
+            const handleSearch = (loc) => {
+                if (loc === 'CURRENT') {
                     navigator.geolocation.getCurrentPosition(
-                        (pos) => fetchAllData(pos.coords.latitude, pos.coords.longitude, "My Location"),
-                        () => fetchAllData(40.7128, -74.0060, "New York, US") 
+                        pos => fetchData(pos.coords.latitude, pos.coords.longitude, "My Location"),
+                        () => fetchData(40.71, -74.00, "New York, US")
                     );
                 } else {
-                    fetchAllData(40.7128, -74.0060, "New York, US");
+                    fetchData(loc.latitude, loc.longitude, loc.name);
                 }
             };
 
-            // --- Save Location Logic ---
             useEffect(() => {
-                const saved = localStorage.getItem('aetherSavedLocation');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    setSavedLocation(parsed);
-                    fetchAllData(parsed.lat, parsed.lon, parsed.name);
+                const saved = localStorage.getItem('aetherLoc');
+                if(saved) {
+                    const p = JSON.parse(saved);
+                    setSavedLoc(p);
+                    fetchData(p.lat, p.lon, p.name);
                 } else {
-                    getGeoLocation();
+                    handleSearch('CURRENT');
                 }
             }, []);
 
-            const toggleSaveLocation = () => {
-                if (savedLocation && savedLocation.name === currentLocation.name) {
-                    // Remove
-                    localStorage.removeItem('aetherSavedLocation');
-                    setSavedLocation(null);
-                    showToast("Default location removed", "error");
+            const toggleSave = () => {
+                if(savedLoc && savedLoc.name === location.name) {
+                    localStorage.removeItem('aetherLoc');
+                    setSavedLoc(null);
                 } else {
-                    // Save
-                    const toSave = { ...currentLocation };
-                    localStorage.setItem('aetherSavedLocation', JSON.stringify(toSave));
-                    setSavedLocation(toSave);
-                    showToast("Location saved as default", "success");
+                    localStorage.setItem('aetherLoc', JSON.stringify(location));
+                    setSavedLoc(location);
                 }
             };
 
-            const isCurrentSaved = savedLocation && currentLocation && savedLocation.name === currentLocation.name;
-
-            // Day/Night Logic
-            let isDayTime = true;
+            let config = getWeatherConfig(0, true);
             if (weather) {
-                const now = new Date();
-                const sunrise = new Date(weather.daily.sunrise[0]);
-                const sunset = new Date(weather.daily.sunset[0]);
-                
-                if (!isNaN(sunrise.getTime()) && !isNaN(sunset.getTime())) {
-                    isDayTime = now >= sunrise && now < sunset;
-                } else {
-                    isDayTime = weather.current.is_day === 1;
-                }
+                const isDay = weather.current.is_day === 1; 
+                config = getWeatherConfig(weather.current.weather_code, isDay);
             }
 
-            const config = weather 
-                ? getWeatherConfig(weather.current.weather_code, isDayTime)
-                : getWeatherConfig(0, true);
-            
-            const canvasRef = useWeatherParticles(config?.type);
+            // PWA Installation and Link Handling Logic
+            useEffect(() => {
+                // 1. Register Service Worker (with error handling to fix unhandled rejection)
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(reg => console.log('Service Worker registered', reg))
+                        .catch(err => console.log('Service Worker registration failed (this is normal in preview mode):', err));
+                }
 
-            if (loading && !weather) return <LoadingSpinner />;
+                // 2. Intercept External Links to maintain Standalone Mode
+                const handleLinkClick = (e) => {
+                    const anchor = e.target.closest('a');
+                    if (anchor && anchor.href) {
+                        const url = new URL(anchor.href);
+                        // If the link is NOT the same origin (external link), force open in new window
+                        // This prevents the PWA from opening external sites inside the app window, showing the URL bar
+                        if (url.origin !== window.location.origin) {
+                            e.preventDefault();
+                            window.open(anchor.href, '_blank');
+                        }
+                    }
+                };
+                
+                document.addEventListener('click', handleLinkClick);
+                return () => document.removeEventListener('click', handleLinkClick);
+            }, []);
 
             return (
-                <div className={`min-h-screen transition-all duration-1000 ease-in-out ${config.gradient} p-4 md:p-8 overflow-hidden relative selection:bg-white/30`}>
-                    
-                    <canvas ref={canvasRef} id="particle-canvas"></canvas>
-
-                    {/* Toast Notification */}
-                    {toast && <Toast message={toast.message} type={toast.type} />}
-
-                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                        <div className="absolute -top-20 -left-20 w-96 h-96 bg-white/10 rounded-full blur-[100px] animate-pulse-slow"></div>
-                        <div className="absolute top-1/2 -right-20 w-80 h-80 bg-white/5 rounded-full blur-[80px] animate-float" style={{animationDelay: '1s'}}></div>
+                <div className={`min-h-screen transition-colors duration-700 ${config.gradient} p-4 pb-10 overflow-x-hidden relative`}>
+                    <div className="absolute inset-0 pointer-events-none opacity-30">
+                        <div className="absolute top-20 -left-20 w-72 h-72 bg-white rounded-full blur-[120px] mix-blend-overlay animate-pulse-fast"></div>
+                        <div className="absolute bottom-20 -right-20 w-80 h-80 bg-blue-400 rounded-full blur-[120px] mix-blend-overlay opacity-50"></div>
                     </div>
 
-                    <div className="max-w-md mx-auto relative z-20 flex flex-col min-h-[90vh]">
+                    <div className="max-w-md mx-auto relative z-10 flex flex-col min-h-[90vh]">
                         
-                        <div className="absolute top-0 right-0 z-50 mt-4 mr-1">
-                             <button 
-                                onClick={() => setThemeMode(prev => prev === 'dark' ? 'light' : 'dark')}
-                                className={`p-3 rounded-full glass-panel hover:bg-white/20 transition-all shadow-lg ${config?.textColor || 'text-white'} border-white/30`}
-                                title="Toggle Theme"
-                            >
-                                <Icon name={themeMode === 'dark' ? 'sun' : 'moon'} size={20} />
-                            </button>
+                        <div className="flex justify-between items-center mb-4">
+                            <button onClick={() => window.location.reload()} className="p-3 glass-panel rounded-full hover:bg-white/20 transition-colors text-white"><Icon name="rotate-cw" size={18}/></button>
+                            <div className="flex-1 px-2"><SearchBar onSearch={handleSearch} /></div>
+                            <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} className="p-3 glass-panel rounded-full hover:bg-white/20 transition-colors text-white"><Icon name={theme==='dark'?'sun':'moon'} size={18}/></button>
                         </div>
 
-                        {error && (
-                            <div className="absolute top-16 left-0 right-0 z-50 animate-slide-up px-4">
-                                <div className="glass-panel bg-red-500/20 border-red-200/30 text-white px-4 py-3 rounded-2xl flex items-center justify-center space-x-2">
-                                    <Icon name="alert-circle" size={20} />
-                                    <span>{error}</span>
-                                </div>
-                            </div>
-                        )}
-
-                        <SearchBar onSearch={handleSearch} isLocating={loading} />
-
-                        {weather && (
-                            <div className="flex-grow">
-                                <WeatherDisplay 
+                        {loading ? (
+                            <WeatherSkeleton />
+                        ) : weather && (
+                            <>
+                                <MainWeather 
                                     weather={weather} 
-                                    aqi={aqi} 
-                                    locationName={locationName} 
                                     config={config} 
-                                    themeMode={themeMode}
-                                    isSaved={isCurrentSaved}
-                                    onToggleSave={toggleSaveLocation}
+                                    locationName={location.name} 
+                                    isSaved={savedLoc?.name === location.name}
+                                    onToggleSave={toggleSave}
                                 />
-                            </div>
+                                
+                                <BentoGrid current={weather.current} daily={weather.daily} themeMode={theme} />
+                                <AQICard aqi={aqi} themeMode={theme} />
+                                
+                                <div className={`glass-panel rounded-3xl p-5 ${theme === 'light' ? 'bg-white/60 text-slate-900' : 'bg-slate-900/40 text-white'}`}>
+                                    <h3 className="text-sm font-bold uppercase tracking-wider opacity-60 mb-4 flex items-center gap-2">
+                                        <Icon name="calendar-days" size={16} /> 7-Day Forecast
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {weather.daily.time.slice(1, 6).map((t, i) => (
+                                            <div key={t} className="flex justify-between items-center text-sm">
+                                                <span className="w-12 font-medium">{formatDayName(t)}</span>
+                                                <div className="flex-1 flex justify-center opacity-80">
+                                                    <Icon name={getWeatherConfig(weather.daily.weather_code[i+1], true).icon} size={20} color={getWeatherConfig(weather.daily.weather_code[i+1], true).iconColor}/>
+                                                </div>
+                                                <div className="flex gap-3 w-20 justify-end font-semibold">
+                                                    <span>{Math.round(weather.daily.temperature_2m_max[i+1])}°</span>
+                                                    <span className="opacity-40">{Math.round(weather.daily.temperature_2m_min[i+1])}°</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
                         )}
-
-                        <footer className={`mt-8 py-6 text-center text-xs font-medium tracking-widest uppercase transition-colors ${themeMode === 'light' ? 'text-slate-800/50' : 'text-white/40'}`}>
+                        
+                        <footer className={`mt-12 py-6 text-center text-xs font-medium tracking-widest uppercase transition-colors ${theme === 'light' ? 'text-slate-800/60' : 'text-white/50'}`}>
                             <div className="flex flex-col items-center gap-2">
                                 <p>Designed & Built by Abhra</p>
                                 <a href="https://github.com/Hayagriva0" target="_blank" className="hover:text-blue-400 transition-colors flex items-center gap-1">
