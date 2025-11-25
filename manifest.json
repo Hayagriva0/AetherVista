@@ -1,0 +1,25 @@
+{
+  "name": "Weather Pro",
+  "short_name": "Weather",
+  "description": "A sophisticated, immersive weather experience with heart health tracking.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "https://fav.farm/⛅",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://fav.farm/⛅",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
