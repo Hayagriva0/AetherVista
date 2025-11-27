@@ -30,16 +30,33 @@
                         'float': 'float 8s ease-in-out infinite',
                         'fade-in': 'fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
                         'slide-up': 'slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'slide-down': 'slideDown 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
                         'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
                         'pulse-heart': 'pulseHeart 1.5s ease-in-out infinite',
-                        'spin-slow': 'spin 20s linear infinite',
+                        'rain-drop': 'rainDrop 1s linear infinite',
+                        'snow-fall': 'snowFall 3s linear infinite',
+                        'sneeze': 'sneeze 0.3s ease-in-out',
+                        'bob': 'bob 2s ease-in-out infinite',
+                        'line-cast': 'lineCast 3s ease-in-out infinite',
+                        'wind-sway': 'windSway 2s ease-in-out infinite',
+                        'marquee': 'marquee 15s linear infinite',
+                        'flash': 'flash 2s infinite',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: { '0%': { transform: 'translateY(40px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        slideDown: { '0%': { transform: 'translateY(-100%)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
                         pulseGlow: { '0%, 100%': { opacity: '0.6' }, '50%': { opacity: '1' } },
-                        pulseHeart: { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.15)' } }
+                        pulseHeart: { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.15)' } },
+                        rainDrop: { '0%': { transform: 'translateY(-10px)', opacity: '0' }, '50%': { opacity: '1' }, '100%': { transform: 'translateY(20px)', opacity: '0' } },
+                        snowFall: { '0%': { transform: 'translateY(-10px) rotate(0deg)', opacity: '0' }, '50%': { opacity: '1' }, '100%': { transform: 'translateY(20px) rotate(180deg)', opacity: '0' } },
+                        sneeze: { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(0.9) translateY(2px)' } },
+                        bob: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(3px)' } },
+                        lineCast: { '0%, 100%': { transform: 'rotate(0deg)' }, '50%': { transform: 'rotate(2deg)' } },
+                        windSway: { '0%, 100%': { transform: 'rotate(-5deg)' }, '50%': { transform: 'rotate(5deg)' } },
+                        marquee: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(-100%)' } },
+                        flash: { '0%, 50%, 100%': { opacity: '1' }, '25%, 75%': { opacity: '0.5' } }
                     }
                 }
             }
@@ -56,7 +73,6 @@
         * { -webkit-tap-highlight-color: transparent; }
         body { overscroll-behavior-y: none; touch-action: manipulation; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        /* Improved Visibility: Darker, more opaque glass for better contrast */
         .glass-panel {
             background: rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(20px);
@@ -74,24 +90,57 @@
             border: 1px solid rgba(255, 255, 255, 0.15);
             transition: all 0.2s ease;
         }
-        /* Text Shadow for legibility */
-        .text-shadow {
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
+        .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body class="antialiased bg-slate-950 text-white selection:bg-indigo-500/30">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
         const Icon = ({ name, size = 24, className = "", fill = "none", color }) => {
             useEffect(() => lucide.createIcons(), [name]);
             return <i data-lucide={name} className={className} fill={fill} style={{ width: size, height: size, color: color }}></i>;
         };
 
-        // --- Configs ---
+        // --- Sound Hook ---
+        const useAmbientSound = (weatherCode, isMuted) => {
+            const audioRef = useRef(new Audio());
+            const [isPlaying, setIsPlaying] = useState(false);
+            
+            useEffect(() => {
+                const getSoundUrl = (code) => {
+                    if (code === 0 || code === 1) return 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg'; 
+                    if ([2, 3, 45, 48].includes(code)) return 'https://actions.google.com/sounds/v1/weather/wind_blowing.ogg';
+                    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg';
+                    if ([71, 73, 75, 77, 85, 86].includes(code)) return 'https://actions.google.com/sounds/v1/weather/wind_blowing.ogg';
+                    if ([95, 96, 99].includes(code)) return 'https://actions.google.com/sounds/v1/weather/thunder_claps.ogg';
+                    return 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg';
+                };
+
+                const audio = audioRef.current;
+                audio.loop = true;
+                audio.volume = 0.4;
+
+                if (isMuted) {
+                    audio.pause();
+                    setIsPlaying(false);
+                } else if (weatherCode !== null) {
+                    const src = getSoundUrl(weatherCode);
+                    if (audio.src !== src) audio.src = src;
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+                    }
+                }
+                return () => { audio.pause(); };
+            }, [weatherCode, isMuted]);
+
+            return isPlaying;
+        };
+
+        // --- Helpers ---
         const getAQIStatus = (aqi) => {
             if (aqi <= 50) return { label: "Excellent", color: "text-emerald-400", bar: "bg-emerald-500", heartAdvice: "Perfect air quality for outdoor cardio.", icon: "heart" };
             if (aqi <= 100) return { label: "Moderate", color: "text-yellow-400", bar: "bg-yellow-500", heartAdvice: "Acceptable. Monitor if you are sensitive.", icon: "activity" };
@@ -99,18 +148,46 @@
             return { label: "Unhealthy", color: "text-red-500", bar: "bg-red-600", heartAdvice: "Avoid outdoor activities to protect heart.", icon: "alert-triangle" };
         };
 
+        // Local Moon Phase Calculation
+        const calculateMoonPhase = () => {
+            const date = new Date();
+            const synodic = 29.53058867;
+            const knownNewMoon = new Date('2024-01-11 11:57:00').getTime(); 
+            const now = date.getTime();
+            const diff = now - knownNewMoon;
+            const days = diff / (1000 * 60 * 60 * 24);
+            const phase = (days % synodic) / synodic;
+            return phase < 0 ? phase + 1 : phase;
+        };
+
+        const getMoonPhaseName = (phase) => {
+            if (phase < 0.03 || phase > 0.97) return "New Moon";
+            if (phase < 0.22) return "Waxing Crescent";
+            if (phase < 0.28) return "First Quarter";
+            if (phase < 0.47) return "Waxing Gibbous";
+            if (phase < 0.53) return "Full Moon";
+            if (phase < 0.72) return "Waning Gibbous";
+            if (phase < 0.78) return "Last Quarter";
+            return "Waning Crescent";
+        };
+
         const getAdvice = (code, temp) => {
             if ([95, 96, 99].includes(code)) return { text: "Stormy! Stay safe indoors.", icon: "zap" };
             if ([51, 61, 80].includes(code)) return { text: "Don't forget your umbrella.", icon: "umbrella" };
             if ([71, 73, 75].includes(code)) return { text: "Bundle up! It's freezing.", icon: "snowflake" };
-            if (temp > 30) return { text: "Heat warning. Stay cool.", icon: "droplets" };
+            if (temp <= 10) return { text: "Hoodie weather defined.", icon: "shirt" };
+            if (temp >= 25) return { text: "Sun's out, legs out!", icon: "sun" };
             if (temp > 20 && code === 0) return { text: "Great day for a walk!", icon: "footprints" };
-            if (temp < 10) return { text: "Time for a heavy coat.", icon: "shirt" };
             return { text: "Enjoy the weather!", icon: "smile" };
         };
 
-        const getWeatherConfig = (code, isDay) => {
+        const getWeatherConfig = (code, isDay, isSevere) => {
             const time = isDay ? 'day' : 'night';
+            
+            if (isSevere) {
+                return { gradient: "bg-gradient-to-b from-red-900 via-orange-800 to-slate-900", icon: "alert-triangle", label: "Severe Alert", accent: "shadow-red-500", iconColor: "#EF4444" };
+            }
+
             const c = {
                 clear: { day: { gradient: "bg-gradient-to-b from-sky-500 to-blue-700", icon: "sun", label: "Sunny", accent: "shadow-yellow-400", iconColor: "#FDB813" }, 
                          night: { gradient: "bg-gradient-to-b from-slate-900 to-indigo-950", icon: "moon", label: "Clear", accent: "shadow-indigo-400", iconColor: "#E0E7FF" } },
@@ -126,7 +203,214 @@
 
         const formatDayName = (dateString) => new Date(dateString).toLocaleDateString('en-US', { weekday: 'short' });
 
-        // --- Components ---
+        // --- UI Components ---
+
+        const OfflineError = ({ onRetry }) => (
+            <div className="flex flex-col items-center justify-center h-[70vh] text-center animate-fade-in px-6">
+                <div className="relative mb-8">
+                    <div className="absolute inset-0 bg-red-500/20 blur-2xl rounded-full animate-pulse-glow"></div>
+                    <div className="relative glass-panel p-8 rounded-full border border-white/10 shadow-2xl animate-bounce-gentle">
+                        <Icon name="wifi-off" size={64} className="text-white/80" />
+                    </div>
+                </div>
+                <h2 className="text-3xl font-bold mb-3 drop-shadow-lg">Whoops! No Signal</h2>
+                <p className="text-lg text-white/70 mb-8 font-medium leading-relaxed max-w-xs mx-auto">
+                    You're offline. Look outside for a realistic 4K preview! 🌳
+                </p>
+                <button onClick={onRetry} className="glass-panel px-8 py-4 rounded-full font-bold hover:bg-white/20 transition-all active:scale-95 flex items-center gap-3 border border-white/20 shadow-lg text-lg">
+                    <Icon name="refresh-cw" size={20} />
+                    Reconnect
+                </button>
+            </div>
+        );
+
+        const OfflineBanner = () => (
+            <div className="fixed top-0 left-0 w-full bg-red-500/90 backdrop-blur-md text-white text-center py-2 text-xs font-bold uppercase tracking-widest z-[100] animate-slide-down shadow-lg flex items-center justify-center gap-2"><Icon name="wifi-off" size={14} /><span>Offline Mode</span></div>
+        );
+
+        const SevereAlertBanner = ({ code }) => {
+            const alertText = [95, 96, 99].includes(code) ? "SEVERE WEATHER ALERT: Thunderstorm warning in effect. Please stay indoors." : 
+                             [75, 86].includes(code) ? "SEVERE WEATHER ALERT: Heavy Snowfall warning. Travel not recommended." :
+                             "SEVERE WEATHER ALERT: Heavy Rain/Storm conditions detected.";
+            return (
+                <div className="fixed top-0 left-0 w-full bg-red-600/95 backdrop-blur-md text-white py-2 z-[100] shadow-lg overflow-hidden">
+                     <div className="whitespace-nowrap animate-marquee text-xs font-bold uppercase tracking-widest flex items-center gap-4">
+                        <span>⚠️ {alertText}</span>
+                        <span>⚠️ {alertText}</span>
+                        <span>⚠️ {alertText}</span>
+                     </div>
+                </div>
+            );
+        };
+
+        const MoonPhaseIcon = ({ phase }) => {
+            const getMoonPath = (p) => {
+                if (p < 0.05 || p > 0.95) return <circle cx="50" cy="50" r="40" fill="#334155" />; 
+                if (p >= 0.45 && p <= 0.55) return <circle cx="50" cy="50" r="40" fill="#FEFCD7" stroke="#FEFCD7" strokeWidth="2" className="animate-pulse-glow" />; 
+                if (p < 0.5) {
+                    return (
+                        <g>
+                            <circle cx="50" cy="50" r="40" fill="#334155" />
+                            <path d={`M50,10 A40,40 0 1,1 50,90 A${40 * (1 - p*4)},40 0 1,0 50,10`} fill="#FEFCD7" /> 
+                        </g>
+                    ); 
+                } else {
+                    return (
+                         <g>
+                            <circle cx="50" cy="50" r="40" fill="#334155" />
+                             <path d={`M50,10 A40,40 0 1,0 50,90 A${40 * (1 - (1-p)*4)},40 0 1,1 50,10`} fill="#FEFCD7" />
+                        </g>
+                    );
+                }
+            };
+            return (
+                <div className="w-full h-full flex items-center justify-center">
+                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-xl animate-float">
+                       {getMoonPath(phase)}
+                   </svg>
+                </div>
+            );
+        };
+
+        const WeatherFrog = ({ weatherCode, isDay, temperature }) => {
+            const isRain = [51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode);
+            const isSnow = [71, 73, 75, 77, 85, 86].includes(weatherCode);
+            const isThunder = [95, 96, 99].includes(weatherCode);
+            const isFog = [45, 48].includes(weatherCode);
+            const isClear = weatherCode === 0;
+            const isWindy = weatherCode >= 61 && weatherCode <= 65; 
+            
+            const isCold = temperature <= 10 && !isSnow;
+            const isWarm = temperature >= 25 && !isRain;
+            const isHot = temperature > 30; 
+
+            const isSleeping = isClear && !isDay;
+            const isFishing = !isRain && !isSnow && !isThunder && !isFog && !isHot && !isSleeping && !isWindy; 
+
+            return (
+                <div className="w-full h-full flex items-center justify-center relative overflow-visible">
+                    <svg viewBox="0 0 200 200" className="w-full h-full animate-float">
+                        <defs>
+                            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feComposite in="SourceAlpha" in2="blur" operator="in" result="shadow" />
+                                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" in="shadow" />
+                            </filter>
+                        </defs>
+                        <ellipse cx="100" cy="170" rx="50" ry="10" fill="black" opacity="0.2" filter="url(#softShadow)" />
+                        {isClear && isDay && !isWarm && <circle cx="160" cy="30" r="15" fill="#FDB813" opacity="0.9" className="animate-pulse" />}
+                        {isClear && !isDay && <g><circle cx="20" cy="30" r="1.5" fill="white" className="animate-pulse" /><circle cx="180" cy="20" r="2" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} /><circle cx="50" cy="60" r="1" fill="white" /><circle cx="140" cy="10" r="1.2" fill="white" opacity="0.7" className="animate-pulse" style={{animationDelay: '0.5s'}} /></g>}
+                        {isFishing && <g className="animate-line-cast"><path d="M130 130 Q 180 80 190 100" stroke="#5D4037" strokeWidth="2" fill="none" /><path d="M190 100 Q 195 120 190 150" stroke="white" strokeWidth="1" fill="none" opacity="0.6" /><circle cx="190" cy="150" r="3" fill="#EF4444" className="animate-bob" /></g>}
+                        
+                        <g transform={`translate(0, 10) ${isWindy ? 'rotate(-5)' : ''}`}>
+                            <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />
+                            <path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />
+                            <ellipse cx="100" cy="125" rx="25" ry="35" fill="#22c55e" />
+                            <ellipse cx="100" cy="125" rx="15" ry="20" fill="#86efac" opacity="0.6" />
+                            {isWarm && <g><path d="M75 130 Q 70 150 85 150 L 115 150 Q 130 150 125 130" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" /><line x1="100" y1="130" x2="100" y2="150" stroke="#1D4ED8" strokeWidth="1" /></g>}
+                            <circle cx="100" cy="80" r="35" fill="#22c55e" />
+                            {isCold && <g><path d="M75 100 Q 60 130 75 150 L 125 150 Q 140 130 125 100 Z" fill="#F97316" stroke="#C2410C" strokeWidth="2" /><path d="M65 80 Q 100 30 135 80" stroke="#F97316" strokeWidth="8" fill="none" strokeLinecap="round" /><line x1="90" y1="100" x2="90" y2="120" stroke="white" strokeWidth="2" /><line x1="110" y1="100" x2="110" y2="120" stroke="white" strokeWidth="2" /></g>}
+                            <g className={isThunder ? "animate-sneeze" : ""}>
+                                <path d="M80 55 L70 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" />
+                                <circle cx="70" cy="45" r="10" fill="#22c55e" /> 
+                                <circle cx="70" cy="45" r="7" fill="white" />
+                                <circle cx="70" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
+                                <path d="M120 55 L130 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" />
+                                <circle cx="130" cy="45" r="10" fill="#22c55e" />
+                                <circle cx="130" cy="45" r="7" fill="white" />
+                                <circle cx="130" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
+                            </g>
+                            {isThunder ? <circle cx="100" cy="90" r="4" fill="black" opacity="0.7" /> : 
+                             isHot ? <path d="M90 90 Q100 95 110 90" stroke="#064e3b" strokeWidth="2" fill="none" /> :
+                             <path d="M85 85 Q100 100 115 85" stroke="#064e3b" strokeWidth="2" strokeLinecap="round" fill="none" />}
+                            {isWarm && <g transform="translate(0, -10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g>}
+                            {!isWarm && <circle cx="78" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
+                            {!isWarm && <circle cx="122" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
+                            {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : 
+                             isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> :
+                             isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> :
+                             isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> :
+                             isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> :
+                             <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />}
+                        </g>
+                        {isWindy && <g className="animate-wind-sway"><path d="M140 100 Q 160 90 180 110" stroke="#22c55e" strokeWidth="2" fill="none" strokeDasharray="4 2" /><g transform="translate(180, 110) rotate(30)"><ellipse cx="0" cy="0" rx="15" ry="5" fill="#475569" /><path d="M-10 0 Q0 -15 10 0" fill="#475569" /></g><path d="M20 80 Q 50 90 80 80" stroke="white" strokeWidth="2" opacity="0.3" /><path d="M10 120 Q 40 130 60 110" stroke="white" strokeWidth="2" opacity="0.3" /></g>}
+                        {isHot && <g><g transform="translate(0, 10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g><g transform="translate(135, 90)"><path d="M0 0 L5 20 L-5 20 Z" fill="#FCD34D" /> <line x1="0" y1="0" x2="5" y2="-10" stroke="white" strokeWidth="2" /></g></g>}
+                        {isFog && <g transform="translate(140, 125) rotate(-20)"><rect x="0" y="0" width="20" height="10" fill="#64748b" rx="2" /><path d="M20 0 L60 -20 L60 30 L20 10 Z" fill="yellow" opacity="0.3" /></g>}
+                        {isSleeping && <g transform="translate(130, 120) rotate(-45)"><rect x="0" y="0" width="40" height="10" fill="#475569" rx="2" /><rect x="35" y="-2" width="5" height="14" fill="#334155" rx="1" /></g>}
+                        {isRain && <g transform="translate(120, 50) rotate(10)"><path d="M0 0 Q-40 -50 0 -100 Q40 -50 0 0" fill="#4ade80" stroke="#14532d" strokeWidth="1" /><line x1="0" y1="0" x2="0" y2="100" stroke="#78350f" strokeWidth="3" /></g>}
+                        {isSnow && <g transform="translate(0, 10)"><path d="M80 110 Q100 125 120 110" stroke="#ef4444" strokeWidth="10" strokeLinecap="round" fill="none" /><path d="M110 110 L110 135" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" /></g>}
+                        {isSleeping && <g className="animate-pulse" transform="translate(140, 40)"><text x="0" y="0" fill="white" fontSize="24" fontWeight="bold" opacity="0.8">Z</text><text x="20" y="-15" fill="white" fontSize="16" fontWeight="bold" opacity="0.6">z</text></g>}
+                        {isRain && <g><line x1="50" y1="20" x2="50" y2="30" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" /><line x1="100" y1="10" x2="100" y2="20" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.5s'}} /><line x1="150" y1="30" x2="150" y2="40" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.2s'}} /></g>}
+                        {isSnow && <g><circle cx="40" cy="20" r="2" fill="white" className="animate-snow-fall" /><circle cx="120" cy="10" r="2" fill="white" className="animate-snow-fall" style={{animationDelay: '1s'}} /><circle cx="180" cy="30" r="2" fill="white" className="animate-snow-fall" style={{animationDelay: '2s'}} /></g>}
+                    </svg>
+                </div>
+            );
+        };
+
+        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere }) => {
+            const advice = getAdvice(weather.current.weather_code, weather.current.temperature_2m);
+            const isDay = weather.current.is_day === 1;
+            const weatherCode = weather.current.weather_code;
+            const temperature = weather.current.temperature_2m;
+            
+            const showMoonPhase = !isDay && weatherCode === 0;
+
+            return (
+                <div className="relative mb-6">
+                    <div className="flex flex-col items-center mb-6 animate-fade-in">
+                        <div className="flex items-center gap-2 text-shadow">
+                            <Icon name="map-pin" size={14} className="text-indigo-300 drop-shadow-md" />
+                            <span className="text-lg font-bold tracking-tight drop-shadow-md">{locationName}</span>
+                            <button onClick={onToggleSave} className={`p-1 rounded-full hover:bg-white/10 transition-all ${isSaved ? 'text-yellow-400' : 'opacity-50 hover:opacity-100'}`}>
+                                <Icon name="star" size={14} fill={isSaved ? "currentColor" : "none"} />
+                            </button>
+                        </div>
+                        <div className="text-xs font-bold opacity-80 uppercase tracking-widest mt-1 text-shadow">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between relative z-10 px-2">
+                        <div className="flex flex-col w-1/3 items-center">
+                            <h1 className="text-[4.5rem] font-bold leading-none tracking-tighter drop-shadow-xl text-white">
+                                {Math.round(weather.current.temperature_2m)}°
+                            </h1>
+                            <div className="glass-panel px-3 py-1 rounded-full inline-flex items-center gap-1.5 mt-1 w-fit backdrop-blur-md border-white/20 shadow-lg">
+                                <span className={`w-2 h-2 rounded-full ${isSevere ? 'bg-red-500 animate-flash' : 'bg-green-400 animate-pulse'} shadow-[0_0_8px_rgba(74,222,128,0.8)]`}></span>
+                                <span className="text-[10px] font-bold capitalize text-shadow">
+                                    {showMoonPhase ? getMoonPhaseName(moonPhase) : config.label}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className="relative w-1/3 h-32 flex justify-center items-center">
+                            <div className="w-32 h-32">
+                                <WeatherFrog weatherCode={weatherCode} isDay={isDay} temperature={temperature} />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-center w-1/3 relative h-32 items-center">
+                            <div className={`absolute inset-0 rounded-full opacity-40 blur-xl ${config.accent.replace('shadow-', 'bg-')}`}></div>
+                            <div className="relative animate-float filter drop-shadow-2xl">
+                                {showMoonPhase ? (
+                                    <div className="w-20 h-20">
+                                        <MoonPhaseIcon phase={moonPhase} />
+                                    </div>
+                                ) : (
+                                    <Icon name={config.icon} size={80} color={config.iconColor} fill={config.iconColor + "30"} />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 glass-highlight px-4 py-3 rounded-xl flex items-center gap-3 animate-slide-up mx-1 shadow-lg">
+                        <div className="p-1.5 bg-indigo-500/30 rounded-lg text-indigo-200 shrink-0 shadow-inner"><Icon name={advice.icon} size={18} /></div>
+                        <div className="flex flex-col">
+                            <div className="text-[9px] font-bold uppercase tracking-widest opacity-70">Smart Insight</div>
+                            <div className="text-xs font-bold leading-tight text-shadow">{advice.text}</div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         const SolarCycle = ({ sunrise, sunset }) => {
             if (!sunrise || !sunset) return null;
@@ -157,46 +441,6 @@
             );
         };
 
-        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave }) => {
-            const advice = getAdvice(weather.current.weather_code, weather.current.temperature_2m);
-            return (
-                <div className="relative mb-6">
-                    <div className="flex flex-col items-center mb-6 animate-fade-in">
-                        <div className="flex items-center gap-2 text-shadow">
-                            <Icon name="map-pin" size={14} className="text-indigo-300 drop-shadow-md" />
-                            <span className="text-lg font-bold tracking-tight drop-shadow-md">{locationName}</span>
-                            <button onClick={onToggleSave} className={`p-1 rounded-full hover:bg-white/10 transition-all ${isSaved ? 'text-yellow-400' : 'opacity-50 hover:opacity-100'}`}>
-                                <Icon name="star" size={14} fill={isSaved ? "currentColor" : "none"} />
-                            </button>
-                        </div>
-                        <div className="text-xs font-bold opacity-80 uppercase tracking-widest mt-1 text-shadow">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
-                    </div>
-                    <div className="flex items-center justify-between relative z-10 px-2">
-                        <div className="flex flex-col">
-                            <h1 className="text-[6rem] font-bold leading-none tracking-tighter drop-shadow-xl text-white">
-                                {Math.round(weather.current.temperature_2m)}°
-                            </h1>
-                            <div className="glass-panel px-3 py-1.5 rounded-full inline-flex items-center gap-2 mt-2 w-fit backdrop-blur-md border-white/20 shadow-lg">
-                                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]"></span>
-                                <span className="text-xs font-bold capitalize text-shadow">{config.label}</span>
-                            </div>
-                        </div>
-                        <div className="relative w-32 h-32">
-                            <div className={`absolute inset-0 rounded-full opacity-40 blur-2xl ${config.accent.replace('shadow-', 'bg-')}`}></div>
-                            <div className="relative w-full h-full animate-float filter drop-shadow-2xl"><Icon name={config.icon} size={110} color={config.iconColor} fill={config.iconColor + "30"} /></div>
-                        </div>
-                    </div>
-                    <div className="mt-6 glass-highlight px-4 py-3 rounded-xl flex items-center gap-3 animate-slide-up mx-1 shadow-lg">
-                        <div className="p-1.5 bg-indigo-500/30 rounded-lg text-indigo-200 shrink-0 shadow-inner"><Icon name={advice.icon} size={18} /></div>
-                        <div className="flex flex-col">
-                            <div className="text-[9px] font-bold uppercase tracking-widest opacity-70">Smart Insight</div>
-                            <div className="text-xs font-bold leading-tight text-shadow">{advice.text}</div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
         const ForecastStrip = ({ hourly }) => {
             const now = new Date().getHours();
             const nextHours = hourly.time.map((t, i) => ({ time: t, temp: hourly.temperature_2m[i] })).filter(h => new Date(h.time).getHours() > now).slice(0, 5);
@@ -216,8 +460,7 @@
             );
         };
 
-        // --- AQI Heart Health Card ---
-        const AQIHeartCard = ({ aqi }) => {
+        const AQICard = ({ aqi }) => {
             if (!aqi) return null;
             const status = getAQIStatus(aqi);
             return (
@@ -249,7 +492,6 @@
             );
         };
 
-        // --- 7-Day Forecast List ---
         const DailyForecast = ({ daily }) => {
             return (
                 <div className="glass-panel p-5 rounded-3xl mb-4">
@@ -278,7 +520,7 @@
             );
         };
 
-        const SearchBar = ({ onSearch, onLocate }) => {
+        const SearchBar = ({ onSearch, onLocate, onToggleSound, isMuted, isPlaying }) => {
             const [query, setQuery] = useState('');
             const [suggestions, setSuggestions] = useState([]);
             useEffect(() => {
@@ -293,6 +535,7 @@
                 }, 300);
                 return () => clearTimeout(timer);
             }, [query]);
+
             return (
                 <div className="relative w-full mb-4 z-50 flex gap-2 items-center">
                     <div className="relative flex-1 group">
@@ -301,13 +544,28 @@
                             <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find a city..." className="w-full pl-9 pr-3 py-2 rounded-full glass-input text-white placeholder-white/60 focus:bg-black/50 outline-none ring-0 font-bold text-sm transition-all shadow-inner" />
                         </form>
                     </div>
+                    
+                    {/* Sound Toggle Button */}
+                    <button 
+                        onClick={onToggleSound}
+                        className={`p-2 rounded-full glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/20 shadow-lg relative ${!isMuted ? 'text-green-400' : 'text-white/70'}`} 
+                        title={isMuted ? "Enable Ambient Sounds" : "Mute Ambient Sounds"}
+                    >
+                        <Icon name={isMuted ? "volume-x" : "volume-2"} size={16} />
+                        {!isMuted && isPlaying && (
+                            <div className="absolute -top-1 -right-1 flex gap-0.5 items-end h-2">
+                                <div className="w-0.5 bg-green-400 animate-wave"></div>
+                                <div className="w-0.5 bg-green-400 animate-wave" style={{animationDelay: '0.1s'}}></div>
+                                <div className="w-0.5 bg-green-400 animate-wave" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                        )}
+                    </button>
+
                     <button onClick={() => onSearch('CURRENT')} className="p-2 rounded-full glass-input hover:bg-white/10 active:scale-95 transition-all text-white/90 border border-white/20 shadow-lg" title="Use Current Location"><Icon name="crosshair" size={16} /></button>
                     {suggestions.length > 0 && (
                         <div className="absolute top-full mt-2 w-full glass-panel bg-black/95 rounded-xl overflow-hidden shadow-2xl backdrop-blur-xl animate-slide-up left-0 z-50 border border-white/20">
                             {suggestions.map(city => (
-                                <button key={city.id} onClick={() => { onSearch(city); setSuggestions([]); setQuery(''); }} className="w-full px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/10 last:border-0 flex justify-between text-white">
-                                    <span className="font-bold text-sm">{city.name}, <span className="opacity-60 text-xs ml-1 font-normal">{city.country_code}</span></span>
-                                </button>
+                                <button key={city.id} onClick={() => { onSearch(city); setSuggestions([]); setQuery(''); }} className="w-full px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/10 last:border-0 flex justify-between text-white"><span className="font-bold text-sm">{city.name}, <span className="opacity-60 text-xs ml-1 font-normal">{city.country_code}</span></span></button>
                             ))}
                         </div>
                     )}
@@ -315,16 +573,71 @@
             );
         };
 
+        const BentoGrid = ({ current, daily, themeMode }) => {
+            const isLight = themeMode === 'light';
+            const cardClass = isLight 
+                ? 'bg-white/60 border-white/50 text-slate-900 shadow-sm' 
+                : 'bg-slate-900/40 border-white/10 text-white shadow-lg';
+            const items = [
+                { icon: 'wind', label: 'Wind', val: `${Math.round(current.wind_speed_10m)}`, unit: 'km/h' },
+                { icon: 'droplets', label: 'Humidity', val: `${current.relative_humidity_2m}`, unit: '%' },
+                { icon: 'sun', label: 'UV Index', val: `${Math.round(daily.uv_index_max[0])}`, unit: '' },
+                { icon: 'thermometer', label: 'Feels Like', val: `${Math.round(current.apparent_temperature)}°`, unit: '' },
+            ];
+
+            return (
+                <div className="grid grid-cols-2 gap-3 w-full mb-6">
+                    {items.map((item, i) => (
+                        <div key={i} className={`glass-panel p-4 rounded-3xl flex flex-col items-start justify-between h-28 transition-transform active:scale-95 duration-200 ${cardClass}`}>
+                            <div className="flex w-full justify-between opacity-70"><span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span><Icon name={item.icon} size={16} /></div>
+                            <div className="flex items-baseline gap-1"><span className="text-3xl font-bold tracking-tight">{item.val}</span><span className="text-xs font-medium opacity-60">{item.unit}</span></div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const WeatherSkeleton = () => (
+            <div className="flex flex-col items-center w-full animate-fade-in p-6">
+                <div className="w-32 h-6 skeleton mb-8 rounded-full"></div>
+                <div className="w-[180px] h-[220px] skeleton rounded-[2.5rem] mb-8 opacity-50"></div>
+                <div className="w-48 h-24 skeleton mb-4 rounded-2xl opacity-80"></div>
+                <div className="w-24 h-6 skeleton mb-12 rounded-full opacity-60"></div>
+                <div className="grid grid-cols-2 gap-4 w-full mb-8">
+                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+                </div>
+            </div>
+        );
+
         const App = () => {
             const [data, setData] = useState(null);
             const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
             const [saved, setSaved] = useState(localStorage.getItem('favCity'));
+            const [isOnline, setIsOnline] = useState(navigator.onLine);
+            const [theme, setTheme] = useState('dark');
+            const [isMuted, setIsMuted] = useState(true); 
 
-            // Fixed: Robust fetch function with error isolation
+            const isPlaying = useAmbientSound(data?.weather?.current?.weather_code ?? null, isMuted);
+
+            useEffect(() => {
+                const handleStatus = () => setIsOnline(navigator.onLine);
+                window.addEventListener('online', handleStatus);
+                window.addEventListener('offline', handleStatus);
+                return () => {
+                    window.removeEventListener('online', handleStatus);
+                    window.removeEventListener('offline', handleStatus);
+                };
+            }, []);
+
             const fetchWeather = async (lat, lon, name) => {
                 setLoading(true);
+                setError(null);
                 try {
-                    // Use safe independent fetches
+                    if (!navigator.onLine) throw new Error("OFFLINE");
                     const safeFetch = async (url) => {
                         try {
                             const res = await fetch(url);
@@ -335,21 +648,24 @@
                             return null;
                         }
                     };
-
                     const [w, a] = await Promise.all([
-                        safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto`),
+                        safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,relative_humidity_2m,apparent_temperature&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`),
                         safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`)
                     ]);
-
                     if (w) {
-                        // Handle case where AQI API fails but weather succeeds
                         const safeAqi = a || { current: { us_aqi: null } };
+                        // Local Moon Phase Calculation (since API might fail or not provide it in free tier reliably)
+                        const moonPhase = calculateMoonPhase();
+                        // Inject into data structure
+                        w.daily.moon_phase = [moonPhase]; 
+                        
                         setData({ weather: w, aqi: safeAqi, name });
                     } else {
-                        console.error("Main weather data failed to load");
+                        throw new Error("Weather data unavailable");
                     }
                 } catch(e) { 
                     console.error("Critical fetch error:", e); 
+                    setError(e.message === "OFFLINE" ? "offline" : "generic");
                 } finally { 
                     setTimeout(() => setLoading(false), 800); 
                 }
@@ -371,7 +687,6 @@
                     const loc = JSON.parse(saved);
                     fetchWeather(loc.lat, loc.lon, loc.name);
                 } else { handleSearch('CURRENT'); }
-                
                 if('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
                     navigator.serviceWorker.register('sw.js').catch(console.error);
                 }
@@ -388,25 +703,61 @@
                 }
             };
 
-            const config = data ? getWeatherConfig(data.weather.current.weather_code, data.weather.current.is_day) : { gradient: 'bg-slate-900', accent: 'shadow-none' };
+            const retry = () => {
+                setLoading(true);
+                setError(null);
+                if (saved) {
+                    const loc = JSON.parse(saved);
+                    fetchWeather(loc.lat, loc.lon, loc.name);
+                } else {
+                    handleSearch('CURRENT');
+                }
+            };
+
+            const severeCodes = [95, 96, 99, 75, 85]; // Thunderstorms, heavy snow
+            const isSevere = data && severeCodes.includes(data.weather.current.weather_code);
+            const config = data ? getWeatherConfig(data.weather.current.weather_code, data.weather.current.is_day, isSevere) : { gradient: 'bg-slate-900', accent: 'shadow-none' };
+
+            if (error === "offline" || (!isOnline && !data && !loading)) {
+                return (
+                    <div className="min-h-screen bg-slate-950 text-white p-4 flex flex-col">
+                        {!isOnline && <OfflineBanner />}
+                        <OfflineError onRetry={retry} />
+                    </div>
+                );
+            }
 
             return (
                 <div className={`min-h-screen ${config.gradient} transition-colors duration-1000 p-4 pb-12 relative overflow-hidden flex flex-col`}>
+                    {isSevere && <SevereAlertBanner code={data.weather.current.weather_code} />}
+                    {!isOnline && <OfflineBanner />}
                     <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[80%] bg-gradient-to-b from-white/5 to-transparent rounded-full blur-[100px] pointer-events-none"></div>
-                    <div className="max-w-md mx-auto w-full z-20 pt-2"><SearchBar onSearch={handleSearch} /></div>
+                    <div className={`max-w-md mx-auto w-full z-20 ${isSevere ? 'pt-12' : 'pt-2'}`}>
+                        <SearchBar 
+                            onSearch={handleSearch} 
+                            onToggleSound={() => setIsMuted(!isMuted)} 
+                            isMuted={isMuted} 
+                            isPlaying={isPlaying} 
+                        />
+                    </div>
                     <div className="flex-1 relative z-10 flex flex-col max-w-md mx-auto w-full">
                         {loading ? (
-                            <div className="space-y-4 animate-pulse mt-4">
-                                <div className="h-8 w-1/2 bg-white/10 rounded-full mx-auto mb-8"></div>
-                                <div className="h-40 w-full bg-white/10 rounded-3xl mb-4"></div>
-                                <div className="h-24 w-full bg-white/5 rounded-3xl"></div>
-                            </div>
+                            <WeatherSkeleton />
                         ) : data && (
                             <>
-                                <MainWeather weather={data.weather} locationName={data.name} config={config} isSaved={saved && JSON.parse(saved).name === data.name} onToggleSave={toggleSave} />
+                                <MainWeather 
+                                    weather={data.weather} 
+                                    locationName={data.name} 
+                                    config={config} 
+                                    isSaved={saved && JSON.parse(saved).name === data.name} 
+                                    onToggleSave={toggleSave} 
+                                    moonPhase={data.weather.daily.moon_phase[0]}
+                                    isSevere={isSevere}
+                                />
                                 <ForecastStrip hourly={data.weather.hourly} />
                                 <SolarCycle sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
-                                <AQIHeartCard aqi={data.aqi.current.us_aqi} />
+                                <BentoGrid current={data.weather.current} daily={data.weather.daily} themeMode={theme} />
+                                <AQICard aqi={data.aqi.current.us_aqi} />
                                 <DailyForecast daily={data.weather.daily} />
                             </>
                         )}
