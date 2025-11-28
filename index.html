@@ -41,6 +41,8 @@
                         'wind-sway': 'windSway 2s ease-in-out infinite',
                         'marquee': 'marquee 15s linear infinite',
                         'flash': 'flash 2s infinite',
+                        'grow-bar': 'growBar 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'draw-line': 'drawLine 2s ease-out forwards',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
@@ -56,7 +58,9 @@
                         lineCast: { '0%, 100%': { transform: 'rotate(0deg)' }, '50%': { transform: 'rotate(2deg)' } },
                         windSway: { '0%, 100%': { transform: 'rotate(-5deg)' }, '50%': { transform: 'rotate(5deg)' } },
                         marquee: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(-100%)' } },
-                        flash: { '0%, 50%, 100%': { opacity: '1' }, '25%, 75%': { opacity: '0.5' } }
+                        flash: { '0%, 50%, 100%': { opacity: '1' }, '25%, 75%': { opacity: '0.5' } },
+                        growBar: { '0%': { height: '0%', opacity: '0' }, '100%': { height: 'var(--target-height)', opacity: '1' } },
+                        drawLine: { '0%': { strokeDasharray: '0, 1000' }, '100%': { strokeDasharray: '1000, 0' } }
                     }
                 }
             }
@@ -148,7 +152,6 @@
             return { label: "Unhealthy", color: "text-red-500", bar: "bg-red-600", heartAdvice: "Avoid outdoor activities to protect heart.", icon: "alert-triangle" };
         };
 
-        // Local Moon Phase Calculation
         const calculateMoonPhase = () => {
             const date = new Date();
             const synodic = 29.53058867;
@@ -181,6 +184,63 @@
             return { text: "Enjoy the weather!", icon: "smile" };
         };
 
+        const generateClimateInsight = (currentData, historicalData) => {
+            if (!currentData || !historicalData) return null;
+
+            const currentTemps = currentData.daily.temperature_2m_mean || [];
+            const historicalTemps = historicalData.daily.temperature_2m_mean || [];
+            
+            if (currentTemps.length === 0 || historicalTemps.length === 0) return null;
+
+            const avgCurrent = currentTemps.reduce((a, b) => a + b, 0) / currentTemps.length;
+            const avgHist = historicalTemps.reduce((a, b) => a + b, 0) / historicalTemps.length;
+            const diff = avgCurrent - avgHist;
+
+            let insightText = "Temperatures align with seasonal averages.";
+            let icon = "minus";
+            let color = "text-gray-300";
+            let trend = "neutral";
+
+            if (diff > 1.0) {
+                insightText = `This month is ${diff.toFixed(1)}°C warmer than last year.`;
+                icon = "trending-up";
+                color = "text-orange-400";
+                trend = "warmer";
+            } else if (diff < -1.0) {
+                insightText = `This month is ${Math.abs(diff).toFixed(1)}°C cooler than last year.`;
+                icon = "trending-down";
+                color = "text-blue-400";
+                trend = "cooler";
+            }
+            
+            const currentRain = (currentData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
+            const histRain = (historicalData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
+            
+            if (currentRain > histRain + 5) { 
+                if (histRain < 2) {
+                     insightText = "Significantly wetter than last year's dry spell.";
+                } else {
+                    const percent = Math.round(((currentRain - histRain) / histRain) * 100);
+                    if (percent > 500) {
+                        insightText = "Rainfall is exceptionally higher (>5x) than last year.";
+                    } else {
+                        insightText = `Rainfall is ${percent}% higher than last year.`;
+                    }
+                }
+                icon = "cloud-rain";
+                color = "text-blue-300";
+            }
+
+            return { 
+                text: insightText, 
+                icon, 
+                color, 
+                trend,
+                currentTemps,
+                historicalTemps 
+            };
+        };
+
         const getWeatherConfig = (code, isDay, isSevere) => {
             const time = isDay ? 'day' : 'night';
             
@@ -203,7 +263,100 @@
 
         const formatDayName = (dateString) => new Date(dateString).toLocaleDateString('en-US', { weekday: 'short' });
 
-        // --- UI Components ---
+        // --- Components ---
+
+        const ClimateGraph = ({ current, past, trend }) => {
+            if (!current || !past || current.length === 0) return null;
+            
+            const allVals = [...current, ...past];
+            const min = Math.min(...allVals) - 2;
+            const max = Math.max(...allVals) + 2;
+            const range = max - min || 1;
+            
+            const width = 100;
+            const height = 40;
+            
+            const getPoints = (arr) => {
+                return arr.map((val, i) => {
+                    const x = (i / (arr.length - 1)) * width;
+                    const y = height - ((val - min) / range) * height;
+                    return `${x},${y}`;
+                }).join(' ');
+            };
+            
+            const strokeColor = trend === 'warmer' ? '#fb923c' : trend === 'cooler' ? '#60a5fa' : '#94a3b8'; 
+
+            const currentYear = new Date().getFullYear();
+            const pastYear = currentYear - 1;
+
+            return (
+                <div className="w-full h-20 relative mt-3 overflow-hidden">
+                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                        <line x1="0" y1={height/2} x2={width} y2={height/2} stroke="white" strokeWidth="0.2" strokeDasharray="2 2" opacity="0.3" />
+                        <polyline points={getPoints(past)} fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
+                        <polyline points={getPoints(current)} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" className="drop-shadow-md" />
+                        <path d={`M0,${height} L0,${height - ((current[0] - min) / range) * height} ${getPoints(current).split(' ').map(p => 'L' + p).join(' ')} L${width},${height} Z`} fill={`url(#grad-${trend})`} opacity="0.2" />
+                        <defs>
+                            <linearGradient id={`grad-${trend}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stopColor={strokeColor} stopOpacity="0.8"/>
+                                <stop offset="100%" stopColor={strokeColor} stopOpacity="0"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div className="absolute bottom-0 w-full flex justify-between text-[9px] opacity-50 font-mono">
+                        <span>30 Days Ago</span>
+                        <span>Today</span>
+                    </div>
+                     <div className="absolute top-0 right-0 flex gap-2 text-[9px] font-bold bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm">
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{background: strokeColor}}></span> {currentYear}</span>
+                        <span className="flex items-center gap-1 opacity-50"><span className="w-1.5 h-1.5 rounded-full bg-white"></span> {pastYear}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const ClimateCard = ({ insight }) => {
+            const [showInfo, setShowInfo] = useState(false);
+            if (!insight) return null;
+            return (
+                // Removed mb-4 here to reduce gap
+                <div className="glass-panel p-4 rounded-2xl border border-white/10 relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-2 relative z-10">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-full bg-white/5 ${insight.color}`}>
+                                <Icon name={insight.icon} size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-[10px] font-bold uppercase tracking-wide opacity-50 mb-0.5">Climate Context</h4>
+                                <p className="text-sm font-medium leading-tight">{insight.text}</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowInfo(!showInfo)} className="text-white/50 hover:text-white transition-colors p-1">
+                            <Icon name="info" size={14} />
+                        </button>
+                    </div>
+                    
+                    {showInfo && (
+                        <div 
+                            className="absolute inset-0 z-20 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center animate-fade-in cursor-pointer"
+                            onClick={() => setShowInfo(false)}
+                        >
+                            <Icon name="activity" size={24} className="text-blue-400 mb-2" />
+                            <p className="text-xs text-white/80 leading-relaxed">
+                                <strong>Solid Line:</strong> This Year (2025)<br/>
+                                <strong>Dashed Line:</strong> Last Year (2024)<br/><br/>
+                                Compare the temperature trends over the last 30 days.
+                            </p>
+                            <span className="text-[9px] uppercase tracking-widest text-white/40 mt-3">Tap to close</span>
+                        </div>
+                    )}
+
+                    {insight.currentTemps && insight.historicalTemps && (
+                        <ClimateGraph current={insight.currentTemps} past={insight.historicalTemps} trend={insight.trend} />
+                    )}
+                </div>
+            );
+        };
 
         const OfflineError = ({ onRetry }) => (
             <div className="flex flex-col items-center justify-center h-[70vh] text-center animate-fade-in px-6">
@@ -248,26 +401,16 @@
                 if (p < 0.05 || p > 0.95) return <circle cx="50" cy="50" r="40" fill="#334155" />; 
                 if (p >= 0.45 && p <= 0.55) return <circle cx="50" cy="50" r="40" fill="#FEFCD7" stroke="#FEFCD7" strokeWidth="2" className="animate-pulse-glow" />; 
                 if (p < 0.5) {
-                    return (
-                        <g>
-                            <circle cx="50" cy="50" r="40" fill="#334155" />
-                            <path d={`M50,10 A40,40 0 1,1 50,90 A${40 * (1 - p*4)},40 0 1,0 50,10`} fill="#FEFCD7" /> 
-                        </g>
-                    ); 
+                    const d = `M50,10 A40,40 0 1,1 50,90 A${40 * (1 - p*4)},40 0 1,0 50,10`;
+                    return <g><circle cx="50" cy="50" r="40" fill="#334155" /><path d={d} fill="#FEFCD7" /></g>; 
                 } else {
-                    return (
-                         <g>
-                            <circle cx="50" cy="50" r="40" fill="#334155" />
-                             <path d={`M50,10 A40,40 0 1,0 50,90 A${40 * (1 - (1-p)*4)},40 0 1,1 50,10`} fill="#FEFCD7" />
-                        </g>
-                    );
+                    const d = `M50,10 A40,40 0 1,0 50,90 A${40 * (1 - (1-p)*4)},40 0 1,1 50,10`;
+                    return <g><circle cx="50" cy="50" r="40" fill="#334155" /><path d={d} fill="#FEFCD7" /></g>;
                 }
             };
             return (
                 <div className="w-full h-full flex items-center justify-center">
-                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-xl animate-float">
-                       {getMoonPath(phase)}
-                   </svg>
+                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-xl animate-float">{getMoonPath(phase)}</svg>
                 </div>
             );
         };
@@ -283,7 +426,6 @@
             const isCold = temperature <= 10 && !isSnow;
             const isWarm = temperature >= 25 && !isRain;
             const isHot = temperature > 30; 
-
             const isSleeping = isClear && !isDay;
             const isFishing = !isRain && !isSnow && !isThunder && !isFog && !isHot && !isSleeping && !isWindy; 
 
@@ -299,39 +441,23 @@
                         </defs>
                         <ellipse cx="100" cy="170" rx="50" ry="10" fill="black" opacity="0.2" filter="url(#softShadow)" />
                         {isClear && isDay && !isWarm && <circle cx="160" cy="30" r="15" fill="#FDB813" opacity="0.9" className="animate-pulse" />}
-                        {isClear && !isDay && <g><circle cx="20" cy="30" r="1.5" fill="white" className="animate-pulse" /><circle cx="180" cy="20" r="2" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} /><circle cx="50" cy="60" r="1" fill="white" /><circle cx="140" cy="10" r="1.2" fill="white" opacity="0.7" className="animate-pulse" style={{animationDelay: '0.5s'}} /></g>}
+                        {isClear && !isDay && <g><path d="M160 20 A 15 15 0 1 1 160 50" stroke="white" strokeWidth="2" fill="none" opacity="0.8" /><circle cx="20" cy="30" r="1.5" fill="white" className="animate-pulse" /><circle cx="180" cy="20" r="2" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} /><circle cx="50" cy="60" r="1" fill="white" /><circle cx="140" cy="10" r="1.2" fill="white" opacity="0.7" className="animate-pulse" style={{animationDelay: '0.5s'}} /></g>}
                         {isFishing && <g className="animate-line-cast"><path d="M130 130 Q 180 80 190 100" stroke="#5D4037" strokeWidth="2" fill="none" /><path d="M190 100 Q 195 120 190 150" stroke="white" strokeWidth="1" fill="none" opacity="0.6" /><circle cx="190" cy="150" r="3" fill="#EF4444" className="animate-bob" /></g>}
-                        
                         <g transform={`translate(0, 10) ${isWindy ? 'rotate(-5)' : ''}`}>
-                            <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />
-                            <path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />
-                            <ellipse cx="100" cy="125" rx="25" ry="35" fill="#22c55e" />
-                            <ellipse cx="100" cy="125" rx="15" ry="20" fill="#86efac" opacity="0.6" />
+                            <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /><path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />
+                            <ellipse cx="100" cy="125" rx="25" ry="35" fill="#22c55e" /><ellipse cx="100" cy="125" rx="15" ry="20" fill="#86efac" opacity="0.6" />
                             {isWarm && <g><path d="M75 130 Q 70 150 85 150 L 115 150 Q 130 150 125 130" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" /><line x1="100" y1="130" x2="100" y2="150" stroke="#1D4ED8" strokeWidth="1" /></g>}
                             <circle cx="100" cy="80" r="35" fill="#22c55e" />
                             {isCold && <g><path d="M75 100 Q 60 130 75 150 L 125 150 Q 140 130 125 100 Z" fill="#F97316" stroke="#C2410C" strokeWidth="2" /><path d="M65 80 Q 100 30 135 80" stroke="#F97316" strokeWidth="8" fill="none" strokeLinecap="round" /><line x1="90" y1="100" x2="90" y2="120" stroke="white" strokeWidth="2" /><line x1="110" y1="100" x2="110" y2="120" stroke="white" strokeWidth="2" /></g>}
                             <g className={isThunder ? "animate-sneeze" : ""}>
-                                <path d="M80 55 L70 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" />
-                                <circle cx="70" cy="45" r="10" fill="#22c55e" /> 
-                                <circle cx="70" cy="45" r="7" fill="white" />
-                                <circle cx="70" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
-                                <path d="M120 55 L130 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" />
-                                <circle cx="130" cy="45" r="10" fill="#22c55e" />
-                                <circle cx="130" cy="45" r="7" fill="white" />
-                                <circle cx="130" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
+                                <path d="M80 55 L70 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="70" cy="45" r="10" fill="#22c55e" /> <circle cx="70" cy="45" r="7" fill="white" /><circle cx="70" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
+                                <path d="M120 55 L130 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="130" cy="45" r="10" fill="#22c55e" /><circle cx="130" cy="45" r="7" fill="white" /><circle cx="130" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
                             </g>
-                            {isThunder ? <circle cx="100" cy="90" r="4" fill="black" opacity="0.7" /> : 
-                             isHot ? <path d="M90 90 Q100 95 110 90" stroke="#064e3b" strokeWidth="2" fill="none" /> :
-                             <path d="M85 85 Q100 100 115 85" stroke="#064e3b" strokeWidth="2" strokeLinecap="round" fill="none" />}
+                            {isThunder ? <circle cx="100" cy="90" r="4" fill="black" opacity="0.7" /> : isHot ? <path d="M90 90 Q100 95 110 90" stroke="#064e3b" strokeWidth="2" fill="none" /> : <path d="M85 85 Q100 100 115 85" stroke="#064e3b" strokeWidth="2" strokeLinecap="round" fill="none" />}
                             {isWarm && <g transform="translate(0, -10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g>}
                             {!isWarm && <circle cx="78" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
                             {!isWarm && <circle cx="122" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
-                            {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : 
-                             isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> :
-                             isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> :
-                             isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> :
-                             isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> :
-                             <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />}
+                            {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />}
                         </g>
                         {isWindy && <g className="animate-wind-sway"><path d="M140 100 Q 160 90 180 110" stroke="#22c55e" strokeWidth="2" fill="none" strokeDasharray="4 2" /><g transform="translate(180, 110) rotate(30)"><ellipse cx="0" cy="0" rx="15" ry="5" fill="#475569" /><path d="M-10 0 Q0 -15 10 0" fill="#475569" /></g><path d="M20 80 Q 50 90 80 80" stroke="white" strokeWidth="2" opacity="0.3" /><path d="M10 120 Q 40 130 60 110" stroke="white" strokeWidth="2" opacity="0.3" /></g>}
                         {isHot && <g><g transform="translate(0, 10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g><g transform="translate(135, 90)"><path d="M0 0 L5 20 L-5 20 Z" fill="#FCD34D" /> <line x1="0" y1="0" x2="5" y2="-10" stroke="white" strokeWidth="2" /></g></g>}
@@ -347,16 +473,16 @@
             );
         };
 
-        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere }) => {
+        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight }) => {
             const advice = getAdvice(weather.current.weather_code, weather.current.temperature_2m);
             const isDay = weather.current.is_day === 1;
             const weatherCode = weather.current.weather_code;
             const temperature = weather.current.temperature_2m;
-            
             const showMoonPhase = !isDay && weatherCode === 0;
 
             return (
-                <div className="relative mb-6">
+                // Changed from mb-6 to mb-2 to reduce the gap
+                <div className="relative mb-2">
                     <div className="flex flex-col items-center mb-6 animate-fade-in">
                         <div className="flex items-center gap-2 text-shadow">
                             <Icon name="map-pin" size={14} className="text-indigo-300 drop-shadow-md" />
@@ -367,7 +493,6 @@
                         </div>
                         <div className="text-xs font-bold opacity-80 uppercase tracking-widest mt-1 text-shadow">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
                     </div>
-                    
                     <div className="flex items-center justify-between relative z-10 px-2">
                         <div className="flex flex-col w-1/3 items-center">
                             <h1 className="text-[4.5rem] font-bold leading-none tracking-tighter drop-shadow-xl text-white">
@@ -375,32 +500,22 @@
                             </h1>
                             <div className="glass-panel px-3 py-1 rounded-full inline-flex items-center gap-1.5 mt-1 w-fit backdrop-blur-md border-white/20 shadow-lg">
                                 <span className={`w-2 h-2 rounded-full ${isSevere ? 'bg-red-500 animate-flash' : 'bg-green-400 animate-pulse'} shadow-[0_0_8px_rgba(74,222,128,0.8)]`}></span>
-                                <span className="text-[10px] font-bold capitalize text-shadow">
-                                    {showMoonPhase ? getMoonPhaseName(moonPhase) : config.label}
-                                </span>
+                                <span className="text-[10px] font-bold capitalize text-shadow">{showMoonPhase ? getMoonPhaseName(moonPhase) : config.label}</span>
                             </div>
                         </div>
-                        
                         <div className="relative w-1/3 h-32 flex justify-center items-center">
                             <div className="w-32 h-32">
                                 <WeatherFrog weatherCode={weatherCode} isDay={isDay} temperature={temperature} />
                             </div>
                         </div>
-
                         <div className="flex justify-center w-1/3 relative h-32 items-center">
                             <div className={`absolute inset-0 rounded-full opacity-40 blur-xl ${config.accent.replace('shadow-', 'bg-')}`}></div>
                             <div className="relative animate-float filter drop-shadow-2xl">
-                                {showMoonPhase ? (
-                                    <div className="w-20 h-20">
-                                        <MoonPhaseIcon phase={moonPhase} />
-                                    </div>
-                                ) : (
-                                    <Icon name={config.icon} size={80} color={config.iconColor} fill={config.iconColor + "30"} />
-                                )}
+                                {showMoonPhase ? <div className="w-20 h-20"><MoonPhaseIcon phase={moonPhase} /></div> : <Icon name={config.icon} size={80} color={config.iconColor} fill={config.iconColor + "30"} />}
                             </div>
                         </div>
                     </div>
-
+                    {/* Insight Pill */}
                     <div className="mt-6 glass-highlight px-4 py-3 rounded-xl flex items-center gap-3 animate-slide-up mx-1 shadow-lg">
                         <div className="p-1.5 bg-indigo-500/30 rounded-lg text-indigo-200 shrink-0 shadow-inner"><Icon name={advice.icon} size={18} /></div>
                         <div className="flex flex-col">
@@ -408,6 +523,13 @@
                             <div className="text-xs font-bold leading-tight text-shadow">{advice.text}</div>
                         </div>
                     </div>
+                    
+                    {/* Climate Insight Card */}
+                    {climateInsight && (
+                        <div className="mt-2 animate-slide-up mx-1">
+                            <ClimateCard insight={climateInsight} />
+                        </div>
+                    )}
                 </div>
             );
         };
@@ -420,7 +542,6 @@
             const current = now.getTime();
             let progress = ((current - start) / (end - start)) * 100;
             progress = Math.max(0, Math.min(100, progress));
-            
             return (
                 <div className="glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden">
                     <div className="flex justify-between text-xs opacity-80 font-mono mb-8 font-semibold">
@@ -619,7 +740,9 @@
             const [saved, setSaved] = useState(localStorage.getItem('favCity'));
             const [isOnline, setIsOnline] = useState(navigator.onLine);
             const [theme, setTheme] = useState('dark');
-            const [isMuted, setIsMuted] = useState(true); 
+            const [isMuted, setIsMuted] = useState(true);
+            const [climateInsight, setClimateInsight] = useState(null);
+            const [historicalData, setHistoricalData] = useState(null);
 
             const isPlaying = useAmbientSound(data?.weather?.current?.weather_code ?? null, isMuted);
 
@@ -648,18 +771,34 @@
                             return null;
                         }
                     };
-                    const [w, a] = await Promise.all([
+
+                    // Determine dates for historical comparison (last 30 days)
+                    const today = new Date();
+                    const thirtyDaysAgo = new Date(today);
+                    thirtyDaysAgo.setDate(today.getDate() - 30);
+                    const oneYearAgoToday = new Date(today);
+                    oneYearAgoToday.setFullYear(today.getFullYear() - 1);
+                    const oneYearAgoThirtyDays = new Date(thirtyDaysAgo);
+                    oneYearAgoThirtyDays.setFullYear(thirtyDaysAgo.getFullYear() - 1);
+
+                    const formatDate = (d) => d.toISOString().split('T')[0];
+
+                    const [w, a, histCurr, histPrev] = await Promise.all([
                         safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,relative_humidity_2m,apparent_temperature&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`),
-                        safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`)
+                        safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`),
+                        safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${formatDate(thirtyDaysAgo)}&end_date=${formatDate(today)}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`),
+                        safeFetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${formatDate(oneYearAgoThirtyDays)}&end_date=${formatDate(oneYearAgoToday)}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`)
                     ]);
+
                     if (w) {
                         const safeAqi = a || { current: { us_aqi: null } };
-                        // Local Moon Phase Calculation (since API might fail or not provide it in free tier reliably)
                         const moonPhase = calculateMoonPhase();
-                        // Inject into data structure
-                        w.daily.moon_phase = [moonPhase]; 
-                        
+                        w.daily.moon_phase = [moonPhase];
                         setData({ weather: w, aqi: safeAqi, name });
+                        
+                        // Generate Insight
+                        const insight = generateClimateInsight(histCurr, histPrev);
+                        setClimateInsight(insight);
                     } else {
                         throw new Error("Weather data unavailable");
                     }
@@ -714,7 +853,7 @@
                 }
             };
 
-            const severeCodes = [95, 96, 99, 75, 85]; // Thunderstorms, heavy snow
+            const severeCodes = [95, 96, 99, 75, 85]; 
             const isSevere = data && severeCodes.includes(data.weather.current.weather_code);
             const config = data ? getWeatherConfig(data.weather.current.weather_code, data.weather.current.is_day, isSevere) : { gradient: 'bg-slate-900', accent: 'shadow-none' };
 
@@ -753,6 +892,7 @@
                                     onToggleSave={toggleSave} 
                                     moonPhase={data.weather.daily.moon_phase[0]}
                                     isSevere={isSevere}
+                                    climateInsight={climateInsight}
                                 />
                                 <ForecastStrip hourly={data.weather.hourly} />
                                 <SolarCycle sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
@@ -762,7 +902,6 @@
                             </>
                         )}
                     </div>
-                    <footer className="mt-8 text-center"><a href="https://github.com/Hayagriva0" target="_blank" className="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase opacity-60 hover:opacity-100 transition-opacity text-shadow"><Icon name="github" size={12} /> Designed by Abhra</a></footer>
                 </div>
             );
         };
