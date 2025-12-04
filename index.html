@@ -43,6 +43,14 @@
                         'flash': 'flash 2s infinite',
                         'grow-bar': 'growBar 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'draw-line': 'drawLine 2s ease-out forwards',
+                        // New Werewolf Animations
+                        'howl': 'howl 2s ease-in-out',
+                        'breathing': 'breathe 3s ease-in-out infinite',
+                        'tail-sway': 'sway 2s ease-in-out infinite',
+                        'fog-drift-1': 'drift 30s linear infinite',
+                        'fog-drift-2': 'drift 25s linear infinite reverse',
+                        'fog-drift-3': 'drift 35s linear infinite',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
@@ -60,7 +68,21 @@
                         marquee: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(-100%)' } },
                         flash: { '0%, 50%, 100%': { opacity: '1' }, '25%, 75%': { opacity: '0.5' } },
                         growBar: { '0%': { height: '0%', opacity: '0' }, '100%': { height: 'var(--target-height)', opacity: '1' } },
-                        drawLine: { '0%': { strokeDasharray: '0, 1000' }, '100%': { strokeDasharray: '1000, 0' } }
+                        drawLine: { '0%': { strokeDasharray: '0, 1000' }, '100%': { strokeDasharray: '1000, 0' } },
+                        // New Keyframes
+                        howl: { '0%, 100%': { transform: 'rotate(-30deg) scale(1)' }, '50%': { transform: 'rotate(-35deg) scale(1.1)' } }, // Adjusted for SVG rotation
+                        breathe: { '0%, 100%': { transform: 'scaleY(1)' }, '50%': { transform: 'scaleY(1.03)' } },
+                        sway: { '0%, 100%': { transform: 'rotate(0deg)' }, '50%': { transform: 'rotate(5deg)' } },
+                        drift: { 
+                            '0%': { transform: 'translateX(0)' }, 
+                            '100%': { transform: 'translateX(-50%)' } 
+                        },
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                        }
                     }
                 }
             }
@@ -109,12 +131,13 @@
         };
 
         // --- Sound Hook ---
-        const useAmbientSound = (weatherCode, isMuted) => {
+        const useAmbientSound = (weatherCode, isMuted, isWerewolfMode) => {
             const audioRef = useRef(new Audio());
             const [isPlaying, setIsPlaying] = useState(false);
             
             useEffect(() => {
                 const getSoundUrl = (code) => {
+                    if (isWerewolfMode) return 'https://actions.google.com/sounds/v1/ambiences/forest_night.ogg'; // Eerie night base
                     if (code === 0 || code === 1) return 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg'; 
                     if ([2, 3, 45, 48].includes(code)) return 'https://actions.google.com/sounds/v1/weather/wind_blowing.ogg';
                     if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg';
@@ -125,7 +148,7 @@
 
                 const audio = audioRef.current;
                 audio.loop = true;
-                audio.volume = 0.4;
+                audio.volume = isWerewolfMode ? 0.2 : 0.4;
 
                 if (isMuted) {
                     audio.pause();
@@ -139,7 +162,7 @@
                     }
                 }
                 return () => { audio.pause(); };
-            }, [weatherCode, isMuted]);
+            }, [weatherCode, isMuted, isWerewolfMode]);
 
             return isPlaying;
         };
@@ -241,9 +264,13 @@
             };
         };
 
-        const getWeatherConfig = (code, isDay, isSevere) => {
+        const getWeatherConfig = (code, isDay, isSevere, isWerewolf) => {
             const time = isDay ? 'day' : 'night';
             
+            if (isWerewolf) {
+                return { gradient: "bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800", icon: "moon", label: "Werewolf Alert", accent: "shadow-red-500", iconColor: "#DC2626" };
+            }
+
             if (isSevere) {
                 return { gradient: "bg-gradient-to-b from-red-900 via-orange-800 to-slate-900", icon: "alert-triangle", label: "Severe Alert", accent: "shadow-red-500", iconColor: "#EF4444" };
             }
@@ -307,7 +334,7 @@
                         <span>30 Days Ago</span>
                         <span>Today</span>
                     </div>
-                     <div className="absolute top-0 right-0 flex gap-2 text-[9px] font-bold bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm">
+                      <div className="absolute top-0 right-0 flex gap-2 text-[9px] font-bold bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm">
                         <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{background: strokeColor}}></span> {currentYear}</span>
                         <span className="flex items-center gap-1 opacity-50"><span className="w-1.5 h-1.5 rounded-full bg-white"></span> {pastYear}</span>
                     </div>
@@ -319,7 +346,6 @@
             const [showInfo, setShowInfo] = useState(false);
             if (!insight) return null;
             return (
-                // Removed mb-4 here to reduce gap
                 <div className="glass-panel p-4 rounded-2xl border border-white/10 relative overflow-hidden">
                     <div className="flex justify-between items-start mb-2 relative z-10">
                         <div className="flex items-center gap-3">
@@ -354,6 +380,178 @@
                     {insight.currentTemps && insight.historicalTemps && (
                         <ClimateGraph current={insight.currentTemps} past={insight.historicalTemps} trend={insight.trend} />
                     )}
+                </div>
+            );
+        };
+
+        const WerewolfScene = ({ moonPhase }) => {
+            const [isHowling, setIsHowling] = useState(false);
+            
+            useEffect(() => {
+                // Howl cycle: every 6-9 seconds
+                const cycle = 6000 + Math.random() * 3000;
+                const interval = setInterval(() => {
+                    setIsHowling(true);
+                    // Play sound
+                    const audio = new Audio('https://actions.google.com/sounds/v1/animals/wolf_howl.ogg');
+                    audio.volume = 0.4;
+                    audio.play().catch(e => {});
+
+                    setTimeout(() => setIsHowling(false), 2000);
+                }, cycle);
+                
+                return () => clearInterval(interval);
+            }, []);
+
+            return (
+                <div className="w-full h-full relative overflow-hidden rounded-full mask-image-circle">
+                    {/* Stars */}
+                    <div className="absolute inset-0 pointer-events-none">
+                         {[...Array(15)].map((_, i) => (
+                            <div key={i} className="absolute w-0.5 h-0.5 bg-white rounded-full animate-pulse" 
+                                 style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 60}%`, animationDelay: `${Math.random() * 3}s`, opacity: Math.random() }} />
+                         ))}
+                    </div>
+
+                    {/* Moon - Massive size as per prompt */}
+                    <div className="absolute top-[5%] left-1/2 -translate-x-1/2 w-40 h-40 animate-float">
+                         <div className="relative w-full h-full">
+                            <div className="absolute inset-0 bg-blue-100 rounded-full opacity-20 blur-xl animate-pulse-glow"></div>
+                            <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_15px_rgba(224,242,254,0.5)]">
+                                <defs>
+                                    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stopColor="#F8FAFC" />
+                                        <stop offset="90%" stopColor="#E0F2FE" />
+                                        <stop offset="100%" stopColor="#BFDBFE" />
+                                    </radialGradient>
+                                    <pattern id="moonSurface" width="40" height="40" patternUnits="userSpaceOnUse">
+                                        <circle cx="10" cy="10" r="2" fill="#CBD5E1" opacity="0.3"/>
+                                        <circle cx="30" cy="30" r="4" fill="#94A3B8" opacity="0.2"/>
+                                    </pattern>
+                                </defs>
+                                <circle cx="100" cy="100" r="95" fill="url(#moonGlow)" />
+                                <circle cx="100" cy="100" r="95" fill="url(#moonSurface)" opacity="0.5" />
+                            </svg>
+                         </div>
+                    </div>
+
+                    {/* Fog Layers with Parallax */}
+                    <div className="absolute inset-0 z-0">
+                         <div className="absolute bottom-0 w-[200%] h-1/2 bg-slate-700/30 blur-[20px] animate-fog-drift-1 translate-x-0"></div>
+                         <div className="absolute bottom-[-10%] w-[200%] h-1/3 bg-slate-600/40 blur-[15px] animate-fog-drift-2 translate-x-0"></div>
+                    </div>
+
+                    {/* Cinematic Silhouette Layer */}
+                    <div className="absolute inset-0 z-10 flex items-end justify-center">
+                        <svg viewBox="0 0 200 200" className="w-full h-full" preserveAspectRatio="xMidYMax meet">
+                            {/* Cliff Base */}
+                             <path d="M-10,170 L40,155 L70,165 L100,150 L130,160 L170,145 L210,160 L210,210 L-10,210 Z" fill="#020617" />
+                            
+                            {/* Werewolf - Prompt specific SVG path */}
+                            <g transform="translate(100, 125)" className={isHowling ? "animate-howl origin-bottom" : "animate-breathing origin-bottom"}>
+                                {/* Legs */}
+                                <path d="M-8,0 L-10,20 L-12,30" stroke="#000" strokeWidth="6" strokeLinecap="round" />
+                                <path d="M8,0 L10,20 L12,30" stroke="#000" strokeWidth="6" strokeLinecap="round" />
+                                
+                                {/* Body/Chest */}
+                                <ellipse cx="0" cy="-10" rx="15" ry="25" fill="#000"/>
+                                
+                                {/* Arms (Raised) */}
+                                <path d="M-15,-15 L-25,-25 L-28,-20" stroke="#000" strokeWidth="5" strokeLinecap="round" />
+                                <path d="M15,-15 L25,-25 L28,-20" stroke="#000" strokeWidth="5" strokeLinecap="round" />
+                                
+                                {/* Head (Tilted back) */}
+                                <g transform="rotate(-25 0 -35)">
+                                    <ellipse cx="0" cy="-35" rx="12" ry="15" fill="#000" />
+                                    {/* Snout */}
+                                    <path d="M0,-40 L2,-50 L-2,-50 Z" fill="#000"/>
+                                    {/* Ears */}
+                                    <path d="M-8,-45 L-12,-55 L-6,-48" fill="#000"/>
+                                    <path d="M8,-45 L12,-55 L6,-48" fill="#000"/>
+                                </g>
+
+                                {/* Tail */}
+                                <path d="M12,-5 Q20,-10 25,0 Q28,8 22,10" fill="#000" className="animate-tail-sway origin-left" />
+
+                                {/* Howl Effect Visuals */}
+                                {isHowling && (
+                                    <g>
+                                        <circle cx="0" cy="-55" r="10" stroke="rgba(255,255,255,0.5)" fill="none" className="animate-ping" />
+                                        <circle cx="0" cy="-55" r="20" stroke="rgba(255,255,255,0.3)" fill="none" className="animate-ping" style={{animationDelay: '0.2s'}} />
+                                    </g>
+                                )}
+                            </g>
+                        </svg>
+                    </div>
+
+                    {/* Vignette */}
+                    <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-slate-950/80 pointer-events-none z-20"></div>
+                </div>
+            );
+        };
+
+        const WeatherFrog = ({ weatherCode, isDay, temperature, moonPhase, isWerewolf }) => {
+            const isRain = [51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode);
+            const isSnow = [71, 73, 75, 77, 85, 86].includes(weatherCode);
+            const isThunder = [95, 96, 99].includes(weatherCode);
+            const isFog = [45, 48].includes(weatherCode);
+            const isClear = weatherCode === 0;
+            const isWindy = weatherCode >= 61 && weatherCode <= 65; 
+            
+            const isCold = temperature <= 10 && !isSnow;
+            const isWarm = temperature >= 25 && !isRain;
+            const isHot = temperature > 30; 
+            const isSleeping = isClear && !isDay;
+            const isFishing = !isRain && !isSnow && !isThunder && !isFog && !isHot && !isSleeping && !isWindy; 
+
+            if (isWerewolf) {
+                return <WerewolfScene moonPhase={moonPhase} />;
+            }
+
+            return (
+                <div className="w-full h-full flex items-center justify-center relative overflow-visible">
+                    <svg viewBox="0 0 200 200" className="w-full h-full animate-float">
+                        <defs>
+                            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feComposite in="SourceAlpha" in2="blur" operator="in" result="shadow" />
+                                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" in="shadow" />
+                            </filter>
+                        </defs>
+                        <ellipse cx="100" cy="170" rx="50" ry="10" fill="black" opacity="0.2" filter="url(#softShadow)" />
+                        
+                        {/* Standard Frog Logic */}
+                        <>
+                            {isClear && isDay && !isWarm && <circle cx="160" cy="30" r="15" fill="#FDB813" opacity="0.9" className="animate-pulse" />}
+                            {isClear && !isDay && <g><path d="M160 20 A 15 15 0 1 1 160 50" stroke="white" strokeWidth="2" fill="none" opacity="0.8" /><circle cx="20" cy="30" r="1.5" fill="white" className="animate-pulse" /><circle cx="180" cy="20" r="2" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} /><circle cx="50" cy="60" r="1" fill="white" /><circle cx="140" cy="10" r="1.2" fill="white" opacity="0.7" className="animate-pulse" style={{animationDelay: '0.5s'}} /></g>}
+                            {isFishing && <g className="animate-line-cast"><path d="M130 130 Q 180 80 190 100" stroke="#5D4037" strokeWidth="2" fill="none" /><path d="M190 100 Q 195 120 190 150" stroke="white" strokeWidth="1" fill="none" opacity="0.6" /><circle cx="190" cy="150" r="3" fill="#EF4444" className="animate-bob" /></g>}
+                            <g transform={`translate(0, 10) ${isWindy ? 'rotate(-5)' : ''}`}>
+                                <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /><path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />
+                                <ellipse cx="100" cy="125" rx="25" ry="35" fill="#22c55e" /><ellipse cx="100" cy="125" rx="15" ry="20" fill="#86efac" opacity="0.6" />
+                                {isWarm && <g><path d="M75 130 Q 70 150 85 150 L 115 150 Q 130 150 125 130" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" /><line x1="100" y1="130" x2="100" y2="150" stroke="#1D4ED8" strokeWidth="1" /></g>}
+                                <circle cx="100" cy="80" r="35" fill="#22c55e" />
+                                {isCold && <g><path d="M75 100 Q 60 130 75 150 L 125 150 Q 140 130 125 100 Z" fill="#F97316" stroke="#C2410C" strokeWidth="2" /><path d="M65 80 Q 100 30 135 80" stroke="#F97316" strokeWidth="8" fill="none" strokeLinecap="round" /><line x1="90" y1="100" x2="90" y2="120" stroke="white" strokeWidth="2" /><line x1="110" y1="100" x2="110" y2="120" stroke="white" strokeWidth="2" /></g>}
+                                <g className={isThunder ? "animate-sneeze" : ""}>
+                                    <path d="M80 55 L70 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="70" cy="45" r="10" fill="#22c55e" /> <circle cx="70" cy="45" r="7" fill="white" /><circle cx="70" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
+                                    <path d="M120 55 L130 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="130" cy="45" r="10" fill="#22c55e" /><circle cx="130" cy="45" r="7" fill="white" /><circle cx="130" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
+                                </g>
+                                {isThunder ? <circle cx="100" cy="90" r="4" fill="black" opacity="0.7" /> : isHot ? <path d="M90 90 Q100 95 110 90" stroke="#064e3b" strokeWidth="2" fill="none" /> : <path d="M85 85 Q100 100 115 85" stroke="#064e3b" strokeWidth="2" strokeLinecap="round" fill="none" />}
+                                {isWarm && <g transform="translate(0, -10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g>}
+                                {!isWarm && <circle cx="78" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
+                                {!isWarm && <circle cx="122" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
+                                {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />}
+                            </g>
+                            {isWindy && <g className="animate-wind-sway"><path d="M140 100 Q 160 90 180 110" stroke="#22c55e" strokeWidth="2" fill="none" strokeDasharray="4 2" /><g transform="translate(180, 110) rotate(30)"><ellipse cx="0" cy="0" rx="15" ry="5" fill="#475569" /><path d="M-10 0 Q0 -15 10 0" fill="#475569" /></g><path d="M20 80 Q 50 90 80 80" stroke="white" strokeWidth="2" opacity="0.3" /><path d="M10 120 Q 40 130 60 110" stroke="white" strokeWidth="2" opacity="0.3" /></g>}
+                            {isHot && <g><g transform="translate(0, 10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g><g transform="translate(135, 90)"><path d="M0 0 L5 20 L-5 20 Z" fill="#FCD34D" /> <line x1="0" y1="0" x2="5" y2="-10" stroke="white" strokeWidth="2" /></g></g>}
+                            {isFog && <g transform="translate(140, 125) rotate(-20)"><rect x="0" y="0" width="20" height="10" fill="#64748b" rx="2" /><path d="M20 0 L60 -20 L60 30 L20 10 Z" fill="yellow" opacity="0.3" /></g>}
+                            {isSleeping && <g transform="translate(130, 120) rotate(-45)"><rect x="0" y="0" width="40" height="10" fill="#475569" rx="2" /><rect x="35" y="-2" width="5" height="14" fill="#334155" rx="1" /></g>}
+                            {isRain && <g transform="translate(120, 50) rotate(10)"><path d="M0 0 Q-40 -50 0 -100 Q40 -50 0 0" fill="#4ade80" stroke="#14532d" strokeWidth="1" /><line x1="0" y1="0" x2="0" y2="100" stroke="#78350f" strokeWidth="3" /></g>}
+                            {isSnow && <g transform="translate(0, 10)"><path d="M80 110 Q100 125 120 110" stroke="#ef4444" strokeWidth="10" strokeLinecap="round" fill="none" /><path d="M110 110 L110 135" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" /></g>}
+                            {isSleeping && <g className="animate-pulse" transform="translate(140, 40)"><text x="0" y="0" fill="white" fontSize="24" fontWeight="bold" opacity="0.8">Z</text><text x="20" y="-15" fill="white" fontSize="16" fontWeight="bold" opacity="0.6">z</text></g>}
+                            {isRain && <g><line x1="50" y1="20" x2="50" y2="30" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" /><line x1="100" y1="10" x2="100" y2="20" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.5s'}} /><line x1="150" y1="30" x2="150" y2="40" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.2s'}} /></g>}
+                            {isSnow && <g><circle cx="40" cy="20" r="2" fill="white" className="animate-snow-fall" /><circle cx="120" cy="10" r="2" fill="white" className="animate-snow-fall" style={{animationDelay: '1s'}} /><circle cx="180" cy="30" r="2" fill="white" className="animate-snow-fall" style={{animationDelay: '2s'}} /></g>}
+                        </>
+                    </svg>
                 </div>
             );
         };
@@ -415,73 +613,18 @@
             );
         };
 
-        const WeatherFrog = ({ weatherCode, isDay, temperature }) => {
-            const isRain = [51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode);
-            const isSnow = [71, 73, 75, 77, 85, 86].includes(weatherCode);
-            const isThunder = [95, 96, 99].includes(weatherCode);
-            const isFog = [45, 48].includes(weatherCode);
-            const isClear = weatherCode === 0;
-            const isWindy = weatherCode >= 61 && weatherCode <= 65; 
-            
-            const isCold = temperature <= 10 && !isSnow;
-            const isWarm = temperature >= 25 && !isRain;
-            const isHot = temperature > 30; 
-            const isSleeping = isClear && !isDay;
-            const isFishing = !isRain && !isSnow && !isThunder && !isFog && !isHot && !isSleeping && !isWindy; 
+        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight, isWerewolf }) => {
+            // Override advice if Werewolf
+            const advice = isWerewolf 
+                ? { text: "The beast awakens... Stay inside! 🌕", icon: "moon" }
+                : getAdvice(weather.current.weather_code, weather.current.temperature_2m);
 
-            return (
-                <div className="w-full h-full flex items-center justify-center relative overflow-visible">
-                    <svg viewBox="0 0 200 200" className="w-full h-full animate-float">
-                        <defs>
-                            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="3" result="blur" />
-                                <feComposite in="SourceAlpha" in2="blur" operator="in" result="shadow" />
-                                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" in="shadow" />
-                            </filter>
-                        </defs>
-                        <ellipse cx="100" cy="170" rx="50" ry="10" fill="black" opacity="0.2" filter="url(#softShadow)" />
-                        {isClear && isDay && !isWarm && <circle cx="160" cy="30" r="15" fill="#FDB813" opacity="0.9" className="animate-pulse" />}
-                        {isClear && !isDay && <g><path d="M160 20 A 15 15 0 1 1 160 50" stroke="white" strokeWidth="2" fill="none" opacity="0.8" /><circle cx="20" cy="30" r="1.5" fill="white" className="animate-pulse" /><circle cx="180" cy="20" r="2" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} /><circle cx="50" cy="60" r="1" fill="white" /><circle cx="140" cy="10" r="1.2" fill="white" opacity="0.7" className="animate-pulse" style={{animationDelay: '0.5s'}} /></g>}
-                        {isFishing && <g className="animate-line-cast"><path d="M130 130 Q 180 80 190 100" stroke="#5D4037" strokeWidth="2" fill="none" /><path d="M190 100 Q 195 120 190 150" stroke="white" strokeWidth="1" fill="none" opacity="0.6" /><circle cx="190" cy="150" r="3" fill="#EF4444" className="animate-bob" /></g>}
-                        <g transform={`translate(0, 10) ${isWindy ? 'rotate(-5)' : ''}`}>
-                            <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /><path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />
-                            <ellipse cx="100" cy="125" rx="25" ry="35" fill="#22c55e" /><ellipse cx="100" cy="125" rx="15" ry="20" fill="#86efac" opacity="0.6" />
-                            {isWarm && <g><path d="M75 130 Q 70 150 85 150 L 115 150 Q 130 150 125 130" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" /><line x1="100" y1="130" x2="100" y2="150" stroke="#1D4ED8" strokeWidth="1" /></g>}
-                            <circle cx="100" cy="80" r="35" fill="#22c55e" />
-                            {isCold && <g><path d="M75 100 Q 60 130 75 150 L 125 150 Q 140 130 125 100 Z" fill="#F97316" stroke="#C2410C" strokeWidth="2" /><path d="M65 80 Q 100 30 135 80" stroke="#F97316" strokeWidth="8" fill="none" strokeLinecap="round" /><line x1="90" y1="100" x2="90" y2="120" stroke="white" strokeWidth="2" /><line x1="110" y1="100" x2="110" y2="120" stroke="white" strokeWidth="2" /></g>}
-                            <g className={isThunder ? "animate-sneeze" : ""}>
-                                <path d="M80 55 L70 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="70" cy="45" r="10" fill="#22c55e" /> <circle cx="70" cy="45" r="7" fill="white" /><circle cx="70" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
-                                <path d="M120 55 L130 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="130" cy="45" r="10" fill="#22c55e" /><circle cx="130" cy="45" r="7" fill="white" /><circle cx="130" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
-                            </g>
-                            {isThunder ? <circle cx="100" cy="90" r="4" fill="black" opacity="0.7" /> : isHot ? <path d="M90 90 Q100 95 110 90" stroke="#064e3b" strokeWidth="2" fill="none" /> : <path d="M85 85 Q100 100 115 85" stroke="#064e3b" strokeWidth="2" strokeLinecap="round" fill="none" />}
-                            {isWarm && <g transform="translate(0, -10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g>}
-                            {!isWarm && <circle cx="78" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
-                            {!isWarm && <circle cx="122" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
-                            {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />}
-                        </g>
-                        {isWindy && <g className="animate-wind-sway"><path d="M140 100 Q 160 90 180 110" stroke="#22c55e" strokeWidth="2" fill="none" strokeDasharray="4 2" /><g transform="translate(180, 110) rotate(30)"><ellipse cx="0" cy="0" rx="15" ry="5" fill="#475569" /><path d="M-10 0 Q0 -15 10 0" fill="#475569" /></g><path d="M20 80 Q 50 90 80 80" stroke="white" strokeWidth="2" opacity="0.3" /><path d="M10 120 Q 40 130 60 110" stroke="white" strokeWidth="2" opacity="0.3" /></g>}
-                        {isHot && <g><g transform="translate(0, 10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g><g transform="translate(135, 90)"><path d="M0 0 L5 20 L-5 20 Z" fill="#FCD34D" /> <line x1="0" y1="0" x2="5" y2="-10" stroke="white" strokeWidth="2" /></g></g>}
-                        {isFog && <g transform="translate(140, 125) rotate(-20)"><rect x="0" y="0" width="20" height="10" fill="#64748b" rx="2" /><path d="M20 0 L60 -20 L60 30 L20 10 Z" fill="yellow" opacity="0.3" /></g>}
-                        {isSleeping && <g transform="translate(130, 120) rotate(-45)"><rect x="0" y="0" width="40" height="10" fill="#475569" rx="2" /><rect x="35" y="-2" width="5" height="14" fill="#334155" rx="1" /></g>}
-                        {isRain && <g transform="translate(120, 50) rotate(10)"><path d="M0 0 Q-40 -50 0 -100 Q40 -50 0 0" fill="#4ade80" stroke="#14532d" strokeWidth="1" /><line x1="0" y1="0" x2="0" y2="100" stroke="#78350f" strokeWidth="3" /></g>}
-                        {isSnow && <g transform="translate(0, 10)"><path d="M80 110 Q100 125 120 110" stroke="#ef4444" strokeWidth="10" strokeLinecap="round" fill="none" /><path d="M110 110 L110 135" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" /></g>}
-                        {isSleeping && <g className="animate-pulse" transform="translate(140, 40)"><text x="0" y="0" fill="white" fontSize="24" fontWeight="bold" opacity="0.8">Z</text><text x="20" y="-15" fill="white" fontSize="16" fontWeight="bold" opacity="0.6">z</text></g>}
-                        {isRain && <g><line x1="50" y1="20" x2="50" y2="30" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" /><line x1="100" y1="10" x2="100" y2="20" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.5s'}} /><line x1="150" y1="30" x2="150" y2="40" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.2s'}} /></g>}
-                        {isSnow && <g><circle cx="40" cy="20" r="2" fill="white" className="animate-snow-fall" /><circle cx="120" cy="10" r="2" fill="white" className="animate-snow-fall" style={{animationDelay: '1s'}} /><circle cx="180" cy="30" r="2" fill="white" className="animate-snow-fall" style={{animationDelay: '2s'}} /></g>}
-                    </svg>
-                </div>
-            );
-        };
-
-        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight }) => {
-            const advice = getAdvice(weather.current.weather_code, weather.current.temperature_2m);
             const isDay = weather.current.is_day === 1;
             const weatherCode = weather.current.weather_code;
             const temperature = weather.current.temperature_2m;
             const showMoonPhase = !isDay && weatherCode === 0;
 
             return (
-                // Changed from mb-6 to mb-2 to reduce the gap
                 <div className="relative mb-2">
                     <div className="flex flex-col items-center mb-6 animate-fade-in">
                         <div className="flex items-center gap-2 text-shadow">
@@ -493,6 +636,19 @@
                         </div>
                         <div className="text-xs font-bold opacity-80 uppercase tracking-widest mt-1 text-shadow">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
                     </div>
+                    
+                    {/* Werewolf Badge */}
+                    {isWerewolf && (
+                         <div className="mb-4 animate-shake">
+                            <div className="glass-panel bg-red-500/20 border-red-500/50 p-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/20">
+                              <span className="text-xl">🐺</span>
+                              <span className="text-red-300 font-bold text-xs uppercase tracking-widest">
+                                BEWARE: Full Moon Fog
+                              </span>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between relative z-10 px-2">
                         <div className="flex flex-col w-1/3 items-center">
                             <h1 className="text-[4.5rem] font-bold leading-none tracking-tighter drop-shadow-xl text-white">
@@ -505,27 +661,33 @@
                         </div>
                         <div className="relative w-1/3 h-32 flex justify-center items-center">
                             <div className="w-32 h-32">
-                                <WeatherFrog weatherCode={weatherCode} isDay={isDay} temperature={temperature} />
+                                <WeatherFrog 
+                                    weatherCode={weatherCode} 
+                                    isDay={isDay} 
+                                    temperature={temperature} 
+                                    moonPhase={moonPhase} 
+                                    isWerewolf={isWerewolf}
+                                />
                             </div>
                         </div>
                         <div className="flex justify-center w-1/3 relative h-32 items-center">
                             <div className={`absolute inset-0 rounded-full opacity-40 blur-xl ${config.accent.replace('shadow-', 'bg-')}`}></div>
                             <div className="relative animate-float filter drop-shadow-2xl">
-                                {showMoonPhase ? <div className="w-20 h-20"><MoonPhaseIcon phase={moonPhase} /></div> : <Icon name={config.icon} size={80} color={config.iconColor} fill={config.iconColor + "30"} />}
+                                {showMoonPhase && !isWerewolf ? <div className="w-20 h-20"><MoonPhaseIcon phase={moonPhase} /></div> : <Icon name={config.icon} size={80} color={config.iconColor} fill={config.iconColor + "30"} />}
                             </div>
                         </div>
                     </div>
                     {/* Insight Pill */}
-                    <div className="mt-6 glass-highlight px-4 py-3 rounded-xl flex items-center gap-3 animate-slide-up mx-1 shadow-lg">
+                    <div className={`mt-6 glass-highlight px-4 py-3 rounded-xl flex items-center gap-3 animate-slide-up mx-1 shadow-lg ${isWerewolf ? 'border-red-500/30 bg-red-900/20' : ''}`}>
                         <div className="p-1.5 bg-indigo-500/30 rounded-lg text-indigo-200 shrink-0 shadow-inner"><Icon name={advice.icon} size={18} /></div>
                         <div className="flex flex-col">
                             <div className="text-[9px] font-bold uppercase tracking-widest opacity-70">Smart Insight</div>
-                            <div className="text-xs font-bold leading-tight text-shadow">{advice.text}</div>
+                            <div className={`text-xs font-bold leading-tight text-shadow ${isWerewolf ? 'text-red-200' : ''}`}>{advice.text}</div>
                         </div>
                     </div>
                     
                     {/* Climate Insight Card */}
-                    {climateInsight && (
+                    {climateInsight && !isWerewolf && (
                         <div className="mt-2 animate-slide-up mx-1">
                             <ClimateCard insight={climateInsight} />
                         </div>
@@ -744,7 +906,13 @@
             const [climateInsight, setClimateInsight] = useState(null);
             const [historicalData, setHistoricalData] = useState(null);
 
-            const isPlaying = useAmbientSound(data?.weather?.current?.weather_code ?? null, isMuted);
+            // Werewolf Logic: Full Moon (phase ~0.5) AND Night
+            const isWerewolf = data && data.weather && 
+                data.weather.daily.moon_phase[0] >= 0.45 && 
+                data.weather.daily.moon_phase[0] <= 0.55 && 
+                data.weather.current.is_day === 0;
+
+            const isPlaying = useAmbientSound(data?.weather?.current?.weather_code ?? null, isMuted, isWerewolf);
 
             useEffect(() => {
                 const handleStatus = () => setIsOnline(navigator.onLine);
@@ -772,7 +940,6 @@
                         }
                     };
 
-                    // Determine dates for historical comparison (last 30 days)
                     const today = new Date();
                     const thirtyDaysAgo = new Date(today);
                     thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -855,7 +1022,7 @@
 
             const severeCodes = [95, 96, 99, 75, 85]; 
             const isSevere = data && severeCodes.includes(data.weather.current.weather_code);
-            const config = data ? getWeatherConfig(data.weather.current.weather_code, data.weather.current.is_day, isSevere) : { gradient: 'bg-slate-900', accent: 'shadow-none' };
+            const config = data ? getWeatherConfig(data.weather.current.weather_code, data.weather.current.is_day, isSevere, isWerewolf) : { gradient: 'bg-slate-900', accent: 'shadow-none' };
 
             if (error === "offline" || (!isOnline && !data && !loading)) {
                 return (
@@ -893,12 +1060,25 @@
                                     moonPhase={data.weather.daily.moon_phase[0]}
                                     isSevere={isSevere}
                                     climateInsight={climateInsight}
+                                    isWerewolf={isWerewolf}
                                 />
                                 <ForecastStrip hourly={data.weather.hourly} />
                                 <SolarCycle sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
                                 <BentoGrid current={data.weather.current} daily={data.weather.daily} themeMode={theme} />
                                 <AQICard aqi={data.aqi.current.us_aqi} />
                                 <DailyForecast daily={data.weather.daily} />
+                                
+                                <div className="text-center py-6">
+                                    <a 
+                                        href="https://github.com/Hayagriva0" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-[10px] font-bold uppercase tracking-widest text-white/30 hover:text-white/90 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Icon name="github" size={12} />
+                                        Created by Abhra
+                                    </a>
+                                </div>
                             </>
                         )}
                     </div>
