@@ -1,4 +1,4 @@
-const CACHE_NAME = 'weather-pro-v5.5';
+const CACHE_NAME = 'weather-pro-v6.1';
 const ASSETS = [
   './',
   './index.html',
@@ -26,9 +26,8 @@ self.addEventListener('activate', (e) => {
 });
 
 // 3. Fetch Strategy: Network First, Fallback to Cache
-// This ensures weather data is always fresh, but the app shell loads if offline.
 self.addEventListener('fetch', (e) => {
-  // Allow weather API calls to go straight to network (don't cache weather data indefinitely)
+  // bypass cache for weather APIs to ensure fresh data
   if (e.request.url.includes('api.open-meteo.com') || e.request.url.includes('geocoding-api.open-meteo.com')) {
     return; 
   }
@@ -36,13 +35,12 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     fetch(e.request)
       .then((res) => {
-        // Clone the response to save it in cache for next time
         const resClone = res.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(e.request, resClone);
         });
         return res;
       })
-      .catch(() => caches.match(e.request)) // If offline, serve from cache
+      .catch(() => caches.match(e.request))
   );
 });
