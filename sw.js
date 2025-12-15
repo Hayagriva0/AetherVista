@@ -1,4 +1,4 @@
-const CACHE_NAME = 'weather-pro-v6.1';
+const CACHE_NAME = 'weather-pro-v8.0';
 const ASSETS = [
   './',
   './index.html',
@@ -27,7 +27,7 @@ self.addEventListener('activate', (e) => {
 
 // 3. Fetch Strategy: Network First, Fallback to Cache
 self.addEventListener('fetch', (e) => {
-  // bypass cache for weather APIs to ensure fresh data
+  // Allow weather API calls to bypass cache for fresh data
   if (e.request.url.includes('api.open-meteo.com') || e.request.url.includes('geocoding-api.open-meteo.com')) {
     return; 
   }
