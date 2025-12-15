@@ -16,7 +16,7 @@
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Config -->
@@ -28,7 +28,8 @@
                     fontFamily: { sans: ['Outfit', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
                     animation: {
                         'float': 'float 8s ease-in-out infinite',
-                        'fade-in': 'fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'float-fast': 'float 4s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
                         'slide-up': 'slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
                         'slide-down': 'slideDown 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
                         'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
@@ -42,22 +43,21 @@
                         'marquee': 'marquee 15s linear infinite',
                         'flash': 'flash 2s infinite',
                         'grow-bar': 'growBar 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'draw-line': 'drawLine 2s ease-out forwards',
-                        // New Werewolf Animations
-                        'howl': 'howl 2s ease-in-out',
-                        'breathing': 'breathe 3s ease-in-out infinite',
-                        'tail-sway': 'sway 2s ease-in-out infinite',
-                        'fog-drift-1': 'drift 30s linear infinite',
-                        'fog-drift-2': 'drift 25s linear infinite reverse',
-                        'fog-drift-3': 'drift 35s linear infinite',
+                        'shimmer': 'shimmer 2.5s linear infinite',
+                        'howl': 'howl 3s ease-in-out',
+                        'breathing': 'breathe 4s ease-in-out infinite',
+                        'tail-sway': 'sway 3s ease-in-out infinite',
+                        'fog-drift-1': 'drift 40s linear infinite',
+                        'fog-drift-2': 'drift 30s linear infinite reverse',
                         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'spin-slow': 'spin 8s linear infinite',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
-                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        fadeIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
                         slideUp: { '0%': { transform: 'translateY(40px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
                         slideDown: { '0%': { transform: 'translateY(-100%)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-                        pulseGlow: { '0%, 100%': { opacity: '0.6' }, '50%': { opacity: '1' } },
+                        pulseGlow: { '0%, 100%': { opacity: '0.5', filter: 'blur(8px)' }, '50%': { opacity: '1', filter: 'blur(12px)' } },
                         pulseHeart: { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.15)' } },
                         rainDrop: { '0%': { transform: 'translateY(-10px)', opacity: '0' }, '50%': { opacity: '1' }, '100%': { transform: 'translateY(20px)', opacity: '0' } },
                         snowFall: { '0%': { transform: 'translateY(-10px) rotate(0deg)', opacity: '0' }, '50%': { opacity: '1' }, '100%': { transform: 'translateY(20px) rotate(180deg)', opacity: '0' } },
@@ -68,15 +68,11 @@
                         marquee: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(-100%)' } },
                         flash: { '0%, 50%, 100%': { opacity: '1' }, '25%, 75%': { opacity: '0.5' } },
                         growBar: { '0%': { height: '0%', opacity: '0' }, '100%': { height: 'var(--target-height)', opacity: '1' } },
-                        drawLine: { '0%': { strokeDasharray: '0, 1000' }, '100%': { strokeDasharray: '1000, 0' } },
-                        // New Keyframes
-                        howl: { '0%, 100%': { transform: 'rotate(-30deg) scale(1)' }, '50%': { transform: 'rotate(-35deg) scale(1.1)' } }, // Adjusted for SVG rotation
+                        shimmer: { '0%': { backgroundPosition: '-1000px 0' }, '100%': { backgroundPosition: '1000px 0' } },
+                        howl: { '0%, 100%': { transform: 'rotate(-30deg) scale(1)' }, '50%': { transform: 'rotate(-40deg) scale(1.1) translateY(-5px)' } },
                         breathe: { '0%, 100%': { transform: 'scaleY(1)' }, '50%': { transform: 'scaleY(1.03)' } },
-                        sway: { '0%, 100%': { transform: 'rotate(0deg)' }, '50%': { transform: 'rotate(5deg)' } },
-                        drift: { 
-                            '0%': { transform: 'translateX(0)' }, 
-                            '100%': { transform: 'translateX(-50%)' } 
-                        },
+                        sway: { '0%, 100%': { transform: 'rotate(0deg)' }, '50%': { transform: 'rotate(10deg)' } },
+                        drift: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
                         shake: {
                             '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
                             '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
@@ -100,23 +96,42 @@
         body { overscroll-behavior-y: none; touch-action: manipulation; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .glass-panel {
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.08); }
         .glass-highlight {
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
         .glass-input {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s ease;
         }
-        .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .glass-input:focus-within {
+            background: rgba(0, 0, 0, 0.6);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .text-glow { text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .text-shadow-sm { text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .text-shadow-lg { text-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        
+        /* Shimmer Effect */
+        .shimmer-bg {
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
+            background-size: 1000px 100%;
+        }
     </style>
 </head>
 <body class="antialiased bg-slate-950 text-white selection:bg-indigo-500/30">
@@ -125,19 +140,50 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
+        // --- Bug Fix: Robust Icon Component ---
+        // Uses a ref to limit the scope of createIcons and ensures updates on name changes
         const Icon = ({ name, size = 24, className = "", fill = "none", color }) => {
-            useEffect(() => lucide.createIcons(), [name]);
-            return <i data-lucide={name} className={className} fill={fill} style={{ width: size, height: size, color: color }}></i>;
+            const iconRef = useRef(null);
+            
+            useEffect(() => {
+                if (window.lucide && iconRef.current) {
+                    window.lucide.createIcons({
+                        root: iconRef.current,
+                        nameAttr: 'data-icon-name',
+                        attrs: {
+                            class: className,
+                            fill: fill,
+                            style: `width: ${size}px; height: ${size}px; color: ${color || 'currentColor'}`
+                        }
+                    });
+                }
+            }, [name, size, className, fill, color]);
+
+            // We use a wrapper to ensure Lucide has a stable target to hydrate
+            return <span ref={iconRef}><i data-icon-name={name}></i></span>;
         };
 
-        // --- Sound Hook ---
+        // --- Sound Hook (Fixed Memory Leak) ---
         const useAmbientSound = (weatherCode, isMuted, isWerewolfMode) => {
-            const audioRef = useRef(new Audio());
+            const audioRef = useRef(null);
             const [isPlaying, setIsPlaying] = useState(false);
             
             useEffect(() => {
+                audioRef.current = new Audio();
+                audioRef.current.loop = true;
+                return () => {
+                    if (audioRef.current) {
+                        audioRef.current.pause();
+                        audioRef.current = null;
+                    }
+                };
+            }, []);
+
+            useEffect(() => {
+                if (!audioRef.current) return;
+
                 const getSoundUrl = (code) => {
-                    if (isWerewolfMode) return 'https://actions.google.com/sounds/v1/ambiences/forest_night.ogg'; // Eerie night base
+                    if (isWerewolfMode) return 'https://actions.google.com/sounds/v1/ambiences/forest_night.ogg'; 
                     if (code === 0 || code === 1) return 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg'; 
                     if ([2, 3, 45, 48].includes(code)) return 'https://actions.google.com/sounds/v1/weather/wind_blowing.ogg';
                     if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg';
@@ -147,21 +193,29 @@
                 };
 
                 const audio = audioRef.current;
-                audio.loop = true;
-                audio.volume = isWerewolfMode ? 0.2 : 0.4;
+                audio.volume = isWerewolfMode ? 0.3 : 0.4;
+
+                const targetSrc = getSoundUrl(weatherCode);
 
                 if (isMuted) {
                     audio.pause();
                     setIsPlaying(false);
                 } else if (weatherCode !== null) {
-                    const src = getSoundUrl(weatherCode);
-                    if (audio.src !== src) audio.src = src;
-                    const playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+                    if (audio.src !== targetSrc) {
+                        audio.src = targetSrc;
+                        const playPromise = audio.play();
+                        if (playPromise !== undefined) {
+                            playPromise
+                                .then(() => setIsPlaying(true))
+                                .catch(e => {
+                                    console.log("Audio play blocked (user interaction required)", e);
+                                    setIsPlaying(false);
+                                });
+                        }
+                    } else if (audio.paused) {
+                        audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
                     }
                 }
-                return () => { audio.pause(); };
             }, [weatherCode, isMuted, isWerewolfMode]);
 
             return isPlaying;
@@ -169,10 +223,44 @@
 
         // --- Helpers ---
         const getAQIStatus = (aqi) => {
-            if (aqi <= 50) return { label: "Excellent", color: "text-emerald-400", bar: "bg-emerald-500", heartAdvice: "Perfect air quality for outdoor cardio.", icon: "heart" };
-            if (aqi <= 100) return { label: "Moderate", color: "text-yellow-400", bar: "bg-yellow-500", heartAdvice: "Acceptable. Monitor if you are sensitive.", icon: "activity" };
-            if (aqi <= 150) return { label: "Sensitive", color: "text-orange-400", bar: "bg-orange-500", heartAdvice: "Reduce prolonged outdoor exertion.", icon: "alert-circle" };
-            return { label: "Unhealthy", color: "text-red-500", bar: "bg-red-600", heartAdvice: "Avoid outdoor activities to protect heart.", icon: "alert-triangle" };
+            if (aqi <= 50) return { label: "Excellent", color: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/30", bar: "bg-emerald-500", heartAdvice: "Perfect air quality for outdoor cardio.", icon: "heart" };
+            if (aqi <= 100) return { label: "Moderate", color: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500/30", bar: "bg-yellow-500", heartAdvice: "Acceptable. Monitor if you are sensitive.", icon: "activity" };
+            if (aqi <= 150) return { label: "Sensitive", color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500/30", bar: "bg-orange-500", heartAdvice: "Reduce prolonged outdoor exertion.", icon: "alert-circle" };
+            if (aqi <= 200) return { label: "Unhealthy", color: "text-red-500", bg: "bg-red-500/20", border: "border-red-500/30", bar: "bg-red-600", heartAdvice: "Avoid outdoor activities to protect heart.", icon: "alert-triangle" };
+            if (aqi <= 300) return { label: "Very Unhealthy", color: "text-purple-400", bg: "bg-purple-500/20", border: "border-purple-500/30", bar: "bg-purple-500", heartAdvice: "Health alert: risk of health effects for everyone.", icon: "alert-octagon" };
+            return { label: "Hazardous", color: "text-rose-500", bg: "bg-rose-900/30", border: "border-rose-700/30", bar: "bg-rose-600", heartAdvice: "Emergency conditions. Stay indoors.", icon: "skull" };
+        };
+
+        const getIndianAQIStatus = (aqi) => {
+            if (aqi <= 50) return { label: "Good", color: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/30", bar: "bg-emerald-500", heartAdvice: "Minimal impact.", icon: "heart" };
+            if (aqi <= 100) return { label: "Satisfactory", color: "text-lime-400", bg: "bg-lime-500/20", border: "border-lime-500/30", bar: "bg-lime-500", heartAdvice: "Minor breathing discomfort to sensitive people.", icon: "activity" };
+            if (aqi <= 200) return { label: "Moderate", color: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500/30", bar: "bg-yellow-500", heartAdvice: "Breathing discomfort to people with lung disease.", icon: "alert-circle" };
+            if (aqi <= 300) return { label: "Poor", color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500/30", bar: "bg-orange-500", heartAdvice: "Breathing discomfort to most people on prolonged exposure.", icon: "alert-triangle" };
+            if (aqi <= 400) return { label: "Very Poor", color: "text-red-500", bg: "bg-red-500/20", border: "border-red-500/30", bar: "bg-red-600", heartAdvice: "Respiratory illness on prolonged exposure.", icon: "alert-octagon" };
+            return { label: "Severe", color: "text-rose-600", bg: "bg-rose-900/30", border: "border-rose-700/30", bar: "bg-rose-700", heartAdvice: "Affects healthy people and seriously impacts those with existing diseases.", icon: "skull" };
+        };
+
+        const calculateIndianAQI = (pm25, pm10) => {
+            // Helper to linear interpolate
+            const calc = (conc, [cLow, cHigh], [iLow, iHigh]) => {
+                return Math.round(iLow + (iHigh - iLow) * ((conc - cLow) / (cHigh - cLow)));
+            };
+
+            const getSubIndex = (val, type) => {
+                // Breakpoints based on CPCB
+                const bps = type === 'pm25' 
+                    ? [[0,30,0,50], [30,60,51,100], [60,90,101,200], [90,120,201,300], [120,250,301,400], [250,999,401,500]]
+                    : [[0,50,0,50], [50,100,51,100], [100,250,101,200], [250,350,201,300], [350,430,301,400], [430,999,401,500]];
+                
+                for (let bp of bps) {
+                    if (val >= bp[0] && val <= bp[1]) return calc(val, [bp[0], bp[1]], [bp[2], bp[3]]);
+                }
+                return 500; // Cap at max
+            };
+
+            const idxPm25 = pm25 ? getSubIndex(pm25, 'pm25') : 0;
+            const idxPm10 = pm10 ? getSubIndex(pm10, 'pm10') : 0;
+            return Math.max(idxPm25, idxPm10);
         };
 
         const calculateMoonPhase = () => {
@@ -198,39 +286,37 @@
         };
 
         const getAdvice = (code, temp) => {
-            if ([95, 96, 99].includes(code)) return { text: "Stormy! Stay safe indoors.", icon: "zap" };
+            if ([95, 96, 99].includes(code)) return { text: "Storms ahead. Stay cozy inside.", icon: "zap" };
             if ([51, 61, 80].includes(code)) return { text: "Don't forget your umbrella.", icon: "umbrella" };
-            if ([71, 73, 75].includes(code)) return { text: "Bundle up! It's freezing.", icon: "snowflake" };
-            if (temp <= 10) return { text: "Hoodie weather defined.", icon: "shirt" };
-            if (temp >= 25) return { text: "Sun's out, legs out!", icon: "sun" };
-            if (temp > 20 && code === 0) return { text: "Great day for a walk!", icon: "footprints" };
-            return { text: "Enjoy the weather!", icon: "smile" };
+            if ([71, 73, 75].includes(code)) return { text: "It's freezing! Bundle up tight.", icon: "snowflake" };
+            if (temp <= 10) return { text: "Perfect weather for a warm hoodie.", icon: "shirt" };
+            if (temp >= 25) return { text: "Sun's out, legs out! Stay hydrated.", icon: "sun" };
+            if (temp > 20 && code === 0) return { text: "Beautiful day for a walk.", icon: "footprints" };
+            return { text: "Enjoy the weather out there!", icon: "smile" };
         };
 
         const generateClimateInsight = (currentData, historicalData) => {
             if (!currentData || !historicalData) return null;
-
             const currentTemps = currentData.daily.temperature_2m_mean || [];
             const historicalTemps = historicalData.daily.temperature_2m_mean || [];
-            
             if (currentTemps.length === 0 || historicalTemps.length === 0) return null;
 
             const avgCurrent = currentTemps.reduce((a, b) => a + b, 0) / currentTemps.length;
             const avgHist = historicalTemps.reduce((a, b) => a + b, 0) / historicalTemps.length;
             const diff = avgCurrent - avgHist;
 
-            let insightText = "Temperatures align with seasonal averages.";
+            let insightText = "Consistent with seasonal norms.";
             let icon = "minus";
-            let color = "text-gray-300";
+            let color = "text-slate-300";
             let trend = "neutral";
 
             if (diff > 1.0) {
-                insightText = `This month is ${diff.toFixed(1)}°C warmer than last year.`;
+                insightText = `${diff.toFixed(1)}°C warmer than last year.`;
                 icon = "trending-up";
                 color = "text-orange-400";
                 trend = "warmer";
             } else if (diff < -1.0) {
-                insightText = `This month is ${Math.abs(diff).toFixed(1)}°C cooler than last year.`;
+                insightText = `${Math.abs(diff).toFixed(1)}°C cooler than last year.`;
                 icon = "trending-down";
                 color = "text-blue-400";
                 trend = "cooler";
@@ -239,52 +325,37 @@
             const currentRain = (currentData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
             const histRain = (historicalData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
             
-            if (currentRain > histRain + 5) { 
-                if (histRain < 2) {
-                     insightText = "Significantly wetter than last year's dry spell.";
-                } else {
-                    const percent = Math.round(((currentRain - histRain) / histRain) * 100);
-                    if (percent > 500) {
-                        insightText = "Rainfall is exceptionally higher (>5x) than last year.";
-                    } else {
-                        insightText = `Rainfall is ${percent}% higher than last year.`;
-                    }
-                }
+            if (currentRain > histRain + 10) { 
+                const percent = histRain < 1 ? 100 : Math.round(((currentRain - histRain) / histRain) * 100);
+                insightText = `Significantly wetter (+${percent}%) than last year.`;
                 icon = "cloud-rain";
                 color = "text-blue-300";
             }
 
-            return { 
-                text: insightText, 
-                icon, 
-                color, 
-                trend,
-                currentTemps,
-                historicalTemps 
-            };
+            return { text: insightText, icon, color, trend, currentTemps, historicalTemps };
         };
 
         const getWeatherConfig = (code, isDay, isSevere, isWerewolf) => {
             const time = isDay ? 'day' : 'night';
             
             if (isWerewolf) {
-                return { gradient: "bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800", icon: "moon", label: "Werewolf Alert", accent: "shadow-red-500", iconColor: "#DC2626" };
+                return { gradient: "bg-gradient-to-b from-slate-950 via-red-950/40 to-slate-900", icon: "moon", label: "Werewolf Alert", accent: "shadow-red-500", iconColor: "#DC2626" };
             }
 
             if (isSevere) {
-                return { gradient: "bg-gradient-to-b from-red-900 via-orange-800 to-slate-900", icon: "alert-triangle", label: "Severe Alert", accent: "shadow-red-500", iconColor: "#EF4444" };
+                return { gradient: "bg-gradient-to-b from-red-950 via-slate-900 to-slate-950", icon: "alert-triangle", label: "Severe Alert", accent: "shadow-red-500", iconColor: "#EF4444" };
             }
 
             const c = {
-                clear: { day: { gradient: "bg-gradient-to-b from-sky-500 to-blue-700", icon: "sun", label: "Sunny", accent: "shadow-yellow-400", iconColor: "#FDB813" }, 
-                         night: { gradient: "bg-gradient-to-b from-slate-900 to-indigo-950", icon: "moon", label: "Clear", accent: "shadow-indigo-400", iconColor: "#E0E7FF" } },
-                cloudy: { day: { gradient: "bg-gradient-to-b from-slate-500 to-slate-700", icon: "cloud", label: "Cloudy", accent: "shadow-white", iconColor: "#fff" },
-                          night: { gradient: "bg-gradient-to-b from-gray-900 to-slate-800", icon: "cloud", label: "Cloudy", accent: "shadow-gray-500", iconColor: "#94A3B8" } },
-                rain: { day: { gradient: "bg-gradient-to-b from-blue-700 to-indigo-900", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-400", iconColor: "#60A5FA" },
-                        night: { gradient: "bg-gradient-to-b from-slate-950 to-black", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-600", iconColor: "#3B82F6" } }
+                clear: { day: { gradient: "bg-gradient-to-b from-sky-400 via-sky-600 to-blue-800", icon: "sun", label: "Sunny", accent: "shadow-yellow-400", iconColor: "#FDB813" }, 
+                         night: { gradient: "bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950", icon: "moon", label: "Clear", accent: "shadow-indigo-400", iconColor: "#E0E7FF" } },
+                cloudy: { day: { gradient: "bg-gradient-to-b from-slate-400 via-slate-500 to-slate-700", icon: "cloud", label: "Cloudy", accent: "shadow-white", iconColor: "#fff" },
+                          night: { gradient: "bg-gradient-to-b from-slate-800 via-slate-900 to-black", icon: "cloud", label: "Cloudy", accent: "shadow-gray-500", iconColor: "#94A3B8" } },
+                rain: { day: { gradient: "bg-gradient-to-b from-blue-600 via-blue-800 to-slate-900", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-400", iconColor: "#60A5FA" },
+                        night: { gradient: "bg-gradient-to-b from-slate-900 via-slate-950 to-black", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-600", iconColor: "#3B82F6" } }
             };
             if(code === 0) return c.clear[time];
-            if([1,2,3].includes(code)) return c.cloudy[time];
+            if([1,2,3,45,48].includes(code)) return c.cloudy[time];
             return c.rain[time];
         };
 
@@ -294,34 +365,21 @@
 
         const ClimateGraph = ({ current, past, trend }) => {
             if (!current || !past || current.length === 0) return null;
-            
             const allVals = [...current, ...past];
             const min = Math.min(...allVals) - 2;
             const max = Math.max(...allVals) + 2;
             const range = max - min || 1;
-            
             const width = 100;
             const height = 40;
-            
-            const getPoints = (arr) => {
-                return arr.map((val, i) => {
-                    const x = (i / (arr.length - 1)) * width;
-                    const y = height - ((val - min) / range) * height;
-                    return `${x},${y}`;
-                }).join(' ');
-            };
-            
+            const getPoints = (arr) => arr.map((val, i) => `${(i / (arr.length - 1)) * width},${height - ((val - min) / range) * height}`).join(' ');
             const strokeColor = trend === 'warmer' ? '#fb923c' : trend === 'cooler' ? '#60a5fa' : '#94a3b8'; 
 
-            const currentYear = new Date().getFullYear();
-            const pastYear = currentYear - 1;
-
             return (
-                <div className="w-full h-20 relative mt-3 overflow-hidden">
+                <div className="w-full h-20 relative mt-3">
                     <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
                         <line x1="0" y1={height/2} x2={width} y2={height/2} stroke="white" strokeWidth="0.2" strokeDasharray="2 2" opacity="0.3" />
                         <polyline points={getPoints(past)} fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
-                        <polyline points={getPoints(current)} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" className="drop-shadow-md" />
+                        <polyline points={getPoints(current)} fill="none" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" className="drop-shadow-md" />
                         <path d={`M0,${height} L0,${height - ((current[0] - min) / range) * height} ${getPoints(current).split(' ').map(p => 'L' + p).join(' ')} L${width},${height} Z`} fill={`url(#grad-${trend})`} opacity="0.2" />
                         <defs>
                             <linearGradient id={`grad-${trend}`} x1="0%" y1="0%" x2="0%" y2="100%">
@@ -330,13 +388,9 @@
                             </linearGradient>
                         </defs>
                     </svg>
-                    <div className="absolute bottom-0 w-full flex justify-between text-[9px] opacity-50 font-mono">
-                        <span>30 Days Ago</span>
-                        <span>Today</span>
-                    </div>
-                      <div className="absolute top-0 right-0 flex gap-2 text-[9px] font-bold bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm">
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{background: strokeColor}}></span> {currentYear}</span>
-                        <span className="flex items-center gap-1 opacity-50"><span className="w-1.5 h-1.5 rounded-full bg-white"></span> {pastYear}</span>
+                    <div className="absolute top-0 right-0 flex gap-2 text-[9px] font-bold bg-black/40 px-2 py-1 rounded-full backdrop-blur-md border border-white/10">
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{background: strokeColor}}></span> 2025</span>
+                        <span className="flex items-center gap-1 opacity-50"><span className="w-1.5 h-1.5 rounded-full bg-white"></span> 2024</span>
                     </div>
                 </div>
             );
@@ -346,146 +400,91 @@
             const [showInfo, setShowInfo] = useState(false);
             if (!insight) return null;
             return (
-                <div className="glass-panel p-4 rounded-2xl border border-white/10 relative overflow-hidden">
+                <div className="glass-panel p-4 rounded-3xl relative overflow-hidden group">
                     <div className="flex justify-between items-start mb-2 relative z-10">
                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full bg-white/5 ${insight.color}`}>
+                            <div className={`p-2 rounded-xl bg-white/5 border border-white/5 ${insight.color} group-hover:scale-110 transition-transform`}>
                                 <Icon name={insight.icon} size={20} />
                             </div>
                             <div>
-                                <h4 className="text-[10px] font-bold uppercase tracking-wide opacity-50 mb-0.5">Climate Context</h4>
-                                <p className="text-sm font-medium leading-tight">{insight.text}</p>
+                                <h4 className="text-[10px] font-bold uppercase tracking-wider opacity-50 mb-0.5">Climate Context</h4>
+                                <p className="text-sm font-semibold leading-tight text-white/90">{insight.text}</p>
                             </div>
                         </div>
-                        <button onClick={() => setShowInfo(!showInfo)} className="text-white/50 hover:text-white transition-colors p-1">
-                            <Icon name="info" size={14} />
-                        </button>
+                        <button onClick={() => setShowInfo(!showInfo)} className="text-white/30 hover:text-white transition-colors p-1"><Icon name="info" size={14} /></button>
                     </div>
-                    
                     {showInfo && (
-                        <div 
-                            className="absolute inset-0 z-20 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center animate-fade-in cursor-pointer"
-                            onClick={() => setShowInfo(false)}
-                        >
-                            <Icon name="activity" size={24} className="text-blue-400 mb-2" />
-                            <p className="text-xs text-white/80 leading-relaxed">
-                                <strong>Solid Line:</strong> This Year (2025)<br/>
-                                <strong>Dashed Line:</strong> Last Year (2024)<br/><br/>
-                                Compare the temperature trends over the last 30 days.
-                            </p>
-                            <span className="text-[9px] uppercase tracking-widest text-white/40 mt-3">Tap to close</span>
+                        <div className="absolute inset-0 z-20 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in cursor-pointer" onClick={() => setShowInfo(false)}>
+                            <Icon name="history" size={24} className="text-indigo-400 mb-3" />
+                            <p className="text-xs text-white/80 leading-relaxed font-medium">Comparing last 30 days temperature against same period last year.</p>
+                            <span className="text-[9px] uppercase tracking-widest text-white/40 mt-4">Tap to close</span>
                         </div>
                     )}
-
-                    {insight.currentTemps && insight.historicalTemps && (
-                        <ClimateGraph current={insight.currentTemps} past={insight.historicalTemps} trend={insight.trend} />
-                    )}
+                    <ClimateGraph current={insight.currentTemps} past={insight.historicalTemps} trend={insight.trend} />
                 </div>
             );
         };
 
         const WerewolfScene = ({ moonPhase }) => {
             const [isHowling, setIsHowling] = useState(false);
-            
             useEffect(() => {
-                // Howl cycle: every 6-9 seconds
-                const cycle = 6000 + Math.random() * 3000;
+                const cycle = 8000 + Math.random() * 5000;
                 const interval = setInterval(() => {
                     setIsHowling(true);
-                    // Play sound
                     const audio = new Audio('https://actions.google.com/sounds/v1/animals/wolf_howl.ogg');
-                    audio.volume = 0.4;
+                    audio.volume = 0.3;
                     audio.play().catch(e => {});
-
-                    setTimeout(() => setIsHowling(false), 2000);
+                    setTimeout(() => setIsHowling(false), 3000);
                 }, cycle);
-                
                 return () => clearInterval(interval);
             }, []);
 
             return (
-                <div className="w-full h-full relative overflow-hidden rounded-full mask-image-circle">
-                    {/* Stars */}
+                <div className="w-full h-full relative overflow-hidden rounded-full border-4 border-slate-900/50 shadow-inner bg-slate-950">
                     <div className="absolute inset-0 pointer-events-none">
-                         {[...Array(15)].map((_, i) => (
-                            <div key={i} className="absolute w-0.5 h-0.5 bg-white rounded-full animate-pulse" 
-                                 style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 60}%`, animationDelay: `${Math.random() * 3}s`, opacity: Math.random() }} />
+                         {[...Array(20)].map((_, i) => (
+                            <div key={i} className="absolute w-0.5 h-0.5 bg-white rounded-full animate-pulse" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 60}%`, animationDelay: `${Math.random() * 3}s`, opacity: Math.random() }} />
                          ))}
                     </div>
-
-                    {/* Moon - Massive size as per prompt */}
-                    <div className="absolute top-[5%] left-1/2 -translate-x-1/2 w-40 h-40 animate-float">
+                    <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-32 h-32 animate-float">
                          <div className="relative w-full h-full">
-                            <div className="absolute inset-0 bg-blue-100 rounded-full opacity-20 blur-xl animate-pulse-glow"></div>
-                            <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_15px_rgba(224,242,254,0.5)]">
-                                <defs>
-                                    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-                                        <stop offset="0%" stopColor="#F8FAFC" />
-                                        <stop offset="90%" stopColor="#E0F2FE" />
-                                        <stop offset="100%" stopColor="#BFDBFE" />
-                                    </radialGradient>
-                                    <pattern id="moonSurface" width="40" height="40" patternUnits="userSpaceOnUse">
-                                        <circle cx="10" cy="10" r="2" fill="#CBD5E1" opacity="0.3"/>
-                                        <circle cx="30" cy="30" r="4" fill="#94A3B8" opacity="0.2"/>
-                                    </pattern>
-                                </defs>
-                                <circle cx="100" cy="100" r="95" fill="url(#moonGlow)" />
-                                <circle cx="100" cy="100" r="95" fill="url(#moonSurface)" opacity="0.5" />
+                            <div className="absolute inset-0 bg-red-500 rounded-full opacity-10 blur-2xl animate-pulse-glow"></div>
+                            <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_20px_rgba(200,200,255,0.2)]">
+                                <circle cx="100" cy="100" r="90" fill="#E2E8F0" />
+                                <circle cx="70" cy="80" r="15" fill="#CBD5E1" opacity="0.5" />
+                                <circle cx="130" cy="120" r="25" fill="#CBD5E1" opacity="0.5" />
                             </svg>
                          </div>
                     </div>
-
-                    {/* Fog Layers with Parallax */}
                     <div className="absolute inset-0 z-0">
-                         <div className="absolute bottom-0 w-[200%] h-1/2 bg-slate-700/30 blur-[20px] animate-fog-drift-1 translate-x-0"></div>
-                         <div className="absolute bottom-[-10%] w-[200%] h-1/3 bg-slate-600/40 blur-[15px] animate-fog-drift-2 translate-x-0"></div>
+                         <div className="absolute bottom-0 w-[200%] h-2/3 bg-slate-800/40 blur-[25px] animate-fog-drift-1 translate-x-0"></div>
+                         <div className="absolute bottom-[-10%] w-[200%] h-1/2 bg-slate-900/50 blur-[20px] animate-fog-drift-2 translate-x-0"></div>
                     </div>
-
-                    {/* Cinematic Silhouette Layer */}
                     <div className="absolute inset-0 z-10 flex items-end justify-center">
                         <svg viewBox="0 0 200 200" className="w-full h-full" preserveAspectRatio="xMidYMax meet">
-                            {/* Cliff Base */}
-                             <path d="M-10,170 L40,155 L70,165 L100,150 L130,160 L170,145 L210,160 L210,210 L-10,210 Z" fill="#020617" />
-                            
-                            {/* Werewolf - Prompt specific SVG path */}
-                            <g transform="translate(100, 125)" className={isHowling ? "animate-howl origin-bottom" : "animate-breathing origin-bottom"}>
-                                {/* Legs */}
+                            <path d="M-20,160 L50,140 L90,155 L140,130 L220,150 L220,220 L-20,220 Z" fill="#020617" />
+                            <g transform="translate(140, 115) scale(-1, 1)" className={isHowling ? "animate-howl origin-bottom" : "animate-breathing origin-bottom"}>
                                 <path d="M-8,0 L-10,20 L-12,30" stroke="#000" strokeWidth="6" strokeLinecap="round" />
                                 <path d="M8,0 L10,20 L12,30" stroke="#000" strokeWidth="6" strokeLinecap="round" />
-                                
-                                {/* Body/Chest */}
-                                <ellipse cx="0" cy="-10" rx="15" ry="25" fill="#000"/>
-                                
-                                {/* Arms (Raised) */}
-                                <path d="M-15,-15 L-25,-25 L-28,-20" stroke="#000" strokeWidth="5" strokeLinecap="round" />
-                                <path d="M15,-15 L25,-25 L28,-20" stroke="#000" strokeWidth="5" strokeLinecap="round" />
-                                
-                                {/* Head (Tilted back) */}
-                                <g transform="rotate(-25 0 -35)">
-                                    <ellipse cx="0" cy="-35" rx="12" ry="15" fill="#000" />
-                                    {/* Snout */}
-                                    <path d="M0,-40 L2,-50 L-2,-50 Z" fill="#000"/>
-                                    {/* Ears */}
-                                    <path d="M-8,-45 L-12,-55 L-6,-48" fill="#000"/>
-                                    <path d="M8,-45 L12,-55 L6,-48" fill="#000"/>
+                                <ellipse cx="0" cy="-10" rx="14" ry="22" fill="#000"/>
+                                <path d="M-12,-12 L-22,-22" stroke="#000" strokeWidth="4" strokeLinecap="round" />
+                                <g transform="rotate(-20 0 -30)">
+                                    <circle cx="0" cy="-32" r="12" fill="#000" />
+                                    <path d="M-5,-35 L-15,-25 L0,-28 Z" fill="#000"/> 
+                                    <path d="M-2,-42 L-8,-52 L2,-46" fill="#000"/>
+                                    <path d="M5,-40 L10,-50 L8,-42" fill="#000"/>
                                 </g>
-
-                                {/* Tail */}
-                                <path d="M12,-5 Q20,-10 25,0 Q28,8 22,10" fill="#000" className="animate-tail-sway origin-left" />
-
-                                {/* Howl Effect Visuals */}
+                                <path d="M10,-5 Q20,-15 25,5" fill="none" stroke="#000" strokeWidth="4" className="animate-tail-sway origin-left" />
                                 {isHowling && (
                                     <g>
-                                        <circle cx="0" cy="-55" r="10" stroke="rgba(255,255,255,0.5)" fill="none" className="animate-ping" />
-                                        <circle cx="0" cy="-55" r="20" stroke="rgba(255,255,255,0.3)" fill="none" className="animate-ping" style={{animationDelay: '0.2s'}} />
+                                        <circle cx="-15" cy="-45" r="5" stroke="rgba(255,0,0,0.5)" fill="none" className="animate-ping" />
+                                        <circle cx="-15" cy="-45" r="15" stroke="rgba(255,0,0,0.3)" fill="none" className="animate-ping" style={{animationDelay: '0.2s'}} />
                                     </g>
                                 )}
                             </g>
                         </svg>
                     </div>
-
-                    {/* Vignette */}
-                    <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-slate-950/80 pointer-events-none z-20"></div>
+                    <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-red-950/40 pointer-events-none z-20 mix-blend-overlay"></div>
                 </div>
             );
         };
@@ -497,201 +496,176 @@
             const isFog = [45, 48].includes(weatherCode);
             const isClear = weatherCode === 0;
             const isWindy = weatherCode >= 61 && weatherCode <= 65; 
-            
             const isCold = temperature <= 10 && !isSnow;
             const isWarm = temperature >= 25 && !isRain;
             const isHot = temperature > 30; 
             const isSleeping = isClear && !isDay;
             const isFishing = !isRain && !isSnow && !isThunder && !isFog && !isHot && !isSleeping && !isWindy; 
 
-            if (isWerewolf) {
-                return <WerewolfScene moonPhase={moonPhase} />;
-            }
+            if (isWerewolf) return <WerewolfScene moonPhase={moonPhase} />;
 
             return (
-                <div className="w-full h-full flex items-center justify-center relative overflow-visible">
+                <div className="w-full h-full flex items-center justify-center relative">
                     <svg viewBox="0 0 200 200" className="w-full h-full animate-float">
                         <defs>
                             <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feGaussianBlur stdDeviation="4" result="blur" />
                                 <feComposite in="SourceAlpha" in2="blur" operator="in" result="shadow" />
-                                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" in="shadow" />
+                                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.2 0" in="shadow" />
                             </filter>
                         </defs>
-                        <ellipse cx="100" cy="170" rx="50" ry="10" fill="black" opacity="0.2" filter="url(#softShadow)" />
+                        <ellipse cx="100" cy="175" rx="55" ry="12" fill="black" opacity="0.25" filter="url(#softShadow)" />
                         
-                        {/* Standard Frog Logic */}
-                        <>
-                            {isClear && isDay && !isWarm && <circle cx="160" cy="30" r="15" fill="#FDB813" opacity="0.9" className="animate-pulse" />}
-                            {isClear && !isDay && <g><path d="M160 20 A 15 15 0 1 1 160 50" stroke="white" strokeWidth="2" fill="none" opacity="0.8" /><circle cx="20" cy="30" r="1.5" fill="white" className="animate-pulse" /><circle cx="180" cy="20" r="2" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} /><circle cx="50" cy="60" r="1" fill="white" /><circle cx="140" cy="10" r="1.2" fill="white" opacity="0.7" className="animate-pulse" style={{animationDelay: '0.5s'}} /></g>}
-                            {isFishing && <g className="animate-line-cast"><path d="M130 130 Q 180 80 190 100" stroke="#5D4037" strokeWidth="2" fill="none" /><path d="M190 100 Q 195 120 190 150" stroke="white" strokeWidth="1" fill="none" opacity="0.6" /><circle cx="190" cy="150" r="3" fill="#EF4444" className="animate-bob" /></g>}
-                            <g transform={`translate(0, 10) ${isWindy ? 'rotate(-5)' : ''}`}>
-                                <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /><path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />
-                                <ellipse cx="100" cy="125" rx="25" ry="35" fill="#22c55e" /><ellipse cx="100" cy="125" rx="15" ry="20" fill="#86efac" opacity="0.6" />
-                                {isWarm && <g><path d="M75 130 Q 70 150 85 150 L 115 150 Q 130 150 125 130" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" /><line x1="100" y1="130" x2="100" y2="150" stroke="#1D4ED8" strokeWidth="1" /></g>}
-                                <circle cx="100" cy="80" r="35" fill="#22c55e" />
-                                {isCold && <g><path d="M75 100 Q 60 130 75 150 L 125 150 Q 140 130 125 100 Z" fill="#F97316" stroke="#C2410C" strokeWidth="2" /><path d="M65 80 Q 100 30 135 80" stroke="#F97316" strokeWidth="8" fill="none" strokeLinecap="round" /><line x1="90" y1="100" x2="90" y2="120" stroke="white" strokeWidth="2" /><line x1="110" y1="100" x2="110" y2="120" stroke="white" strokeWidth="2" /></g>}
-                                <g className={isThunder ? "animate-sneeze" : ""}>
-                                    <path d="M80 55 L70 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="70" cy="45" r="10" fill="#22c55e" /> <circle cx="70" cy="45" r="7" fill="white" /><circle cx="70" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
-                                    <path d="M120 55 L130 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="130" cy="45" r="10" fill="#22c55e" /><circle cx="130" cy="45" r="7" fill="white" /><circle cx="130" cy="45" r={isSleeping ? 0.5 : 3} fill="black" />
-                                </g>
-                                {isThunder ? <circle cx="100" cy="90" r="4" fill="black" opacity="0.7" /> : isHot ? <path d="M90 90 Q100 95 110 90" stroke="#064e3b" strokeWidth="2" fill="none" /> : <path d="M85 85 Q100 100 115 85" stroke="#064e3b" strokeWidth="2" strokeLinecap="round" fill="none" />}
-                                {isWarm && <g transform="translate(0, -10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g>}
-                                {!isWarm && <circle cx="78" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
-                                {!isWarm && <circle cx="122" cy="90" r="4" fill="#fca5a5" opacity="0.5" />}
-                                {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" /> : <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" fill="none" />}
+                        {isClear && isDay && !isWarm && <circle cx="160" cy="30" r="18" fill="#FDB813" className="animate-pulse-glow" />}
+                        {isClear && !isDay && <g><path d="M160 20 A 15 15 0 1 1 160 50" stroke="white" strokeWidth="2" fill="none" opacity="0.6" /><circle cx="20" cy="30" r="1.5" fill="white" className="animate-pulse" /><circle cx="180" cy="20" r="2" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} /></g>}
+                        
+                        {isFishing && <g className="animate-line-cast"><path d="M130 130 Q 180 80 190 100" stroke="#5D4037" strokeWidth="2.5" fill="none" /><line x1="190" y1="100" x2="190" y2="150" stroke="rgba(255,255,255,0.6)" strokeWidth="1" strokeDasharray="2 2" /><circle cx="190" cy="150" r="3.5" fill="#EF4444" className="animate-bob" /></g>}
+                        
+                        <g transform={`translate(0, 10) ${isWindy ? 'rotate(-3)' : ''}`}>
+                            <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /><path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" />
+                            <ellipse cx="100" cy="125" rx="28" ry="38" fill="#22c55e" />
+                            <ellipse cx="100" cy="125" rx="18" ry="24" fill="#86efac" opacity="0.4" />
+                            
+                            {isWarm && <g><path d="M75 130 Q 70 150 85 150 L 115 150 Q 130 150 125 130" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" /><line x1="100" y1="130" x2="100" y2="150" stroke="#1D4ED8" strokeWidth="1" /></g>}
+                            
+                            <circle cx="100" cy="80" r="38" fill="#22c55e" />
+                            
+                            {isCold && <g><path d="M75 100 Q 60 130 75 150 L 125 150 Q 140 130 125 100 Z" fill="#F97316" stroke="#C2410C" strokeWidth="2" /><path d="M65 80 Q 100 30 135 80" stroke="#F97316" strokeWidth="8" fill="none" strokeLinecap="round" /><line x1="90" y1="100" x2="90" y2="120" stroke="white" strokeWidth="2" /><line x1="110" y1="100" x2="110" y2="120" stroke="white" strokeWidth="2" /></g>}
+                            
+                            <g className={isThunder ? "animate-sneeze" : ""}>
+                                <path d="M80 55 L70 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="70" cy="45" r="11" fill="#22c55e" /> <circle cx="70" cy="45" r="7.5" fill="white" /><circle cx="70" cy="45" r={isSleeping ? 0.5 : 3.5} fill="black" />
+                                <path d="M120 55 L130 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="130" cy="45" r="11" fill="#22c55e" /><circle cx="130" cy="45" r="7.5" fill="white" /><circle cx="130" cy="45" r={isSleeping ? 0.5 : 3.5} fill="black" />
                             </g>
-                            {isWindy && <g className="animate-wind-sway"><path d="M140 100 Q 160 90 180 110" stroke="#22c55e" strokeWidth="2" fill="none" strokeDasharray="4 2" /><g transform="translate(180, 110) rotate(30)"><ellipse cx="0" cy="0" rx="15" ry="5" fill="#475569" /><path d="M-10 0 Q0 -15 10 0" fill="#475569" /></g><path d="M20 80 Q 50 90 80 80" stroke="white" strokeWidth="2" opacity="0.3" /><path d="M10 120 Q 40 130 60 110" stroke="white" strokeWidth="2" opacity="0.3" /></g>}
-                            {isHot && <g><g transform="translate(0, 10)"><rect x="70" y="38" width="20" height="10" rx="2" fill="#1e293b" /><rect x="110" y="38" width="20" height="10" rx="2" fill="#1e293b" /><line x1="90" y1="43" x2="110" y2="43" stroke="#1e293b" strokeWidth="2" /></g><g transform="translate(135, 90)"><path d="M0 0 L5 20 L-5 20 Z" fill="#FCD34D" /> <line x1="0" y1="0" x2="5" y2="-10" stroke="white" strokeWidth="2" /></g></g>}
-                            {isFog && <g transform="translate(140, 125) rotate(-20)"><rect x="0" y="0" width="20" height="10" fill="#64748b" rx="2" /><path d="M20 0 L60 -20 L60 30 L20 10 Z" fill="yellow" opacity="0.3" /></g>}
-                            {isSleeping && <g transform="translate(130, 120) rotate(-45)"><rect x="0" y="0" width="40" height="10" fill="#475569" rx="2" /><rect x="35" y="-2" width="5" height="14" fill="#334155" rx="1" /></g>}
-                            {isRain && <g transform="translate(120, 50) rotate(10)"><path d="M0 0 Q-40 -50 0 -100 Q40 -50 0 0" fill="#4ade80" stroke="#14532d" strokeWidth="1" /><line x1="0" y1="0" x2="0" y2="100" stroke="#78350f" strokeWidth="3" /></g>}
-                            {isSnow && <g transform="translate(0, 10)"><path d="M80 110 Q100 125 120 110" stroke="#ef4444" strokeWidth="10" strokeLinecap="round" fill="none" /><path d="M110 110 L110 135" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" /></g>}
-                            {isSleeping && <g className="animate-pulse" transform="translate(140, 40)"><text x="0" y="0" fill="white" fontSize="24" fontWeight="bold" opacity="0.8">Z</text><text x="20" y="-15" fill="white" fontSize="16" fontWeight="bold" opacity="0.6">z</text></g>}
-                            {isRain && <g><line x1="50" y1="20" x2="50" y2="30" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" /><line x1="100" y1="10" x2="100" y2="20" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.5s'}} /><line x1="150" y1="30" x2="150" y2="40" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.2s'}} /></g>}
-                            {isSnow && <g><circle cx="40" cy="20" r="2" fill="white" className="animate-snow-fall" /><circle cx="120" cy="10" r="2" fill="white" className="animate-snow-fall" style={{animationDelay: '1s'}} /><circle cx="180" cy="30" r="2" fill="white" className="animate-snow-fall" style={{animationDelay: '2s'}} /></g>}
-                        </>
+                            
+                            {isThunder ? <circle cx="100" cy="90" r="5" fill="black" opacity="0.6" /> : isHot ? <path d="M90 90 Q100 95 110 90" stroke="#064e3b" strokeWidth="2.5" fill="none" /> : <path d="M85 85 Q100 100 115 85" stroke="#064e3b" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+                            
+                            {isWarm && <g transform="translate(0, -10)"><rect x="70" y="38" width="22" height="12" rx="3" fill="#1e293b" /><rect x="110" y="38" width="22" height="12" rx="3" fill="#1e293b" /><line x1="92" y1="44" x2="110" y2="44" stroke="#1e293b" strokeWidth="2.5" /></g>}
+                            
+                            {!isWarm && <circle cx="78" cy="92" r="5" fill="#fca5a5" opacity="0.4" />}
+                            {!isWarm && <circle cx="122" cy="92" r="5" fill="#fca5a5" opacity="0.4" />}
+                            
+                            {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" />}
+                        </g>
+
+                        {isWindy && <g className="animate-wind-sway"><path d="M140 100 Q 160 90 180 110" stroke="#22c55e" strokeWidth="2" fill="none" strokeDasharray="4 2" /><g transform="translate(180, 110) rotate(30)"><ellipse cx="0" cy="0" rx="15" ry="5" fill="#475569" /><path d="M-10 0 Q0 -15 10 0" fill="#475569" /></g><path d="M20 80 Q 50 90 80 80" stroke="white" strokeWidth="2" opacity="0.2" /><path d="M10 120 Q 40 130 60 110" stroke="white" strokeWidth="2" opacity="0.2" /></g>}
+                        {isHot && <g><g transform="translate(0, 10)"><rect x="70" y="38" width="22" height="12" rx="3" fill="#1e293b" /><rect x="110" y="38" width="22" height="12" rx="3" fill="#1e293b" /><line x1="92" y1="44" x2="110" y2="44" stroke="#1e293b" strokeWidth="2.5" /></g><g transform="translate(135, 90)"><path d="M0 0 L5 20 L-5 20 Z" fill="#FCD34D" /> <line x1="0" y1="0" x2="5" y2="-10" stroke="white" strokeWidth="2" /></g></g>}
+                        {isFog && <g transform="translate(140, 125) rotate(-20)"><rect x="0" y="0" width="20" height="10" fill="#64748b" rx="2" /><path d="M20 0 L60 -20 L60 30 L20 10 Z" fill="yellow" opacity="0.3" /></g>}
+                        {isSleeping && <g transform="translate(130, 120) rotate(-45)"><rect x="0" y="0" width="40" height="10" fill="#475569" rx="2" /><rect x="35" y="-2" width="5" height="14" fill="#334155" rx="1" /></g>}
+                        {isRain && <g transform="translate(120, 50) rotate(10)"><path d="M0 0 Q-40 -50 0 -100 Q40 -50 0 0" fill="#4ade80" stroke="#14532d" strokeWidth="1" /><line x1="0" y1="0" x2="0" y2="100" stroke="#78350f" strokeWidth="3" /></g>}
+                        {isSnow && <g transform="translate(0, 10)"><path d="M80 110 Q100 125 120 110" stroke="#ef4444" strokeWidth="10" strokeLinecap="round" fill="none" /><path d="M110 110 L110 135" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" /></g>}
+                        {isSleeping && <g className="animate-pulse" transform="translate(140, 40)"><text x="0" y="0" fill="white" fontSize="24" fontWeight="bold" opacity="0.8">Z</text><text x="20" y="-15" fill="white" fontSize="16" fontWeight="bold" opacity="0.6">z</text></g>}
+                        {isRain && <g><line x1="50" y1="20" x2="50" y2="30" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" /><line x1="100" y1="10" x2="100" y2="20" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.5s'}} /><line x1="150" y1="30" x2="150" y2="40" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.2s'}} /></g>}
+                        {isSnow && <g><circle cx="40" cy="20" r="2.5" fill="white" className="animate-snow-fall" /><circle cx="120" cy="10" r="2.5" fill="white" className="animate-snow-fall" style={{animationDelay: '1s'}} /><circle cx="180" cy="30" r="2.5" fill="white" className="animate-snow-fall" style={{animationDelay: '2s'}} /></g>}
                     </svg>
                 </div>
             );
         };
 
         const OfflineError = ({ onRetry }) => (
-            <div className="flex flex-col items-center justify-center h-[70vh] text-center animate-fade-in px-6">
-                <div className="relative mb-8">
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center animate-fade-in px-8">
+                <div className="relative mb-6">
                     <div className="absolute inset-0 bg-red-500/20 blur-2xl rounded-full animate-pulse-glow"></div>
-                    <div className="relative glass-panel p-8 rounded-full border border-white/10 shadow-2xl animate-bounce-gentle">
-                        <Icon name="wifi-off" size={64} className="text-white/80" />
+                    <div className="relative glass-panel p-6 rounded-full border border-white/10 shadow-2xl animate-bob">
+                        <Icon name="wifi-off" size={48} className="text-white/80" />
                     </div>
                 </div>
-                <h2 className="text-3xl font-bold mb-3 drop-shadow-lg">Whoops! No Signal</h2>
-                <p className="text-lg text-white/70 mb-8 font-medium leading-relaxed max-w-xs mx-auto">
-                    You're offline. Look outside for a realistic 4K preview! 🌳
+                <h2 className="text-2xl font-bold mb-2 drop-shadow-lg text-glow">You're Offline</h2>
+                <p className="text-sm text-white/60 mb-6 font-medium leading-relaxed max-w-xs mx-auto">
+                    The weather data can't be fetched right now. Please check your internet connection.
                 </p>
-                <button onClick={onRetry} className="glass-panel px-8 py-4 rounded-full font-bold hover:bg-white/20 transition-all active:scale-95 flex items-center gap-3 border border-white/20 shadow-lg text-lg">
-                    <Icon name="refresh-cw" size={20} />
-                    Reconnect
+                <button onClick={onRetry} className="glass-panel px-6 py-3 rounded-xl font-bold hover:bg-white/10 transition-all active:scale-95 flex items-center gap-2 border border-white/20 shadow-lg text-sm shimmer-bg bg-[length:200%_100%] animate-shimmer">
+                    <Icon name="refresh-cw" size={16} /> Try Again
                 </button>
             </div>
         );
 
-        const OfflineBanner = () => (
-            <div className="fixed top-0 left-0 w-full bg-red-500/90 backdrop-blur-md text-white text-center py-2 text-xs font-bold uppercase tracking-widest z-[100] animate-slide-down shadow-lg flex items-center justify-center gap-2"><Icon name="wifi-off" size={14} /><span>Offline Mode</span></div>
-        );
-
         const SevereAlertBanner = ({ code }) => {
-            const alertText = [95, 96, 99].includes(code) ? "SEVERE WEATHER ALERT: Thunderstorm warning in effect. Please stay indoors." : 
-                             [75, 86].includes(code) ? "SEVERE WEATHER ALERT: Heavy Snowfall warning. Travel not recommended." :
-                             "SEVERE WEATHER ALERT: Heavy Rain/Storm conditions detected.";
+            const alertText = [95, 96, 99].includes(code) ? "SEVERE THUNDERSTORM WARNING" : 
+                             [75, 86].includes(code) ? "HEAVY SNOWFALL WARNING" :
+                             "SEVERE WEATHER CONDITIONS";
             return (
-                <div className="fixed top-0 left-0 w-full bg-red-600/95 backdrop-blur-md text-white py-2 z-[100] shadow-lg overflow-hidden">
-                     <div className="whitespace-nowrap animate-marquee text-xs font-bold uppercase tracking-widest flex items-center gap-4">
-                        <span>⚠️ {alertText}</span>
-                        <span>⚠️ {alertText}</span>
-                        <span>⚠️ {alertText}</span>
+                <div className="fixed top-0 left-0 w-full bg-red-600 text-white py-1.5 z-[100] shadow-xl overflow-hidden border-b border-red-400/30">
+                     <div className="whitespace-nowrap animate-marquee text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-8">
+                        <span>⚠️ {alertText}</span><span>⚠️ {alertText}</span><span>⚠️ {alertText}</span><span>⚠️ {alertText}</span>
                      </div>
                 </div>
             );
         };
 
-        const MoonPhaseIcon = ({ phase }) => {
-            const getMoonPath = (p) => {
-                if (p < 0.05 || p > 0.95) return <circle cx="50" cy="50" r="40" fill="#334155" />; 
-                if (p >= 0.45 && p <= 0.55) return <circle cx="50" cy="50" r="40" fill="#FEFCD7" stroke="#FEFCD7" strokeWidth="2" className="animate-pulse-glow" />; 
-                if (p < 0.5) {
-                    const d = `M50,10 A40,40 0 1,1 50,90 A${40 * (1 - p*4)},40 0 1,0 50,10`;
-                    return <g><circle cx="50" cy="50" r="40" fill="#334155" /><path d={d} fill="#FEFCD7" /></g>; 
-                } else {
-                    const d = `M50,10 A40,40 0 1,0 50,90 A${40 * (1 - (1-p)*4)},40 0 1,1 50,10`;
-                    return <g><circle cx="50" cy="50" r="40" fill="#334155" /><path d={d} fill="#FEFCD7" /></g>;
-                }
-            };
-            return (
-                <div className="w-full h-full flex items-center justify-center">
-                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-xl animate-float">{getMoonPath(phase)}</svg>
-                </div>
-            );
-        };
-
         const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight, isWerewolf }) => {
-            // Override advice if Werewolf
             const advice = isWerewolf 
-                ? { text: "The beast awakens... Stay inside! 🌕", icon: "moon" }
+                ? { text: "The moon is full. The beast awakes.", icon: "moon" }
                 : getAdvice(weather.current.weather_code, weather.current.temperature_2m);
-
             const isDay = weather.current.is_day === 1;
             const weatherCode = weather.current.weather_code;
-            const temperature = weather.current.temperature_2m;
-            const showMoonPhase = !isDay && weatherCode === 0;
 
             return (
-                <div className="relative mb-2">
-                    <div className="flex flex-col items-center mb-6 animate-fade-in">
-                        <div className="flex items-center gap-2 text-shadow">
-                            <Icon name="map-pin" size={14} className="text-indigo-300 drop-shadow-md" />
-                            <span className="text-lg font-bold tracking-tight drop-shadow-md">{locationName}</span>
-                            <button onClick={onToggleSave} className={`p-1 rounded-full hover:bg-white/10 transition-all ${isSaved ? 'text-yellow-400' : 'opacity-50 hover:opacity-100'}`}>
-                                <Icon name="star" size={14} fill={isSaved ? "currentColor" : "none"} />
+                <div className="relative mb-6">
+                    <div className="flex flex-col items-center mb-8 animate-fade-in">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Icon name="map-pin" size={16} className="text-indigo-300 drop-shadow-md" />
+                            <h2 className="text-xl font-bold tracking-tight text-glow">{locationName}</h2>
+                            <button onClick={onToggleSave} className={`p-1.5 rounded-full hover:bg-white/10 transition-all ${isSaved ? 'text-yellow-400' : 'text-white/30 hover:text-white'}`}>
+                                <Icon name="star" size={16} fill={isSaved ? "currentColor" : "none"} />
                             </button>
                         </div>
-                        <div className="text-xs font-bold opacity-80 uppercase tracking-widest mt-1 text-shadow">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                        <div className="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em]">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
                     </div>
                     
-                    {/* Werewolf Badge */}
                     {isWerewolf && (
-                         <div className="mb-4 animate-shake">
-                            <div className="glass-panel bg-red-500/20 border-red-500/50 p-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/20">
-                              <span className="text-xl">🐺</span>
-                              <span className="text-red-300 font-bold text-xs uppercase tracking-widest">
-                                BEWARE: Full Moon Fog
-                              </span>
-                            </div>
-                        </div>
+                        <div className="mb-6 animate-shake mx-auto max-w-xs">
+                           <div className="bg-red-950/40 border border-red-500/30 p-2 rounded-xl flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(220,38,38,0.2)] backdrop-blur-sm">
+                             <Icon name="alert-octagon" size={18} className="text-red-500 animate-pulse" />
+                             <span className="text-red-200 font-bold text-[10px] uppercase tracking-widest">Full Moon Danger</span>
+                           </div>
+                       </div>
                     )}
 
-                    <div className="flex items-center justify-between relative z-10 px-2">
-                        <div className="flex flex-col w-1/3 items-center">
-                            <h1 className="text-[4.5rem] font-bold leading-none tracking-tighter drop-shadow-xl text-white">
-                                {Math.round(weather.current.temperature_2m)}°
-                            </h1>
-                            <div className="glass-panel px-3 py-1 rounded-full inline-flex items-center gap-1.5 mt-1 w-fit backdrop-blur-md border-white/20 shadow-lg">
-                                <span className={`w-2 h-2 rounded-full ${isSevere ? 'bg-red-500 animate-flash' : 'bg-green-400 animate-pulse'} shadow-[0_0_8px_rgba(74,222,128,0.8)]`}></span>
-                                <span className="text-[10px] font-bold capitalize text-shadow">{showMoonPhase ? getMoonPhaseName(moonPhase) : config.label}</span>
+                    <div className="flex items-center justify-between relative z-10 px-4 mb-8">
+                        <div className="flex flex-col w-1/3 items-start pl-2">
+                            <div className="relative flex items-start">
+                                <h1 className="text-7xl font-bold leading-none tracking-tighter text-glow bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">
+                                    {Math.round(weather.current.temperature_2m)}
+                                </h1>
+                                <span className="text-4xl font-bold text-white mt-1 ml-1 drop-shadow-md">°</span>
+                            </div>
+                            <div className="glass-panel px-3 py-1.5 rounded-full inline-flex items-center gap-2 mt-3 backdrop-blur-md border-white/10 shadow-lg">
+                                <span className={`w-2 h-2 rounded-full ${isSevere ? 'bg-red-500 animate-flash' : 'bg-emerald-400'} shadow-[0_0_8px_rgba(52,211,153,0.8)]`}></span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider">{config.label}</span>
                             </div>
                         </div>
-                        <div className="relative w-1/3 h-32 flex justify-center items-center">
-                            <div className="w-32 h-32">
+                        
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 z-0 pointer-events-none">
+                             <div className={`absolute inset-0 rounded-full opacity-20 blur-3xl ${config.accent.replace('shadow-', 'bg-')}`}></div>
+                        </div>
+
+                        <div className="relative w-1/3 h-40 flex justify-center items-center z-10">
+                            <div className="w-40 h-40">
                                 <WeatherFrog 
                                     weatherCode={weatherCode} 
                                     isDay={isDay} 
-                                    temperature={temperature} 
+                                    temperature={weather.current.temperature_2m} 
                                     moonPhase={moonPhase} 
                                     isWerewolf={isWerewolf}
                                 />
                             </div>
                         </div>
-                        <div className="flex justify-center w-1/3 relative h-32 items-center">
-                            <div className={`absolute inset-0 rounded-full opacity-40 blur-xl ${config.accent.replace('shadow-', 'bg-')}`}></div>
-                            <div className="relative animate-float filter drop-shadow-2xl">
-                                {showMoonPhase && !isWerewolf ? <div className="w-20 h-20"><MoonPhaseIcon phase={moonPhase} /></div> : <Icon name={config.icon} size={80} color={config.iconColor} fill={config.iconColor + "30"} />}
-                            </div>
-                        </div>
                     </div>
+                    
                     {/* Insight Pill */}
-                    <div className={`mt-6 glass-highlight px-4 py-3 rounded-xl flex items-center gap-3 animate-slide-up mx-1 shadow-lg ${isWerewolf ? 'border-red-500/30 bg-red-900/20' : ''}`}>
-                        <div className="p-1.5 bg-indigo-500/30 rounded-lg text-indigo-200 shrink-0 shadow-inner"><Icon name={advice.icon} size={18} /></div>
+                    <div className={`glass-highlight px-5 py-4 rounded-2xl flex items-center gap-4 animate-slide-up shadow-lg ${isWerewolf ? 'border-red-500/30 bg-red-900/10' : ''}`}>
+                        <div className="p-2.5 bg-white/5 rounded-xl text-indigo-200 shrink-0 border border-white/5 shadow-inner">
+                            <Icon name={advice.icon} size={20} />
+                        </div>
                         <div className="flex flex-col">
-                            <div className="text-[9px] font-bold uppercase tracking-widest opacity-70">Smart Insight</div>
-                            <div className={`text-xs font-bold leading-tight text-shadow ${isWerewolf ? 'text-red-200' : ''}`}>{advice.text}</div>
+                            <div className="text-[9px] font-bold uppercase tracking-widest opacity-60 mb-0.5">Daily Advice</div>
+                            <div className={`text-sm font-semibold leading-tight ${isWerewolf ? 'text-red-100' : 'text-white'}`}>{advice.text}</div>
                         </div>
                     </div>
                     
-                    {/* Climate Insight Card */}
-                    {climateInsight && !isWerewolf && (
-                        <div className="mt-2 animate-slide-up mx-1">
-                            <ClimateCard insight={climateInsight} />
-                        </div>
-                    )}
+                    <div className="mt-4 animate-slide-up" style={{animationDelay: '0.1s'}}>
+                        <ClimateCard insight={climateInsight} />
+                    </div>
                 </div>
             );
         };
@@ -704,72 +678,124 @@
             const current = now.getTime();
             let progress = ((current - start) / (end - start)) * 100;
             progress = Math.max(0, Math.min(100, progress));
+            const isNight = current > end || current < start;
+
             return (
-                <div className="glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden">
-                    <div className="flex justify-between text-xs opacity-80 font-mono mb-8 font-semibold">
+                <div className="glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden group">
+                    <div className="flex justify-between text-[10px] opacity-60 font-mono font-bold uppercase tracking-wider mb-8">
                         <span>{new Date(sunrise).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                         <span>{new Date(sunset).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <div className="relative h-12 w-full">
-                        <svg className="w-full h-full overflow-visible" viewBox="0 0 200 50" preserveAspectRatio="none">
-                            <path d="M0,50 Q100,-40 200,50" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeDasharray="4 4" />
+                    <div className="relative h-16 w-full mb-1">
+                        <svg className="w-full h-full overflow-visible" viewBox="0 0 200 60" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="sunPathGrad" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0%" stopColor="rgba(255,255,255,0.1)" />
+                                    <stop offset="50%" stopColor="rgba(255,255,255,0.3)" />
+                                    <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M0,60 Q100,-40 200,60" fill="none" stroke="url(#sunPathGrad)" strokeWidth="2" strokeDasharray="4 4" />
+                            <line x1="0" y1="60" x2="200" y2="60" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
                         </svg>
-                        <div className="absolute top-0 left-0 w-8 h-8 bg-yellow-300 rounded-full shadow-[0_0_20px_rgba(253,224,71,0.8)] flex items-center justify-center text-yellow-900 transition-all duration-1000 ease-out"
-                            style={{ offsetPath: 'path("M0,50 Q100,-40 200,50")', offsetDistance: `${progress}%`, opacity: progress > 0 && progress < 100 ? 1 : 0.3 }}>
-                            <Icon name="sun" size={16} fill="currentColor" />
+                        <div className="absolute top-0 left-0 w-6 h-6 bg-yellow-100 rounded-full shadow-[0_0_25px_rgba(253,224,71,0.6)] flex items-center justify-center text-yellow-900 transition-all duration-1000 ease-out z-10"
+                            style={{ offsetPath: 'path("M0,60 Q100,-40 200,60")', offsetDistance: `${progress}%`, opacity: isNight ? 0.3 : 1, transform: isNight ? 'scale(0.8)' : 'scale(1)' }}>
+                            <Icon name="sun" size={14} fill="currentColor" />
                         </div>
                     </div>
-                    <div className="text-center text-xs font-bold tracking-widest uppercase opacity-70 mt-2">Solar Position</div>
                 </div>
             );
         };
 
         const ForecastStrip = ({ hourly }) => {
             const now = new Date().getHours();
-            const nextHours = hourly.time.map((t, i) => ({ time: t, temp: hourly.temperature_2m[i] })).filter(h => new Date(h.time).getHours() > now).slice(0, 5);
+            const nextHours = hourly.time.map((t, i) => ({ 
+                time: t, 
+                temp: hourly.temperature_2m[i], 
+                code: hourly.weather_code[i] 
+            })).filter(h => new Date(h.time).getHours() > now).slice(0, 5);
+
             return (
-                <div className="glass-panel p-5 rounded-3xl mb-4">
-                    <div className="flex justify-between items-end h-24 relative">
-                        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-indigo-500/20 to-transparent rounded-b-2xl pointer-events-none"></div>
-                        {nextHours.map((h, i) => (
-                            <div key={i} className="flex flex-col items-center justify-end z-10 gap-2">
-                                <span className="text-lg font-bold text-shadow">{Math.round(h.temp)}°</span>
-                                <div className="h-8 w-1 bg-white/20 rounded-full relative overflow-hidden border border-white/10"><div className="absolute bottom-0 left-0 right-0 bg-indigo-400 rounded-full shadow-[0_0_10px_rgba(129,140,248,0.5)]" style={{ height: `${(h.temp / 40) * 100}%` }}></div></div>
-                                <span className="text-xs opacity-70 font-mono font-semibold">{new Date(h.time).getHours()}:00</span>
-                            </div>
-                        ))}
+                <div className="glass-panel p-6 rounded-3xl mb-4">
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-4 flex items-center gap-2">
+                        <Icon name="clock" size={12} /> Hourly
+                    </h3>
+                    <div className="flex justify-between items-end h-28 relative">
+                        {nextHours.map((h, i) => {
+                             const config = getWeatherConfig(h.code, true);
+                             return (
+                                <div key={i} className="flex flex-col items-center justify-end z-10 gap-2 group w-full">
+                                    <span className="text-xs opacity-60 font-mono font-bold mb-1">{new Date(h.time).getHours()}:00</span>
+                                    <Icon name={config.icon} size={18} className="opacity-80 mb-1" />
+                                    <div className="w-1.5 bg-white/10 rounded-full relative overflow-hidden border border-white/5 h-16 group-hover:bg-white/20 transition-colors">
+                                        <div className="absolute bottom-0 left-0 right-0 bg-indigo-400 rounded-full shadow-[0_0_10px_rgba(129,140,248,0.5)] transition-all duration-1000" style={{ height: `${Math.min((h.temp / 40) * 100, 100)}%` }}></div>
+                                    </div>
+                                    <span className="text-sm font-bold mt-1">{Math.round(h.temp)}°</span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             );
         };
 
-        const AQICard = ({ aqi }) => {
-            if (!aqi) return null;
-            const status = getAQIStatus(aqi);
+        const AQICard = ({ usAqi, pm25, pm10 }) => {
+            const [system, setSystem] = useState('US'); // 'US' or 'IN'
+            
+            if (usAqi === null || usAqi === undefined) return null;
+
+            const indianAqi = calculateIndianAQI(pm25, pm10);
+            const displayAqi = system === 'US' ? usAqi : indianAqi;
+            const status = system === 'US' ? getAQIStatus(displayAqi) : getIndianAQIStatus(displayAqi);
+            const infoUrl = system === 'US' ? "https://www.airnow.gov/aqi/aqi-basics/" : "https://cpcb.nic.in/National-Air-Quality-Index/";
+            
+            // Indian AQI also nominally goes up to 500
+            const percentage = Math.min((displayAqi / 500) * 100, 100);
+            
             return (
-                <div className="glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden">
-                    <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg bg-white/10 border border-white/10"><Icon name="wind" size={16} /></div>
-                            <span className="text-sm font-bold uppercase tracking-wide opacity-80 text-shadow">Air Quality</span>
+                <div className={`glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden ${status.border} group transition-colors duration-500`}>
+                    <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
+                    <div className="flex justify-between items-center mb-6">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-1.5 rounded-lg bg-white/10 border border-white/10"><Icon name="wind" size={14} /></div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">Air Quality</span>
                         </div>
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full bg-black/30 ${status.color} border border-white/10 shadow-sm`}>{status.label}</span>
-                    </div>
-                    <div className="flex items-end gap-2 mb-4">
-                        <span className="text-4xl font-bold tracking-tighter text-shadow">{aqi}</span>
-                        <span className="text-xs opacity-70 mb-1.5 font-medium">US AQI</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-black/30 rounded-full overflow-hidden mb-5 border border-white/5">
-                        <div className={`h-full ${status.bar} transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(255,255,255,0.3)]`} style={{ width: `${Math.min((aqi / 300) * 100, 100)}%` }}></div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-black/20 rounded-2xl border border-white/10 backdrop-blur-sm">
-                        <div className={`p-2 rounded-full bg-white/5 ${status.color} animate-pulse-heart shrink-0 border border-white/5`}>
-                            <Icon name="heart" size={18} fill="currentColor" />
+                        
+                        <div className="flex bg-black/30 rounded-full p-1 border border-white/5">
+                            <button 
+                                onClick={() => setSystem('US')}
+                                className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${system === 'US' ? 'bg-white/20 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                            >
+                                US
+                            </button>
+                            <button 
+                                onClick={() => setSystem('IN')}
+                                className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${system === 'IN' ? 'bg-white/20 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                            >
+                                IN
+                            </button>
                         </div>
-                        <div>
-                            <h4 className="text-[10px] font-bold uppercase tracking-wide opacity-70 mb-0.5">Heart Impact</h4>
-                            <p className="text-xs font-semibold leading-snug opacity-90 text-shadow">{status.heartAdvice}</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-end mb-4">
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-5xl font-bold tracking-tighter text-glow animate-fade-in" key={displayAqi}>{Math.round(displayAqi)}</span>
+                            <div className="flex flex-col">
+                                <span className="text-xs opacity-50 font-medium">{system === 'US' ? 'US AQI' : 'NAQI (IN)'}</span>
+                                <a href={infoUrl} target="_blank" rel="noopener noreferrer" className="text-[9px] opacity-40 hover:opacity-100 hover:text-blue-300 transition-all flex items-center gap-1 mt-0.5 font-bold uppercase tracking-wider group/link">
+                                    About {system === 'US' ? 'System' : 'NAQI'} <Icon name="external-link" size={8} className="group-hover/link:translate-x-0.5 transition-transform" />
+                                </a>
+                            </div>
                         </div>
+                        <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${status.bg} ${status.color} border border-white/5 shadow-sm uppercase tracking-wide mb-1.5`}>{status.label}</span>
+                    </div>
+
+                    <div className="h-2 w-full bg-slate-900/50 rounded-full overflow-hidden mb-5 border border-white/5 shadow-inner">
+                        <div className={`h-full ${status.bar} transition-all duration-1000 ease-out shadow-[0_0_15px_currentColor]`} style={{ width: `${percentage}%` }}></div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-slate-900/40 rounded-xl border border-white/5 backdrop-blur-sm">
+                        <Icon name={status.icon} size={16} className={`${status.color} mt-0.5`} />
+                        <p className="text-xs font-medium leading-relaxed opacity-80">{status.heartAdvice}</p>
                     </div>
                 </div>
             );
@@ -778,22 +804,23 @@
         const DailyForecast = ({ daily }) => {
             return (
                 <div className="glass-panel p-5 rounded-3xl mb-4">
-                    <h3 className="text-xs font-bold uppercase tracking-widest opacity-60 mb-4 flex items-center gap-2 text-shadow">
-                        <Icon name="calendar-days" size={14} /> 7-Day Forecast
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-5 flex items-center gap-2">
+                        <Icon name="calendar-days" size={12} /> 7-Day Forecast
                     </h3>
-                    <div className="space-y-3">
+                    <div className="space-y-1">
                         {daily.time.slice(1, 7).map((t, i) => {
                             const config = getWeatherConfig(daily.weather_code[i+1], true);
+                            const pop = daily.precipitation_probability_max ? daily.precipitation_probability_max[i+1] : 0;
                             return (
-                                <div key={t} className="flex items-center justify-between p-2.5 hover:bg-white/10 rounded-xl transition-colors border border-transparent hover:border-white/10">
-                                    <span className="w-12 font-bold text-sm text-shadow">{formatDayName(t)}</span>
-                                    <div className="flex items-center gap-2 opacity-90">
-                                        <Icon name={config.icon} size={18} color={config.iconColor} className="drop-shadow-sm" />
-                                        <span className="text-xs opacity-70 capitalize font-medium">{config.label}</span>
+                                <div key={t} className="flex items-center justify-between p-3 hover:bg-white/5 rounded-2xl transition-colors group">
+                                    <span className="w-10 font-bold text-sm opacity-90">{formatDayName(t)}</span>
+                                    <div className="flex items-center gap-3 flex-1 px-4">
+                                        <Icon name={config.icon} size={20} color={config.iconColor} className="drop-shadow-sm group-hover:scale-110 transition-transform" />
+                                        {pop > 20 && <div className="flex items-center gap-1 text-[10px] text-blue-300 font-bold bg-blue-500/10 px-1.5 py-0.5 rounded"><Icon name="droplets" size={8} /> {pop}%</div>}
                                     </div>
-                                    <div className="flex gap-3 text-sm font-mono">
-                                        <span className="font-bold text-white">{Math.round(daily.temperature_2m_max[i+1])}°</span>
-                                        <span className="opacity-60 font-semibold">{Math.round(daily.temperature_2m_min[i+1])}°</span>
+                                    <div className="flex gap-4 text-sm font-mono">
+                                        <span className="font-bold text-white w-8 text-right">{Math.round(daily.temperature_2m_max[i+1])}°</span>
+                                        <span className="opacity-40 font-semibold w-8 text-right">{Math.round(daily.temperature_2m_min[i+1])}°</span>
                                     </div>
                                 </div>
                             );
@@ -803,9 +830,11 @@
             );
         };
 
-        const SearchBar = ({ onSearch, onLocate, onToggleSound, isMuted, isPlaying }) => {
+        const SearchBar = ({ onSearch, onToggleSound, isMuted, isPlaying }) => {
             const [query, setQuery] = useState('');
             const [suggestions, setSuggestions] = useState([]);
+            const [isFocused, setIsFocused] = useState(false);
+
             useEffect(() => {
                 const timer = setTimeout(async () => {
                     if (query.length > 2) {
@@ -820,35 +849,47 @@
             }, [query]);
 
             return (
-                <div className="relative w-full mb-4 z-50 flex gap-2 items-center">
-                    <div className="relative flex-1 group">
-                        <div className="absolute left-3 top-2.5 text-white/60 group-focus-within:text-white transition-colors"><Icon name="search" size={14} /></div>
+                <div className="relative w-full mb-6 z-50 flex gap-3 items-center">
+                    <div className={`relative flex-1 group transition-all duration-300 ${isFocused ? 'scale-[1.02]' : ''}`}>
+                        <div className="absolute left-4 top-3.5 text-white/50 group-focus-within:text-white transition-colors"><Icon name="search" size={16} /></div>
                         <form onSubmit={(e) => { e.preventDefault(); if(suggestions[0]) onSearch(suggestions[0]); }}>
-                            <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find a city..." className="w-full pl-9 pr-3 py-2 rounded-full glass-input text-white placeholder-white/60 focus:bg-black/50 outline-none ring-0 font-bold text-sm transition-all shadow-inner" />
+                            <input 
+                                type="text" 
+                                value={query} 
+                                onFocus={() => setIsFocused(true)}
+                                onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+                                onChange={(e) => setQuery(e.target.value)} 
+                                placeholder="Search city..." 
+                                className="w-full pl-11 pr-4 py-3 rounded-2xl glass-input text-white placeholder-white/40 focus:bg-black/40 outline-none ring-0 font-bold text-sm transition-all shadow-lg" 
+                            />
                         </form>
                     </div>
                     
-                    {/* Sound Toggle Button */}
                     <button 
                         onClick={onToggleSound}
-                        className={`p-2 rounded-full glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/20 shadow-lg relative ${!isMuted ? 'text-green-400' : 'text-white/70'}`} 
-                        title={isMuted ? "Enable Ambient Sounds" : "Mute Ambient Sounds"}
+                        className={`p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg relative overflow-hidden group ${!isMuted ? 'text-emerald-400 border-emerald-500/30' : 'text-white/50'}`} 
+                        title={isMuted ? "Enable Sound" : "Mute Sound"}
                     >
-                        <Icon name={isMuted ? "volume-x" : "volume-2"} size={16} />
+                        <div className={`absolute inset-0 bg-emerald-500/10 transition-opacity ${!isMuted ? 'opacity-100' : 'opacity-0'}`}></div>
+                        <Icon name={isMuted ? "volume-x" : "volume-2"} size={18} className="relative z-10" />
                         {!isMuted && isPlaying && (
-                            <div className="absolute -top-1 -right-1 flex gap-0.5 items-end h-2">
-                                <div className="w-0.5 bg-green-400 animate-wave"></div>
-                                <div className="w-0.5 bg-green-400 animate-wave" style={{animationDelay: '0.1s'}}></div>
-                                <div className="w-0.5 bg-green-400 animate-wave" style={{animationDelay: '0.2s'}}></div>
+                            <div className="absolute bottom-1 right-1 flex gap-0.5 items-end h-2 z-10">
+                                <div className="w-0.5 bg-emerald-400 animate-[bounce_1s_infinite] h-1.5"></div>
+                                <div className="w-0.5 bg-emerald-400 animate-[bounce_1.2s_infinite] h-2.5"></div>
+                                <div className="w-0.5 bg-emerald-400 animate-[bounce_0.8s_infinite] h-1"></div>
                             </div>
                         )}
                     </button>
 
-                    <button onClick={() => onSearch('CURRENT')} className="p-2 rounded-full glass-input hover:bg-white/10 active:scale-95 transition-all text-white/90 border border-white/20 shadow-lg" title="Use Current Location"><Icon name="crosshair" size={16} /></button>
-                    {suggestions.length > 0 && (
-                        <div className="absolute top-full mt-2 w-full glass-panel bg-black/95 rounded-xl overflow-hidden shadow-2xl backdrop-blur-xl animate-slide-up left-0 z-50 border border-white/20">
+                    <button onClick={() => onSearch('CURRENT')} className="p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all text-white/80 border border-white/10 shadow-lg" title="Use Current Location"><Icon name="crosshair" size={18} /></button>
+                    
+                    {suggestions.length > 0 && isFocused && (
+                        <div className="absolute top-full mt-2 w-full glass-panel bg-slate-900/95 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl animate-slide-up left-0 z-50 border border-white/10">
                             {suggestions.map(city => (
-                                <button key={city.id} onClick={() => { onSearch(city); setSuggestions([]); setQuery(''); }} className="w-full px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/10 last:border-0 flex justify-between text-white"><span className="font-bold text-sm">{city.name}, <span className="opacity-60 text-xs ml-1 font-normal">{city.country_code}</span></span></button>
+                                <button key={city.id} onClick={() => { onSearch(city); setSuggestions([]); setQuery(''); }} className="w-full px-5 py-3.5 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex justify-between text-white group">
+                                    <span className="font-bold text-sm">{city.name}</span>
+                                    <span className="opacity-40 text-xs font-mono group-hover:opacity-80 transition-opacity">{city.country_code}</span>
+                                </button>
                             ))}
                         </div>
                     )}
@@ -857,23 +898,33 @@
         };
 
         const BentoGrid = ({ current, daily, themeMode }) => {
-            const isLight = themeMode === 'light';
-            const cardClass = isLight 
-                ? 'bg-white/60 border-white/50 text-slate-900 shadow-sm' 
-                : 'bg-slate-900/40 border-white/10 text-white shadow-lg';
             const items = [
-                { icon: 'wind', label: 'Wind', val: `${Math.round(current.wind_speed_10m)}`, unit: 'km/h' },
-                { icon: 'droplets', label: 'Humidity', val: `${current.relative_humidity_2m}`, unit: '%' },
-                { icon: 'sun', label: 'UV Index', val: `${Math.round(daily.uv_index_max[0])}`, unit: '' },
-                { icon: 'thermometer', label: 'Feels Like', val: `${Math.round(current.apparent_temperature)}°`, unit: '' },
+                { icon: 'wind', label: 'Wind', val: `${Math.round(current.wind_speed_10m)}`, unit: 'km/h', sub: <div className="flex items-center gap-1 text-[9px] opacity-60 mt-1"><Icon name="compass" size={10} style={{transform: `rotate(${current.wind_direction_10m}deg)`}} /> {current.wind_direction_10m}°</div> },
+                { icon: 'droplets', label: 'Humidity', val: `${current.relative_humidity_2m}`, unit: '%', sub: null },
+                { icon: 'sun', label: 'UV Index', val: `${Math.round(daily.uv_index_max[0])}`, unit: '', sub: null },
+                { icon: 'thermometer', label: 'Feels Like', val: `${Math.round(current.apparent_temperature)}°`, unit: '', sub: null },
+                { icon: 'eye', label: 'Visibility', val: `${(current.visibility / 1000).toFixed(1)}`, unit: 'km', sub: null },
+                { icon: 'gauge', label: 'Pressure', val: `${Math.round(current.surface_pressure)}`, unit: 'hPa', sub: null },
             ];
 
             return (
-                <div className="grid grid-cols-2 gap-3 w-full mb-6">
+                <div className="grid grid-cols-3 gap-3 w-full mb-4">
                     {items.map((item, i) => (
-                        <div key={i} className={`glass-panel p-4 rounded-3xl flex flex-col items-start justify-between h-28 transition-transform active:scale-95 duration-200 ${cardClass}`}>
-                            <div className="flex w-full justify-between opacity-70"><span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span><Icon name={item.icon} size={16} /></div>
-                            <div className="flex items-baseline gap-1"><span className="text-3xl font-bold tracking-tight">{item.val}</span><span className="text-xs font-medium opacity-60">{item.unit}</span></div>
+                        <div key={i} className="glass-card p-3 rounded-2xl flex flex-col justify-between h-24 hover:bg-white/5 relative overflow-hidden group">
+                            <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">
+                                <Icon name={item.icon} size={64} />
+                            </div>
+                            <div className="flex w-full justify-between opacity-50 mb-1">
+                                <Icon name={item.icon} size={14} />
+                            </div>
+                            <div>
+                                <div className="flex items-baseline gap-0.5">
+                                    <span className="text-xl font-bold tracking-tight">{item.val}</span>
+                                    <span className="text-[10px] font-medium opacity-50">{item.unit}</span>
+                                </div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider opacity-40 mt-1">{item.label}</div>
+                                {item.sub}
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -881,16 +932,12 @@
         };
 
         const WeatherSkeleton = () => (
-            <div className="flex flex-col items-center w-full animate-fade-in p-6">
-                <div className="w-32 h-6 skeleton mb-8 rounded-full"></div>
-                <div className="w-[180px] h-[220px] skeleton rounded-[2.5rem] mb-8 opacity-50"></div>
-                <div className="w-48 h-24 skeleton mb-4 rounded-2xl opacity-80"></div>
-                <div className="w-24 h-6 skeleton mb-12 rounded-full opacity-60"></div>
-                <div className="grid grid-cols-2 gap-4 w-full mb-8">
-                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
-                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
-                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
-                    <div className="h-32 skeleton rounded-3xl opacity-40"></div>
+            <div className="flex flex-col items-center w-full animate-fade-in px-4">
+                <div className="w-40 h-8 skeleton bg-white/5 rounded-full mb-8 animate-pulse"></div>
+                <div className="w-full aspect-square max-w-[200px] skeleton bg-white/5 rounded-full mb-8 animate-pulse opacity-50"></div>
+                <div className="w-full h-24 skeleton bg-white/5 rounded-3xl mb-4 animate-pulse opacity-30"></div>
+                <div className="grid grid-cols-3 gap-3 w-full mb-8">
+                    {[...Array(6)].map((_, i) => <div key={i} className="h-24 skeleton bg-white/5 rounded-2xl animate-pulse opacity-20"></div>)}
                 </div>
             </div>
         );
@@ -901,12 +948,9 @@
             const [error, setError] = useState(null);
             const [saved, setSaved] = useState(localStorage.getItem('favCity'));
             const [isOnline, setIsOnline] = useState(navigator.onLine);
-            const [theme, setTheme] = useState('dark');
             const [isMuted, setIsMuted] = useState(true);
             const [climateInsight, setClimateInsight] = useState(null);
-            const [historicalData, setHistoricalData] = useState(null);
 
-            // Werewolf Logic: Full Moon (phase ~0.5) AND Night
             const isWerewolf = data && data.weather && 
                 data.weather.daily.moon_phase[0] >= 0.45 && 
                 data.weather.daily.moon_phase[0] <= 0.55 && 
@@ -930,14 +974,9 @@
                 try {
                     if (!navigator.onLine) throw new Error("OFFLINE");
                     const safeFetch = async (url) => {
-                        try {
-                            const res = await fetch(url);
-                            if (!res.ok) throw new Error(res.statusText);
-                            return await res.json();
-                        } catch (e) {
-                            console.warn("Failed to fetch:", url, e);
-                            return null;
-                        }
+                        const res = await fetch(url);
+                        if (!res.ok) throw new Error(res.statusText);
+                        return await res.json();
                     };
 
                     const today = new Date();
@@ -947,30 +986,27 @@
                     oneYearAgoToday.setFullYear(today.getFullYear() - 1);
                     const oneYearAgoThirtyDays = new Date(thirtyDaysAgo);
                     oneYearAgoThirtyDays.setFullYear(thirtyDaysAgo.getFullYear() - 1);
-
                     const formatDate = (d) => d.toISOString().split('T')[0];
 
                     const [w, a, histCurr, histPrev] = await Promise.all([
-                        safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,relative_humidity_2m,apparent_temperature&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`),
-                        safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`),
+                        safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,relative_humidity_2m,apparent_temperature,surface_pressure,visibility&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto`),
+                        safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10`),
                         safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${formatDate(thirtyDaysAgo)}&end_date=${formatDate(today)}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`),
                         safeFetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${formatDate(oneYearAgoThirtyDays)}&end_date=${formatDate(oneYearAgoToday)}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`)
                     ]);
 
                     if (w) {
-                        const safeAqi = a || { current: { us_aqi: null } };
+                        const safeAqi = a || { current: { us_aqi: null, pm2_5: null, pm10: null } };
                         const moonPhase = calculateMoonPhase();
                         w.daily.moon_phase = [moonPhase];
                         setData({ weather: w, aqi: safeAqi, name });
-                        
-                        // Generate Insight
                         const insight = generateClimateInsight(histCurr, histPrev);
                         setClimateInsight(insight);
                     } else {
                         throw new Error("Weather data unavailable");
                     }
                 } catch(e) { 
-                    console.error("Critical fetch error:", e); 
+                    console.error("Fetch error:", e); 
                     setError(e.message === "OFFLINE" ? "offline" : "generic");
                 } finally { 
                     setTimeout(() => setLoading(false), 800); 
@@ -993,9 +1029,6 @@
                     const loc = JSON.parse(saved);
                     fetchWeather(loc.lat, loc.lon, loc.name);
                 } else { handleSearch('CURRENT'); }
-                if('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
-                    navigator.serviceWorker.register('sw.js').catch(console.error);
-                }
             }, []);
 
             const toggleSave = () => {
@@ -1026,61 +1059,62 @@
 
             if (error === "offline" || (!isOnline && !data && !loading)) {
                 return (
-                    <div className="min-h-screen bg-slate-950 text-white p-4 flex flex-col">
-                        {!isOnline && <OfflineBanner />}
+                    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
                         <OfflineError onRetry={retry} />
                     </div>
                 );
             }
 
             return (
-                <div className={`min-h-screen ${config.gradient} transition-colors duration-1000 p-4 pb-12 relative overflow-hidden flex flex-col`}>
+                <div className={`min-h-screen ${config.gradient} transition-colors duration-1000 p-0 relative overflow-x-hidden flex flex-col font-sans`}>
                     {isSevere && <SevereAlertBanner code={data.weather.current.weather_code} />}
-                    {!isOnline && <OfflineBanner />}
-                    <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[80%] bg-gradient-to-b from-white/5 to-transparent rounded-full blur-[100px] pointer-events-none"></div>
-                    <div className={`max-w-md mx-auto w-full z-20 ${isSevere ? 'pt-12' : 'pt-2'}`}>
+                    <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[60%] bg-gradient-to-b from-white/10 to-transparent rounded-full blur-[120px] pointer-events-none"></div>
+                    
+                    <div className="max-w-md mx-auto w-full z-20 pt-6 px-4 pb-20">
                         <SearchBar 
                             onSearch={handleSearch} 
                             onToggleSound={() => setIsMuted(!isMuted)} 
                             isMuted={isMuted} 
                             isPlaying={isPlaying} 
                         />
-                    </div>
-                    <div className="flex-1 relative z-10 flex flex-col max-w-md mx-auto w-full">
-                        {loading ? (
-                            <WeatherSkeleton />
-                        ) : data && (
-                            <>
-                                <MainWeather 
-                                    weather={data.weather} 
-                                    locationName={data.name} 
-                                    config={config} 
-                                    isSaved={saved && JSON.parse(saved).name === data.name} 
-                                    onToggleSave={toggleSave} 
-                                    moonPhase={data.weather.daily.moon_phase[0]}
-                                    isSevere={isSevere}
-                                    climateInsight={climateInsight}
-                                    isWerewolf={isWerewolf}
-                                />
-                                <ForecastStrip hourly={data.weather.hourly} />
-                                <SolarCycle sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
-                                <BentoGrid current={data.weather.current} daily={data.weather.daily} themeMode={theme} />
-                                <AQICard aqi={data.aqi.current.us_aqi} />
-                                <DailyForecast daily={data.weather.daily} />
-                                
-                                <div className="text-center py-6">
-                                    <a 
-                                        href="https://github.com/Hayagriva0" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="text-[10px] font-bold uppercase tracking-widest text-white/30 hover:text-white/90 transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <Icon name="github" size={12} />
-                                        Created by Abhra
-                                    </a>
-                                </div>
-                            </>
-                        )}
+                        
+                        <div className="flex-1 relative z-10 flex flex-col w-full">
+                            {loading ? (
+                                <WeatherSkeleton />
+                            ) : data && (
+                                <>
+                                    <MainWeather 
+                                        weather={data.weather} 
+                                        locationName={data.name} 
+                                        config={config} 
+                                        isSaved={saved && JSON.parse(saved).name === data.name} 
+                                        onToggleSave={toggleSave} 
+                                        moonPhase={data.weather.daily.moon_phase[0]}
+                                        isSevere={isSevere}
+                                        climateInsight={climateInsight}
+                                        isWerewolf={isWerewolf}
+                                    />
+                                    <ForecastStrip hourly={data.weather.hourly} />
+                                    <BentoGrid current={data.weather.current} daily={data.weather.daily} />
+                                    <SolarCycle sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
+                                    <AQICard 
+                                        usAqi={data.aqi.current.us_aqi} 
+                                        pm25={data.aqi.current.pm2_5} 
+                                        pm10={data.aqi.current.pm10} 
+                                    />
+                                    <DailyForecast daily={data.weather.daily} />
+                                    
+                                    <div className="text-center py-8 opacity-40 hover:opacity-100 transition-opacity">
+                                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Made by Abhra</div>
+                                        <div className="flex justify-center gap-4">
+                                            <a href="https://github.com/Hayagriva0" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                                                <Icon name="github" size={14} />
+                                            </a>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             );
