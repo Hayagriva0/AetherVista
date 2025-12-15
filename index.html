@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Weather Pro</title>
-    <link rel="icon" href="https://fav.farm/⛅">
+    <!-- Updated "Cool" Apple/Samsung Style Icon (Embedded SVG) -->
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2REQ1RkEiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyOTgwQjkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0idXJsKCNhKSIvPjxjaXJjbGUgY3g9IjE5MCIgY3k9IjE5MCIgcj0iOTAiIGZpbGw9IiNGRkQ3MDAiLz48cGF0aCBkPSJNMzkwIDM1MGMwIDQ0LTM2IDgwLTgwIDgwSDE3MGMtNDQgMC04MC0zNi04MC04MCAwLTM4IDI3LTcwIDYzLTc3IDUtMzggMzgtNjggNzktNjggMjkgMCA1NSAxNiA2OSAzOSA3LTMgMTUtNSAyMy01IDM1IDAgNjQgMjkgNjQgNjQgMCA1LTEgMTAtMiAxNSA0OSA3IDg0IDQ0IDg0IDMyeiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC45Ii8+PC9zdmc+">
     
-    <!-- PWA Manifest -->
+    <!-- Link to physical manifest file -->
     <link rel="manifest" href="manifest.json">
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Weather Pro">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -50,7 +52,8 @@
                         'fog-drift-1': 'drift 40s linear infinite',
                         'fog-drift-2': 'drift 30s linear infinite reverse',
                         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
-                        'spin-slow': 'spin 8s linear infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                        'twinkle': 'twinkle 3s ease-in-out infinite',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
@@ -73,12 +76,14 @@
                         breathe: { '0%, 100%': { transform: 'scaleY(1)' }, '50%': { transform: 'scaleY(1.03)' } },
                         sway: { '0%, 100%': { transform: 'rotate(0deg)' }, '50%': { transform: 'rotate(10deg)' } },
                         drift: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+                        twinkle: { '0%, 100%': { opacity: '0.3', transform: 'scale(0.8)' }, '50%': { opacity: '1', transform: 'scale(1.2)' } },
                         shake: {
                             '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
                             '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
                             '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
                             '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
-                        }
+                        },
+                        spin: { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } }
                     }
                 }
             }
@@ -140,11 +145,9 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- Bug Fix: Robust Icon Component ---
-        // Uses a ref to limit the scope of createIcons and ensures updates on name changes
+        // --- Icon Component ---
         const Icon = ({ name, size = 24, className = "", fill = "none", color }) => {
             const iconRef = useRef(null);
-            
             useEffect(() => {
                 if (window.lucide && iconRef.current) {
                     window.lucide.createIcons({
@@ -158,12 +161,10 @@
                     });
                 }
             }, [name, size, className, fill, color]);
-
-            // We use a wrapper to ensure Lucide has a stable target to hydrate
             return <span ref={iconRef}><i data-icon-name={name}></i></span>;
         };
 
-        // --- Sound Hook (Fixed Memory Leak) ---
+        // --- Sound Hook ---
         const useAmbientSound = (weatherCode, isMuted, isWerewolfMode) => {
             const audioRef = useRef(null);
             const [isPlaying, setIsPlaying] = useState(false);
@@ -171,17 +172,11 @@
             useEffect(() => {
                 audioRef.current = new Audio();
                 audioRef.current.loop = true;
-                return () => {
-                    if (audioRef.current) {
-                        audioRef.current.pause();
-                        audioRef.current = null;
-                    }
-                };
+                return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
             }, []);
 
             useEffect(() => {
                 if (!audioRef.current) return;
-
                 const getSoundUrl = (code) => {
                     if (isWerewolfMode) return 'https://actions.google.com/sounds/v1/ambiences/forest_night.ogg'; 
                     if (code === 0 || code === 1) return 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg'; 
@@ -191,10 +186,8 @@
                     if ([95, 96, 99].includes(code)) return 'https://actions.google.com/sounds/v1/weather/thunder_claps.ogg';
                     return 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg';
                 };
-
                 const audio = audioRef.current;
                 audio.volume = isWerewolfMode ? 0.3 : 0.4;
-
                 const targetSrc = getSoundUrl(weatherCode);
 
                 if (isMuted) {
@@ -205,19 +198,13 @@
                         audio.src = targetSrc;
                         const playPromise = audio.play();
                         if (playPromise !== undefined) {
-                            playPromise
-                                .then(() => setIsPlaying(true))
-                                .catch(e => {
-                                    console.log("Audio play blocked (user interaction required)", e);
-                                    setIsPlaying(false);
-                                });
+                            playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
                         }
                     } else if (audio.paused) {
                         audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
                     }
                 }
             }, [weatherCode, isMuted, isWerewolfMode]);
-
             return isPlaying;
         };
 
@@ -241,23 +228,14 @@
         };
 
         const calculateIndianAQI = (pm25, pm10) => {
-            // Helper to linear interpolate
-            const calc = (conc, [cLow, cHigh], [iLow, iHigh]) => {
-                return Math.round(iLow + (iHigh - iLow) * ((conc - cLow) / (cHigh - cLow)));
-            };
-
+            const calc = (conc, [cLow, cHigh], [iLow, iHigh]) => Math.round(iLow + (iHigh - iLow) * ((conc - cLow) / (cHigh - cLow)));
             const getSubIndex = (val, type) => {
-                // Breakpoints based on CPCB
                 const bps = type === 'pm25' 
                     ? [[0,30,0,50], [30,60,51,100], [60,90,101,200], [90,120,201,300], [120,250,301,400], [250,999,401,500]]
                     : [[0,50,0,50], [50,100,51,100], [100,250,101,200], [250,350,201,300], [350,430,301,400], [430,999,401,500]];
-                
-                for (let bp of bps) {
-                    if (val >= bp[0] && val <= bp[1]) return calc(val, [bp[0], bp[1]], [bp[2], bp[3]]);
-                }
-                return 500; // Cap at max
+                for (let bp of bps) { if (val >= bp[0] && val <= bp[1]) return calc(val, [bp[0], bp[1]], [bp[2], bp[3]]); }
+                return 500;
             };
-
             const idxPm25 = pm25 ? getSubIndex(pm25, 'pm25') : 0;
             const idxPm10 = pm10 ? getSubIndex(pm10, 'pm10') : 0;
             return Math.max(idxPm25, idxPm10);
@@ -272,17 +250,6 @@
             const days = diff / (1000 * 60 * 60 * 24);
             const phase = (days % synodic) / synodic;
             return phase < 0 ? phase + 1 : phase;
-        };
-
-        const getMoonPhaseName = (phase) => {
-            if (phase < 0.03 || phase > 0.97) return "New Moon";
-            if (phase < 0.22) return "Waxing Crescent";
-            if (phase < 0.28) return "First Quarter";
-            if (phase < 0.47) return "Waxing Gibbous";
-            if (phase < 0.53) return "Full Moon";
-            if (phase < 0.72) return "Waning Gibbous";
-            if (phase < 0.78) return "Last Quarter";
-            return "Waning Crescent";
         };
 
         const getAdvice = (code, temp) => {
@@ -321,31 +288,21 @@
                 color = "text-blue-400";
                 trend = "cooler";
             }
-            
             const currentRain = (currentData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
             const histRain = (historicalData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
-            
             if (currentRain > histRain + 10) { 
                 const percent = histRain < 1 ? 100 : Math.round(((currentRain - histRain) / histRain) * 100);
                 insightText = `Significantly wetter (+${percent}%) than last year.`;
                 icon = "cloud-rain";
                 color = "text-blue-300";
             }
-
             return { text: insightText, icon, color, trend, currentTemps, historicalTemps };
         };
 
         const getWeatherConfig = (code, isDay, isSevere, isWerewolf) => {
             const time = isDay ? 'day' : 'night';
-            
-            if (isWerewolf) {
-                return { gradient: "bg-gradient-to-b from-slate-950 via-red-950/40 to-slate-900", icon: "moon", label: "Werewolf Alert", accent: "shadow-red-500", iconColor: "#DC2626" };
-            }
-
-            if (isSevere) {
-                return { gradient: "bg-gradient-to-b from-red-950 via-slate-900 to-slate-950", icon: "alert-triangle", label: "Severe Alert", accent: "shadow-red-500", iconColor: "#EF4444" };
-            }
-
+            if (isWerewolf) return { gradient: "bg-gradient-to-b from-slate-950 via-red-950/40 to-slate-900", icon: "moon", label: "Werewolf Alert", accent: "shadow-red-500", iconColor: "#DC2626" };
+            if (isSevere) return { gradient: "bg-gradient-to-b from-red-950 via-slate-900 to-slate-950", icon: "alert-triangle", label: "Severe Alert", accent: "shadow-red-500", iconColor: "#EF4444" };
             const c = {
                 clear: { day: { gradient: "bg-gradient-to-b from-sky-400 via-sky-600 to-blue-800", icon: "sun", label: "Sunny", accent: "shadow-yellow-400", iconColor: "#FDB813" }, 
                          night: { gradient: "bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950", icon: "moon", label: "Clear", accent: "shadow-indigo-400", iconColor: "#E0E7FF" } },
@@ -489,11 +446,72 @@
             );
         };
 
+        const CelestialWidget = ({ isDay, moonPhase, weatherCode }) => {
+            // Reusing the path logic for the moon
+            const getMoonPath = (cx, cy, r, phase) => {
+                const p = phase; 
+                const isWaxing = p <= 0.5;
+                let lit = isWaxing ? p * 2 : (1-p) * 2;
+                const x1 = cx; const y1 = cy - r;
+                const x2 = cx; const y2 = cy + r;
+                const depth = r * (2 * lit - 1); 
+                const sweep = isWaxing ? 1 : 0;
+                const rx = Math.abs(depth);
+                const sweepTerminator = isWaxing ? (lit > 0.5 ? 0 : 1) : (lit > 0.5 ? 1 : 0);
+                return `M ${x1} ${y1} A ${r} ${r} 0 0 ${sweep} ${x2} ${y2} A ${rx} ${r} 0 0 ${sweepTerminator} ${x1} ${y1}`;
+            };
+
+            return (
+                <div className="w-full h-full flex items-center justify-center relative animate-float">
+                    <svg viewBox="0 0 200 200" className="w-full h-full overflow-visible">
+                        <defs>
+                            <radialGradient id="sunGradientSmall" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                                <stop offset="0%" stopColor="#FDB813" stopOpacity="1" />
+                                <stop offset="80%" stopColor="#F59E0B" stopOpacity="1" />
+                                <stop offset="100%" stopColor="#D97706" stopOpacity="0" />
+                            </radialGradient>
+                            <filter id="moonGlowSmall" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="6" result="coloredBlur" />
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        {isDay ? (
+                            <g className="animate-spin-slow origin-center">
+                                {[...Array(12)].map((_, i) => (
+                                    <line key={i} x1="100" y1="100" x2="100" y2="10" transform={`rotate(${i * 30} 100 100) translate(0 -25)`} stroke="#FDB813" strokeWidth="6" strokeLinecap="round" opacity="0.8" />
+                                ))}
+                                <circle cx="100" cy="100" r="60" fill="url(#sunGradientSmall)" className="animate-pulse-glow" />
+                            </g>
+                        ) : (
+                            <g>
+                                <circle cx="40" cy="40" r="3" fill="white" className="animate-twinkle" />
+                                <circle cx="170" cy="30" r="4" fill="white" className="animate-twinkle" style={{animationDelay: '1.5s'}} />
+                                <circle cx="160" cy="160" r="2" fill="white" className="animate-twinkle" style={{animationDelay: '2.5s'}} />
+                                <g filter="url(#moonGlowSmall)">
+                                    <circle cx="100" cy="100" r="70" fill="#1e293b" opacity="0.8" />
+                                    <path d={getMoonPath(100, 100, 70, moonPhase)} fill="#f8fafc" />
+                                </g>
+                                <g opacity="0.15">
+                                    <circle cx="80" cy="80" r="10" fill="#334155" />
+                                    <circle cx="130" cy="70" r="12" fill="#334155" />
+                                </g>
+                            </g>
+                        )}
+                    </svg>
+                </div>
+            );
+        };
+
         const WeatherFrog = ({ weatherCode, isDay, temperature, moonPhase, isWerewolf }) => {
             const isRain = [51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode);
             const isSnow = [71, 73, 75, 77, 85, 86].includes(weatherCode);
             const isThunder = [95, 96, 99].includes(weatherCode);
             const isFog = [45, 48].includes(weatherCode);
+            const isCloudy = [1, 2, 3].includes(weatherCode); 
             const isClear = weatherCode === 0;
             const isWindy = weatherCode >= 61 && weatherCode <= 65; 
             const isCold = temperature <= 10 && !isSnow;
@@ -513,15 +531,24 @@
                                 <feComposite in="SourceAlpha" in2="blur" operator="in" result="shadow" />
                                 <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.2 0" in="shadow" />
                             </filter>
+                            <filter id="frogShadow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="black" floodOpacity="0.3" />
+                            </filter>
                         </defs>
-                        <ellipse cx="100" cy="175" rx="55" ry="12" fill="black" opacity="0.25" filter="url(#softShadow)" />
                         
-                        {isClear && isDay && !isWarm && <circle cx="160" cy="30" r="18" fill="#FDB813" className="animate-pulse-glow" />}
-                        {isClear && !isDay && <g><path d="M160 20 A 15 15 0 1 1 160 50" stroke="white" strokeWidth="2" fill="none" opacity="0.6" /><circle cx="20" cy="30" r="1.5" fill="white" className="animate-pulse" /><circle cx="180" cy="20" r="2" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} /></g>}
+                        {/* --- MIDGROUND: WEATHER EFFECTS (Behind Frog) --- */}
+                        {(isCloudy || isRain || isSnow || isThunder) && (
+                            <g opacity="0.8" transform="translate(0, 10)">
+                                <path d="M40 100 Q55 80 75 90 Q85 70 110 80 Q130 65 150 85 Q170 85 170 110 L40 110 Z" fill="#94a3b8" />
+                            </g>
+                        )}
+
+                        {/* --- FOREGROUND: THE FROG --- */}
+                        <ellipse cx="100" cy="175" rx="55" ry="12" fill="black" opacity="0.4" filter="url(#softShadow)" />
                         
                         {isFishing && <g className="animate-line-cast"><path d="M130 130 Q 180 80 190 100" stroke="#5D4037" strokeWidth="2.5" fill="none" /><line x1="190" y1="100" x2="190" y2="150" stroke="rgba(255,255,255,0.6)" strokeWidth="1" strokeDasharray="2 2" /><circle cx="190" cy="150" r="3.5" fill="#EF4444" className="animate-bob" /></g>}
                         
-                        <g transform={`translate(0, 10) ${isWindy ? 'rotate(-3)' : ''}`}>
+                        <g transform={`translate(0, 10) ${isWindy ? 'rotate(-3)' : ''}`} filter="url(#frogShadow)">
                             <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /><path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" />
                             <ellipse cx="100" cy="125" rx="28" ry="38" fill="#22c55e" />
                             <ellipse cx="100" cy="125" rx="18" ry="24" fill="#86efac" opacity="0.4" />
@@ -547,6 +574,7 @@
                             {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" />}
                         </g>
 
+                        {/* --- FOREGROUND: WEATHER EFFECTS (Over Frog) --- */}
                         {isWindy && <g className="animate-wind-sway"><path d="M140 100 Q 160 90 180 110" stroke="#22c55e" strokeWidth="2" fill="none" strokeDasharray="4 2" /><g transform="translate(180, 110) rotate(30)"><ellipse cx="0" cy="0" rx="15" ry="5" fill="#475569" /><path d="M-10 0 Q0 -15 10 0" fill="#475569" /></g><path d="M20 80 Q 50 90 80 80" stroke="white" strokeWidth="2" opacity="0.2" /><path d="M10 120 Q 40 130 60 110" stroke="white" strokeWidth="2" opacity="0.2" /></g>}
                         {isHot && <g><g transform="translate(0, 10)"><rect x="70" y="38" width="22" height="12" rx="3" fill="#1e293b" /><rect x="110" y="38" width="22" height="12" rx="3" fill="#1e293b" /><line x1="92" y1="44" x2="110" y2="44" stroke="#1e293b" strokeWidth="2.5" /></g><g transform="translate(135, 90)"><path d="M0 0 L5 20 L-5 20 Z" fill="#FCD34D" /> <line x1="0" y1="0" x2="5" y2="-10" stroke="white" strokeWidth="2" /></g></g>}
                         {isFog && <g transform="translate(140, 125) rotate(-20)"><rect x="0" y="0" width="20" height="10" fill="#64748b" rx="2" /><path d="M20 0 L60 -20 L60 30 L20 10 Z" fill="yellow" opacity="0.3" /></g>}
@@ -601,7 +629,7 @@
 
             return (
                 <div className="relative mb-6">
-                    <div className="flex flex-col items-center mb-8 animate-fade-in">
+                    <div className="flex flex-col items-center mb-6 animate-fade-in">
                         <div className="flex items-center gap-2 mb-1">
                             <Icon name="map-pin" size={16} className="text-indigo-300 drop-shadow-md" />
                             <h2 className="text-xl font-bold tracking-tight text-glow">{locationName}</h2>
@@ -621,39 +649,46 @@
                        </div>
                     )}
 
-                    <div className="flex items-center justify-between relative z-10 px-4 mb-8">
-                        <div className="flex flex-col w-1/3 items-start pl-2">
+                    {/* New Horizontal Alignment: Temp -> Frog -> Celestial */}
+                    <div className="flex flex-row items-center justify-between px-6 mb-8 relative z-10 w-full">
+                        
+                        {/* 1. Temperature Section */}
+                        <div className="flex flex-col items-center w-1/3">
                             <div className="relative flex items-start">
-                                <h1 className="text-7xl font-bold leading-none tracking-tighter text-glow bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">
+                                <h1 className="text-6xl font-bold leading-none tracking-tighter text-glow bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">
                                     {Math.round(weather.current.temperature_2m)}
                                 </h1>
-                                <span className="text-4xl font-bold text-white mt-1 ml-1 drop-shadow-md">°</span>
+                                <span className="text-3xl font-bold text-white mt-1 ml-1 drop-shadow-md">°</span>
                             </div>
-                            <div className="glass-panel px-3 py-1.5 rounded-full inline-flex items-center gap-2 mt-3 backdrop-blur-md border-white/10 shadow-lg">
+                            <div className="glass-panel px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 mt-2 backdrop-blur-md border-white/10 shadow-lg cursor-default">
                                 <span className={`w-2 h-2 rounded-full ${isSevere ? 'bg-red-500 animate-flash' : 'bg-emerald-400'} shadow-[0_0_8px_rgba(52,211,153,0.8)]`}></span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider">{config.label}</span>
+                                <span className="text-[9px] font-bold uppercase tracking-wider opacity-90">{config.label}</span>
                             </div>
-                        </div>
-                        
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 z-0 pointer-events-none">
-                             <div className={`absolute inset-0 rounded-full opacity-20 blur-3xl ${config.accent.replace('shadow-', 'bg-')}`}></div>
                         </div>
 
-                        <div className="relative w-1/3 h-40 flex justify-center items-center z-10">
-                            <div className="w-40 h-40">
-                                <WeatherFrog 
-                                    weatherCode={weatherCode} 
-                                    isDay={isDay} 
-                                    temperature={weather.current.temperature_2m} 
-                                    moonPhase={moonPhase} 
-                                    isWerewolf={isWerewolf}
-                                />
-                            </div>
+                        {/* 2. Frog Section (Small) */}
+                        <div className="relative w-32 h-32 flex justify-center items-center">
+                            <WeatherFrog 
+                                weatherCode={weatherCode} 
+                                isDay={isDay} 
+                                temperature={weather.current.temperature_2m} 
+                                moonPhase={moonPhase} 
+                                isWerewolf={isWerewolf}
+                            />
+                        </div>
+
+                        {/* 3. Celestial Section (Small) */}
+                        <div className="relative w-24 h-24 flex justify-center items-center">
+                            <CelestialWidget 
+                                isDay={isDay}
+                                moonPhase={moonPhase}
+                                weatherCode={weatherCode}
+                            />
                         </div>
                     </div>
                     
                     {/* Insight Pill */}
-                    <div className={`glass-highlight px-5 py-4 rounded-2xl flex items-center gap-4 animate-slide-up shadow-lg ${isWerewolf ? 'border-red-500/30 bg-red-900/10' : ''}`}>
+                    <div className={`glass-highlight px-5 py-4 rounded-2xl flex items-center gap-4 animate-slide-up shadow-lg mt-2 ${isWerewolf ? 'border-red-500/30 bg-red-900/10' : ''}`}>
                         <div className="p-2.5 bg-white/5 rounded-xl text-indigo-200 shrink-0 border border-white/5 shadow-inner">
                             <Icon name={advice.icon} size={20} />
                         </div>
@@ -962,6 +997,14 @@
                 const handleStatus = () => setIsOnline(navigator.onLine);
                 window.addEventListener('online', handleStatus);
                 window.addEventListener('offline', handleStatus);
+                
+                // Register Service Worker if available (Required for PWA)
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(reg => console.log('SW Registered'))
+                        .catch(err => console.log('SW Error:', err));
+                }
+
                 return () => {
                     window.removeEventListener('online', handleStatus);
                     window.removeEventListener('offline', handleStatus);
@@ -971,45 +1014,61 @@
             const fetchWeather = async (lat, lon, name) => {
                 setLoading(true);
                 setError(null);
+                setClimateInsight(null); // Reset insight while fetching new location
+
                 try {
                     if (!navigator.onLine) throw new Error("OFFLINE");
                     const safeFetch = async (url) => {
-                        const res = await fetch(url);
-                        if (!res.ok) throw new Error(res.statusText);
-                        return await res.json();
+                        try {
+                            const res = await fetch(url);
+                            if (!res.ok) throw new Error(res.statusText);
+                            return await res.json();
+                        } catch (e) { return null; }
                     };
 
-                    const today = new Date();
-                    const thirtyDaysAgo = new Date(today);
-                    thirtyDaysAgo.setDate(today.getDate() - 30);
-                    const oneYearAgoToday = new Date(today);
-                    oneYearAgoToday.setFullYear(today.getFullYear() - 1);
-                    const oneYearAgoThirtyDays = new Date(thirtyDaysAgo);
-                    oneYearAgoThirtyDays.setFullYear(thirtyDaysAgo.getFullYear() - 1);
-                    const formatDate = (d) => d.toISOString().split('T')[0];
-
-                    const [w, a, histCurr, histPrev] = await Promise.all([
+                    // Phase 1: Critical Data (Fast) - Fetch immediately to show UI
+                    const [w, a] = await Promise.all([
                         safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,relative_humidity_2m,apparent_temperature,surface_pressure,visibility&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto`),
-                        safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10`),
-                        safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${formatDate(thirtyDaysAgo)}&end_date=${formatDate(today)}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`),
-                        safeFetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${formatDate(oneYearAgoThirtyDays)}&end_date=${formatDate(oneYearAgoToday)}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`)
+                        safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10`)
                     ]);
 
                     if (w) {
                         const safeAqi = a || { current: { us_aqi: null, pm2_5: null, pm10: null } };
                         const moonPhase = calculateMoonPhase();
                         w.daily.moon_phase = [moonPhase];
+                        
+                        // Update UI immediately with critical data
                         setData({ weather: w, aqi: safeAqi, name });
-                        const insight = generateClimateInsight(histCurr, histPrev);
-                        setClimateInsight(insight);
+                        setLoading(false); 
+
+                        // Phase 2: Non-Critical Data (Slow) - Fetch Historical data in background
+                        // This prevents the slow Archive API from blocking the main UI
+                        const today = new Date();
+                        const thirtyDaysAgo = new Date(today);
+                        thirtyDaysAgo.setDate(today.getDate() - 30);
+                        const oneYearAgoToday = new Date(today);
+                        oneYearAgoToday.setFullYear(today.getFullYear() - 1);
+                        const oneYearAgoThirtyDays = new Date(thirtyDaysAgo);
+                        oneYearAgoThirtyDays.setFullYear(thirtyDaysAgo.getFullYear() - 1);
+                        const formatDate = (d) => d.toISOString().split('T')[0];
+
+                        Promise.all([
+                            safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${formatDate(thirtyDaysAgo)}&end_date=${formatDate(today)}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`),
+                            safeFetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${formatDate(oneYearAgoThirtyDays)}&end_date=${formatDate(oneYearAgoToday)}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`)
+                        ]).then(([histCurr, histPrev]) => {
+                            if (histCurr && histPrev) {
+                                const insight = generateClimateInsight(histCurr, histPrev);
+                                setClimateInsight(insight);
+                            }
+                        }).catch(console.error);
+
                     } else {
                         throw new Error("Weather data unavailable");
                     }
                 } catch(e) { 
                     console.error("Fetch error:", e); 
                     setError(e.message === "OFFLINE" ? "offline" : "generic");
-                } finally { 
-                    setTimeout(() => setLoading(false), 800); 
+                    setLoading(false);
                 }
             };
 
