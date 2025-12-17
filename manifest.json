@@ -8,18 +8,25 @@
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "scope": "./",
+  "id": "/weather-pro",
   "icons": [
     {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2REQ1RkEiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyOTgwQjkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0idXJsKCNhKSIvPjxjaXJjbGUgY3g9IjE5MCIgY3k9IjE5MCIgcj0iOTAiIGZpbGw9IiNGRkQ3MDAiLz48cGF0aCBkPSJNMzkwIDM1MGMwIDQ0LTM2IDgwLTgwIDgwSDE3MGMtNDQgMC04MC0zNi04MC04MCAwLTM4IDI3LTcwIDYzLTc3IDUtMzggMzgtNjggNzktNjggMjkgMCA1NSAxNiA2OSAzOSA3LTMgMTUtNSAyMy01IDM1IDAgNjQgMjkgNjQgNjQgMCA1LTEgMTAtMiAxNSA0OSA3IDg0IDQ0IDg0IDMyeiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC45Ii8+PC9zdmc+",
+      "src": "./icon-192.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2REQ1RkEiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyOTgwQjkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0idXJsKCNhKSIvPjxjaXJjbGUgY3g9IjE5MCIgY3k9IjE5MCIgcj0iOTAiIGZpbGw9IiNGRkQ3MDAiLz48cGF0aCBkPSJNMzkwIDM1MGMwIDQ0LTM2IDgwLTgwIDgwSDE3MGMtNDQgMC04MC0zNi04MC04MCAwLTM4IDI3LTcwIDYzLTc3IDUtMzggMzgtNjggNzktNjggMjkgMCA1NSAxNiA2OSAzOSA3LTMgMTUtNSAyMy01IDM1IDAgNjQgMjkgNjQgNjQgMCA1LTEgMTAtMiAxNSA0OSA3IDg0IDQ0IDg0IDMyeiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC45Ii8+PC9zdmc+",
+      "src": "./icon-512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

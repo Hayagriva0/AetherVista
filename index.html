@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Weather Pro</title>
     <!-- Updated "Cool" Apple/Samsung Style Icon (Embedded SVG) -->
-    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2REQ1RkEiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyOTgwQjkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0idXJsKCNhKSIvPjxjaXJjbGUgY3g9IjE5MCIgY3k9IjE5MCIgcj0iOTAiIGZpbGw9IiNGRkQ3MDAiLz48cGF0aCBkPSJNMzkwIDM1MGMwIDQ0LTM2IDgwLTgwIDgwSDE3MGMtNDQgMC04MC0zNi04MC04MCAwLTM4IDI3LTcwIDYzLTc3IDUtMzggMzgtNjggNzktNjggMjkgMCA1NSAxNiA2OSAzOSA3LTMgMTUtNSAyMy01IDM1IDAgNjQgMjkgNjQgNjQgMCA1LTEgMTAtMiAxNSA0OSA3IDg0IDQ0IDg0IDMyeiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC45Ii8+PC9zdmc+">
-    
+    <link rel="icon"
+        href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2REQ1RkEiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyOTgwQjkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0idXJsKCNhKSIvPjxjaXJjbGUgY3g9IjE5MCIgY3k9IjE5MCIgcj0iOTAiIGZpbGw9IiNGRkQ3MDAiLz48cGF0aCBkPSJNMzkwIDM1MGMwIDQ0LTM2IDgwLTgwIDgwSDE3MGMtNDQgMC04MC0zNi04MC04MCAwLTM4IDI3LTcwIDYzLTc3IDUtMzggMzgtNjggNzktNjggMjkgMCA1NSAxNiA2OSAzOSA3LTMgMTUtNSAyMy01IDM1IDAgNjQgMjkgNjQgNjQgMCA1LTEgMTAtMiAxNSA0OSA3IDg0IDQ0IDg0IDMyeiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC45Ii8+PC9zdmc+">
+
     <!-- Link to physical manifest file -->
     <link rel="manifest" href="manifest.json">
 
@@ -14,13 +17,15 @@
     <meta name="apple-mobile-web-app-title" content="Weather Pro">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
-    
+
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Config -->
     <script>
         tailwind.config = {
@@ -78,12 +83,12 @@
                         drift: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
                         twinkle: { '0%, 100%': { opacity: '0.3', transform: 'scale(0.8)' }, '50%': { opacity: '1', transform: 'scale(1.2)' } },
                         shake: {
+                            '0%,100%': { transform: 'translate3d(0, 0, 0)' },
                             '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
                             '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
                             '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
                             '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
-                        },
-                        spin: { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } }
+                        }
                     }
                 }
             }
@@ -97,9 +102,19 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        * { -webkit-tap-highlight-color: transparent; }
-        body { overscroll-behavior-y: none; touch-action: manipulation; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            overscroll-behavior-y: none;
+            touch-action: manipulation;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
         .glass-panel {
             background: rgba(15, 23, 42, 0.4);
             backdrop-filter: blur(24px);
@@ -107,38 +122,56 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .glass-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.08); }
+
+        .glass-card:active {
+            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
         .glass-highlight {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
+
         .glass-input {
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s ease;
         }
+
         .glass-input:focus-within {
             background: rgba(0, 0, 0, 0.6);
             border-color: rgba(255, 255, 255, 0.3);
         }
-        .text-glow { text-shadow: 0 0 10px rgba(255,255,255,0.3); }
-        .text-shadow-sm { text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-        .text-shadow-lg { text-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-        
+
+        .text-glow {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .text-shadow-sm {
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .text-shadow-lg {
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
         /* Shimmer Effect */
         .shimmer-bg {
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0) 100%);
             background-size: 1000px 100%;
         }
     </style>
 </head>
+
 <body class="antialiased bg-slate-950 text-white selection:bg-indigo-500/30">
     <div id="root"></div>
 
@@ -168,7 +201,7 @@
         const useAmbientSound = (weatherCode, isMuted, isWerewolfMode) => {
             const audioRef = useRef(null);
             const [isPlaying, setIsPlaying] = useState(false);
-            
+
             useEffect(() => {
                 audioRef.current = new Audio();
                 audioRef.current.loop = true;
@@ -178,8 +211,8 @@
             useEffect(() => {
                 if (!audioRef.current) return;
                 const getSoundUrl = (code) => {
-                    if (isWerewolfMode) return 'https://actions.google.com/sounds/v1/ambiences/forest_night.ogg'; 
-                    if (code === 0 || code === 1) return 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg'; 
+                    if (isWerewolfMode) return 'https://actions.google.com/sounds/v1/ambiences/forest_night.ogg';
+                    if (code === 0 || code === 1) return 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg';
                     if ([2, 3, 45, 48].includes(code)) return 'https://actions.google.com/sounds/v1/weather/wind_blowing.ogg';
                     if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg';
                     if ([71, 73, 75, 77, 85, 86].includes(code)) return 'https://actions.google.com/sounds/v1/weather/wind_blowing.ogg';
@@ -230,9 +263,9 @@
         const calculateIndianAQI = (pm25, pm10) => {
             const calc = (conc, [cLow, cHigh], [iLow, iHigh]) => Math.round(iLow + (iHigh - iLow) * ((conc - cLow) / (cHigh - cLow)));
             const getSubIndex = (val, type) => {
-                const bps = type === 'pm25' 
-                    ? [[0,30,0,50], [30,60,51,100], [60,90,101,200], [90,120,201,300], [120,250,301,400], [250,999,401,500]]
-                    : [[0,50,0,50], [50,100,51,100], [100,250,101,200], [250,350,201,300], [350,430,301,400], [430,999,401,500]];
+                const bps = type === 'pm25'
+                    ? [[0, 30, 0, 50], [30, 60, 51, 100], [60, 90, 101, 200], [90, 120, 201, 300], [120, 250, 301, 400], [250, 999, 401, 500]]
+                    : [[0, 50, 0, 50], [50, 100, 51, 100], [100, 250, 101, 200], [250, 350, 201, 300], [350, 430, 301, 400], [430, 999, 401, 500]];
                 for (let bp of bps) { if (val >= bp[0] && val <= bp[1]) return calc(val, [bp[0], bp[1]], [bp[2], bp[3]]); }
                 return 500;
             };
@@ -244,7 +277,7 @@
         const calculateMoonPhase = () => {
             const date = new Date();
             const synodic = 29.53058867;
-            const knownNewMoon = new Date('2024-01-11 11:57:00').getTime(); 
+            const knownNewMoon = new Date('2024-01-11 11:57:00').getTime();
             const now = date.getTime();
             const diff = now - knownNewMoon;
             const days = diff / (1000 * 60 * 60 * 24);
@@ -290,7 +323,7 @@
             }
             const currentRain = (currentData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
             const histRain = (historicalData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
-            if (currentRain > histRain + 10) { 
+            if (currentRain > histRain + 10) {
                 const percent = histRain < 1 ? 100 : Math.round(((currentRain - histRain) / histRain) * 100);
                 insightText = `Significantly wetter (+${percent}%) than last year.`;
                 icon = "cloud-rain";
@@ -304,15 +337,21 @@
             if (isWerewolf) return { gradient: "bg-gradient-to-b from-slate-950 via-red-950/40 to-slate-900", icon: "moon", label: "Werewolf Alert", accent: "shadow-red-500", iconColor: "#DC2626" };
             if (isSevere) return { gradient: "bg-gradient-to-b from-red-950 via-slate-900 to-slate-950", icon: "alert-triangle", label: "Severe Alert", accent: "shadow-red-500", iconColor: "#EF4444" };
             const c = {
-                clear: { day: { gradient: "bg-gradient-to-b from-sky-400 via-sky-600 to-blue-800", icon: "sun", label: "Sunny", accent: "shadow-yellow-400", iconColor: "#FDB813" }, 
-                         night: { gradient: "bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950", icon: "moon", label: "Clear", accent: "shadow-indigo-400", iconColor: "#E0E7FF" } },
-                cloudy: { day: { gradient: "bg-gradient-to-b from-slate-400 via-slate-500 to-slate-700", icon: "cloud", label: "Cloudy", accent: "shadow-white", iconColor: "#fff" },
-                          night: { gradient: "bg-gradient-to-b from-slate-800 via-slate-900 to-black", icon: "cloud", label: "Cloudy", accent: "shadow-gray-500", iconColor: "#94A3B8" } },
-                rain: { day: { gradient: "bg-gradient-to-b from-blue-600 via-blue-800 to-slate-900", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-400", iconColor: "#60A5FA" },
-                        night: { gradient: "bg-gradient-to-b from-slate-900 via-slate-950 to-black", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-600", iconColor: "#3B82F6" } }
+                clear: {
+                    day: { gradient: "bg-gradient-to-b from-sky-400 via-sky-600 to-blue-800", icon: "sun", label: "Sunny", accent: "shadow-yellow-400", iconColor: "#FDB813" },
+                    night: { gradient: "bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950", icon: "moon", label: "Clear", accent: "shadow-indigo-400", iconColor: "#E0E7FF" }
+                },
+                cloudy: {
+                    day: { gradient: "bg-gradient-to-b from-slate-400 via-slate-500 to-slate-700", icon: "cloud", label: "Cloudy", accent: "shadow-white", iconColor: "#fff" },
+                    night: { gradient: "bg-gradient-to-b from-slate-800 via-slate-900 to-black", icon: "cloud", label: "Cloudy", accent: "shadow-gray-500", iconColor: "#94A3B8" }
+                },
+                rain: {
+                    day: { gradient: "bg-gradient-to-b from-blue-600 via-blue-800 to-slate-900", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-400", iconColor: "#60A5FA" },
+                    night: { gradient: "bg-gradient-to-b from-slate-900 via-slate-950 to-black", icon: "cloud-rain", label: "Rainy", accent: "shadow-blue-600", iconColor: "#3B82F6" }
+                }
             };
-            if(code === 0) return c.clear[time];
-            if([1,2,3,45,48].includes(code)) return c.cloudy[time];
+            if (code === 0) return c.clear[time];
+            if ([1, 2, 3, 45, 48].includes(code)) return c.cloudy[time];
             return c.rain[time];
         };
 
@@ -329,24 +368,24 @@
             const width = 100;
             const height = 40;
             const getPoints = (arr) => arr.map((val, i) => `${(i / (arr.length - 1)) * width},${height - ((val - min) / range) * height}`).join(' ');
-            const strokeColor = trend === 'warmer' ? '#fb923c' : trend === 'cooler' ? '#60a5fa' : '#94a3b8'; 
+            const strokeColor = trend === 'warmer' ? '#fb923c' : trend === 'cooler' ? '#60a5fa' : '#94a3b8';
 
             return (
                 <div className="w-full h-20 relative mt-3">
                     <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
-                        <line x1="0" y1={height/2} x2={width} y2={height/2} stroke="white" strokeWidth="0.2" strokeDasharray="2 2" opacity="0.3" />
+                        <line x1="0" y1={height / 2} x2={width} y2={height / 2} stroke="white" strokeWidth="0.2" strokeDasharray="2 2" opacity="0.3" />
                         <polyline points={getPoints(past)} fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
                         <polyline points={getPoints(current)} fill="none" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" className="drop-shadow-md" />
                         <path d={`M0,${height} L0,${height - ((current[0] - min) / range) * height} ${getPoints(current).split(' ').map(p => 'L' + p).join(' ')} L${width},${height} Z`} fill={`url(#grad-${trend})`} opacity="0.2" />
                         <defs>
                             <linearGradient id={`grad-${trend}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stopColor={strokeColor} stopOpacity="0.8"/>
-                                <stop offset="100%" stopColor={strokeColor} stopOpacity="0"/>
+                                <stop offset="0%" stopColor={strokeColor} stopOpacity="0.8" />
+                                <stop offset="100%" stopColor={strokeColor} stopOpacity="0" />
                             </linearGradient>
                         </defs>
                     </svg>
                     <div className="absolute top-0 right-0 flex gap-2 text-[9px] font-bold bg-black/40 px-2 py-1 rounded-full backdrop-blur-md border border-white/10">
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{background: strokeColor}}></span> 2025</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: strokeColor }}></span> 2025</span>
                         <span className="flex items-center gap-1 opacity-50"><span className="w-1.5 h-1.5 rounded-full bg-white"></span> 2024</span>
                     </div>
                 </div>
@@ -390,7 +429,7 @@
                     setIsHowling(true);
                     const audio = new Audio('https://actions.google.com/sounds/v1/animals/wolf_howl.ogg');
                     audio.volume = 0.3;
-                    audio.play().catch(e => {});
+                    audio.play().catch(e => { });
                     setTimeout(() => setIsHowling(false), 3000);
                 }, cycle);
                 return () => clearInterval(interval);
@@ -399,23 +438,23 @@
             return (
                 <div className="w-full h-full relative overflow-hidden rounded-full border-4 border-slate-900/50 shadow-inner bg-slate-950">
                     <div className="absolute inset-0 pointer-events-none">
-                         {[...Array(20)].map((_, i) => (
+                        {[...Array(20)].map((_, i) => (
                             <div key={i} className="absolute w-0.5 h-0.5 bg-white rounded-full animate-pulse" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 60}%`, animationDelay: `${Math.random() * 3}s`, opacity: Math.random() }} />
-                         ))}
+                        ))}
                     </div>
                     <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-32 h-32 animate-float">
-                         <div className="relative w-full h-full">
+                        <div className="relative w-full h-full">
                             <div className="absolute inset-0 bg-red-500 rounded-full opacity-10 blur-2xl animate-pulse-glow"></div>
                             <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_20px_rgba(200,200,255,0.2)]">
                                 <circle cx="100" cy="100" r="90" fill="#E2E8F0" />
                                 <circle cx="70" cy="80" r="15" fill="#CBD5E1" opacity="0.5" />
                                 <circle cx="130" cy="120" r="25" fill="#CBD5E1" opacity="0.5" />
                             </svg>
-                         </div>
+                        </div>
                     </div>
                     <div className="absolute inset-0 z-0">
-                         <div className="absolute bottom-0 w-[200%] h-2/3 bg-slate-800/40 blur-[25px] animate-fog-drift-1 translate-x-0"></div>
-                         <div className="absolute bottom-[-10%] w-[200%] h-1/2 bg-slate-900/50 blur-[20px] animate-fog-drift-2 translate-x-0"></div>
+                        <div className="absolute bottom-0 w-[200%] h-2/3 bg-slate-800/40 blur-[25px] animate-fog-drift-1 translate-x-0"></div>
+                        <div className="absolute bottom-[-10%] w-[200%] h-1/2 bg-slate-900/50 blur-[20px] animate-fog-drift-2 translate-x-0"></div>
                     </div>
                     <div className="absolute inset-0 z-10 flex items-end justify-center">
                         <svg viewBox="0 0 200 200" className="w-full h-full" preserveAspectRatio="xMidYMax meet">
@@ -423,19 +462,19 @@
                             <g transform="translate(140, 115) scale(-1, 1)" className={isHowling ? "animate-howl origin-bottom" : "animate-breathing origin-bottom"}>
                                 <path d="M-8,0 L-10,20 L-12,30" stroke="#000" strokeWidth="6" strokeLinecap="round" />
                                 <path d="M8,0 L10,20 L12,30" stroke="#000" strokeWidth="6" strokeLinecap="round" />
-                                <ellipse cx="0" cy="-10" rx="14" ry="22" fill="#000"/>
+                                <ellipse cx="0" cy="-10" rx="14" ry="22" fill="#000" />
                                 <path d="M-12,-12 L-22,-22" stroke="#000" strokeWidth="4" strokeLinecap="round" />
                                 <g transform="rotate(-20 0 -30)">
                                     <circle cx="0" cy="-32" r="12" fill="#000" />
-                                    <path d="M-5,-35 L-15,-25 L0,-28 Z" fill="#000"/> 
-                                    <path d="M-2,-42 L-8,-52 L2,-46" fill="#000"/>
-                                    <path d="M5,-40 L10,-50 L8,-42" fill="#000"/>
+                                    <path d="M-5,-35 L-15,-25 L0,-28 Z" fill="#000" />
+                                    <path d="M-2,-42 L-8,-52 L2,-46" fill="#000" />
+                                    <path d="M5,-40 L10,-50 L8,-42" fill="#000" />
                                 </g>
                                 <path d="M10,-5 Q20,-15 25,5" fill="none" stroke="#000" strokeWidth="4" className="animate-tail-sway origin-left" />
                                 {isHowling && (
                                     <g>
                                         <circle cx="-15" cy="-45" r="5" stroke="rgba(255,0,0,0.5)" fill="none" className="animate-ping" />
-                                        <circle cx="-15" cy="-45" r="15" stroke="rgba(255,0,0,0.3)" fill="none" className="animate-ping" style={{animationDelay: '0.2s'}} />
+                                        <circle cx="-15" cy="-45" r="15" stroke="rgba(255,0,0,0.3)" fill="none" className="animate-ping" style={{ animationDelay: '0.2s' }} />
                                     </g>
                                 )}
                             </g>
@@ -449,12 +488,12 @@
         const CelestialWidget = ({ isDay, moonPhase, weatherCode }) => {
             // Reusing the path logic for the moon
             const getMoonPath = (cx, cy, r, phase) => {
-                const p = phase; 
+                const p = phase;
                 const isWaxing = p <= 0.5;
-                let lit = isWaxing ? p * 2 : (1-p) * 2;
+                let lit = isWaxing ? p * 2 : (1 - p) * 2;
                 const x1 = cx; const y1 = cy - r;
                 const x2 = cx; const y2 = cy + r;
-                const depth = r * (2 * lit - 1); 
+                const depth = r * (2 * lit - 1);
                 const sweep = isWaxing ? 1 : 0;
                 const rx = Math.abs(depth);
                 const sweepTerminator = isWaxing ? (lit > 0.5 ? 0 : 1) : (lit > 0.5 ? 1 : 0);
@@ -489,8 +528,8 @@
                         ) : (
                             <g>
                                 <circle cx="40" cy="40" r="3" fill="white" className="animate-twinkle" />
-                                <circle cx="170" cy="30" r="4" fill="white" className="animate-twinkle" style={{animationDelay: '1.5s'}} />
-                                <circle cx="160" cy="160" r="2" fill="white" className="animate-twinkle" style={{animationDelay: '2.5s'}} />
+                                <circle cx="170" cy="30" r="4" fill="white" className="animate-twinkle" style={{ animationDelay: '1.5s' }} />
+                                <circle cx="160" cy="160" r="2" fill="white" className="animate-twinkle" style={{ animationDelay: '2.5s' }} />
                                 <g filter="url(#moonGlowSmall)">
                                     <circle cx="100" cy="100" r="70" fill="#1e293b" opacity="0.8" />
                                     <path d={getMoonPath(100, 100, 70, moonPhase)} fill="#f8fafc" />
@@ -511,14 +550,14 @@
             const isSnow = [71, 73, 75, 77, 85, 86].includes(weatherCode);
             const isThunder = [95, 96, 99].includes(weatherCode);
             const isFog = [45, 48].includes(weatherCode);
-            const isCloudy = [1, 2, 3].includes(weatherCode); 
+            const isCloudy = [1, 2, 3].includes(weatherCode);
             const isClear = weatherCode === 0;
-            const isWindy = weatherCode >= 61 && weatherCode <= 65; 
+            const isWindy = weatherCode >= 61 && weatherCode <= 65;
             const isCold = temperature <= 10 && !isSnow;
             const isWarm = temperature >= 25 && !isRain;
-            const isHot = temperature > 30; 
+            const isHot = temperature > 30;
             const isSleeping = isClear && !isDay;
-            const isFishing = !isRain && !isSnow && !isThunder && !isFog && !isHot && !isSleeping && !isWindy; 
+            const isFishing = !isRain && !isSnow && !isThunder && !isFog && !isHot && !isSleeping && !isWindy;
 
             if (isWerewolf) return <WerewolfScene moonPhase={moonPhase} />;
 
@@ -535,7 +574,7 @@
                                 <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="black" floodOpacity="0.3" />
                             </filter>
                         </defs>
-                        
+
                         {/* --- MIDGROUND: WEATHER EFFECTS (Behind Frog) --- */}
                         {(isCloudy || isRain || isSnow || isThunder) && (
                             <g opacity="0.8" transform="translate(0, 10)">
@@ -545,32 +584,32 @@
 
                         {/* --- FOREGROUND: THE FROG --- */}
                         <ellipse cx="100" cy="175" rx="55" ry="12" fill="black" opacity="0.4" filter="url(#softShadow)" />
-                        
+
                         {isFishing && <g className="animate-line-cast"><path d="M130 130 Q 180 80 190 100" stroke="#5D4037" strokeWidth="2.5" fill="none" /><line x1="190" y1="100" x2="190" y2="150" stroke="rgba(255,255,255,0.6)" strokeWidth="1" strokeDasharray="2 2" /><circle cx="190" cy="150" r="3.5" fill="#EF4444" className="animate-bob" /></g>}
-                        
+
                         <g transform={`translate(0, 10) ${isWindy ? 'rotate(-3)' : ''}`} filter="url(#frogShadow)">
                             <path d="M85 145 L85 165 L75 170" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /><path d="M115 145 L115 165 L125 170" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" />
                             <ellipse cx="100" cy="125" rx="28" ry="38" fill="#22c55e" />
                             <ellipse cx="100" cy="125" rx="18" ry="24" fill="#86efac" opacity="0.4" />
-                            
+
                             {isWarm && <g><path d="M75 130 Q 70 150 85 150 L 115 150 Q 130 150 125 130" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" /><line x1="100" y1="130" x2="100" y2="150" stroke="#1D4ED8" strokeWidth="1" /></g>}
-                            
+
                             <circle cx="100" cy="80" r="38" fill="#22c55e" />
-                            
+
                             {isCold && <g><path d="M75 100 Q 60 130 75 150 L 125 150 Q 140 130 125 100 Z" fill="#F97316" stroke="#C2410C" strokeWidth="2" /><path d="M65 80 Q 100 30 135 80" stroke="#F97316" strokeWidth="8" fill="none" strokeLinecap="round" /><line x1="90" y1="100" x2="90" y2="120" stroke="white" strokeWidth="2" /><line x1="110" y1="100" x2="110" y2="120" stroke="white" strokeWidth="2" /></g>}
-                            
+
                             <g className={isThunder ? "animate-sneeze" : ""}>
                                 <path d="M80 55 L70 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="70" cy="45" r="11" fill="#22c55e" /> <circle cx="70" cy="45" r="7.5" fill="white" /><circle cx="70" cy="45" r={isSleeping ? 0.5 : 3.5} fill="black" />
                                 <path d="M120 55 L130 45" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" /><circle cx="130" cy="45" r="11" fill="#22c55e" /><circle cx="130" cy="45" r="7.5" fill="white" /><circle cx="130" cy="45" r={isSleeping ? 0.5 : 3.5} fill="black" />
                             </g>
-                            
+
                             {isThunder ? <circle cx="100" cy="90" r="5" fill="black" opacity="0.6" /> : isHot ? <path d="M90 90 Q100 95 110 90" stroke="#064e3b" strokeWidth="2.5" fill="none" /> : <path d="M85 85 Q100 100 115 85" stroke="#064e3b" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
-                            
+
                             {isWarm && <g transform="translate(0, -10)"><rect x="70" y="38" width="22" height="12" rx="3" fill="#1e293b" /><rect x="110" y="38" width="22" height="12" rx="3" fill="#1e293b" /><line x1="92" y1="44" x2="110" y2="44" stroke="#1e293b" strokeWidth="2.5" /></g>}
-                            
+
                             {!isWarm && <circle cx="78" cy="92" r="5" fill="#fca5a5" opacity="0.4" />}
                             {!isWarm && <circle cx="122" cy="92" r="5" fill="#fca5a5" opacity="0.4" />}
-                            
+
                             {isFishing ? <path d="M80 115 L100 120 L130 115" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isWindy ? <path d="M80 115 L60 100 M120 115 L140 100" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isHot ? <path d="M120 115 L135 100" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isFog ? <path d="M80 115 L70 125 M120 115 L140 125" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : isSleeping ? <path d="M80 115 L90 105 M120 115 L130 120" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" /> : <path d="M80 120 Q70 135 80 140 M120 120 Q130 135 120 140" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" fill="none" />}
                         </g>
 
@@ -582,8 +621,8 @@
                         {isRain && <g transform="translate(120, 50) rotate(10)"><path d="M0 0 Q-40 -50 0 -100 Q40 -50 0 0" fill="#4ade80" stroke="#14532d" strokeWidth="1" /><line x1="0" y1="0" x2="0" y2="100" stroke="#78350f" strokeWidth="3" /></g>}
                         {isSnow && <g transform="translate(0, 10)"><path d="M80 110 Q100 125 120 110" stroke="#ef4444" strokeWidth="10" strokeLinecap="round" fill="none" /><path d="M110 110 L110 135" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" /></g>}
                         {isSleeping && <g className="animate-pulse" transform="translate(140, 40)"><text x="0" y="0" fill="white" fontSize="24" fontWeight="bold" opacity="0.8">Z</text><text x="20" y="-15" fill="white" fontSize="16" fontWeight="bold" opacity="0.6">z</text></g>}
-                        {isRain && <g><line x1="50" y1="20" x2="50" y2="30" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" /><line x1="100" y1="10" x2="100" y2="20" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.5s'}} /><line x1="150" y1="30" x2="150" y2="40" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{animationDelay: '0.2s'}} /></g>}
-                        {isSnow && <g><circle cx="40" cy="20" r="2.5" fill="white" className="animate-snow-fall" /><circle cx="120" cy="10" r="2.5" fill="white" className="animate-snow-fall" style={{animationDelay: '1s'}} /><circle cx="180" cy="30" r="2.5" fill="white" className="animate-snow-fall" style={{animationDelay: '2s'}} /></g>}
+                        {isRain && <g><line x1="50" y1="20" x2="50" y2="30" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" /><line x1="100" y1="10" x2="100" y2="20" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{ animationDelay: '0.5s' }} /><line x1="150" y1="30" x2="150" y2="40" stroke="#60a5fa" strokeWidth="2" className="animate-rain-drop" style={{ animationDelay: '0.2s' }} /></g>}
+                        {isSnow && <g><circle cx="40" cy="20" r="2.5" fill="white" className="animate-snow-fall" /><circle cx="120" cy="10" r="2.5" fill="white" className="animate-snow-fall" style={{ animationDelay: '1s' }} /><circle cx="180" cy="30" r="2.5" fill="white" className="animate-snow-fall" style={{ animationDelay: '2s' }} /></g>}
                     </svg>
                 </div>
             );
@@ -608,20 +647,20 @@
         );
 
         const SevereAlertBanner = ({ code }) => {
-            const alertText = [95, 96, 99].includes(code) ? "SEVERE THUNDERSTORM WARNING" : 
-                             [75, 86].includes(code) ? "HEAVY SNOWFALL WARNING" :
-                             "SEVERE WEATHER CONDITIONS";
+            const alertText = [95, 96, 99].includes(code) ? "SEVERE THUNDERSTORM WARNING" :
+                [75, 86].includes(code) ? "HEAVY SNOWFALL WARNING" :
+                    "SEVERE WEATHER CONDITIONS";
             return (
                 <div className="fixed top-0 left-0 w-full bg-red-600 text-white py-1.5 z-[100] shadow-xl overflow-hidden border-b border-red-400/30">
-                     <div className="whitespace-nowrap animate-marquee text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-8">
+                    <div className="whitespace-nowrap animate-marquee text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-8">
                         <span>⚠️ {alertText}</span><span>⚠️ {alertText}</span><span>⚠️ {alertText}</span><span>⚠️ {alertText}</span>
-                     </div>
+                    </div>
                 </div>
             );
         };
 
         const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight, isWerewolf }) => {
-            const advice = isWerewolf 
+            const advice = isWerewolf
                 ? { text: "The moon is full. The beast awakes.", icon: "moon" }
                 : getAdvice(weather.current.weather_code, weather.current.temperature_2m);
             const isDay = weather.current.is_day === 1;
@@ -639,19 +678,19 @@
                         </div>
                         <div className="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em]">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
                     </div>
-                    
+
                     {isWerewolf && (
                         <div className="mb-6 animate-shake mx-auto max-w-xs">
-                           <div className="bg-red-950/40 border border-red-500/30 p-2 rounded-xl flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(220,38,38,0.2)] backdrop-blur-sm">
-                             <Icon name="alert-octagon" size={18} className="text-red-500 animate-pulse" />
-                             <span className="text-red-200 font-bold text-[10px] uppercase tracking-widest">Full Moon Danger</span>
-                           </div>
-                       </div>
+                            <div className="bg-red-950/40 border border-red-500/30 p-2 rounded-xl flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(220,38,38,0.2)] backdrop-blur-sm">
+                                <Icon name="alert-octagon" size={18} className="text-red-500 animate-pulse" />
+                                <span className="text-red-200 font-bold text-[10px] uppercase tracking-widest">Full Moon Danger</span>
+                            </div>
+                        </div>
                     )}
 
                     {/* New Horizontal Alignment: Temp -> Frog -> Celestial */}
                     <div className="flex flex-row items-center justify-between px-6 mb-8 relative z-10 w-full">
-                        
+
                         {/* 1. Temperature Section */}
                         <div className="flex flex-col items-center w-1/3">
                             <div className="relative flex items-start">
@@ -668,25 +707,25 @@
 
                         {/* 2. Frog Section (Small) */}
                         <div className="relative w-32 h-32 flex justify-center items-center">
-                            <WeatherFrog 
-                                weatherCode={weatherCode} 
-                                isDay={isDay} 
-                                temperature={weather.current.temperature_2m} 
-                                moonPhase={moonPhase} 
+                            <WeatherFrog
+                                weatherCode={weatherCode}
+                                isDay={isDay}
+                                temperature={weather.current.temperature_2m}
+                                moonPhase={moonPhase}
                                 isWerewolf={isWerewolf}
                             />
                         </div>
 
                         {/* 3. Celestial Section (Small) */}
                         <div className="relative w-24 h-24 flex justify-center items-center">
-                            <CelestialWidget 
+                            <CelestialWidget
                                 isDay={isDay}
                                 moonPhase={moonPhase}
                                 weatherCode={weatherCode}
                             />
                         </div>
                     </div>
-                    
+
                     {/* Insight Pill */}
                     <div className={`glass-highlight px-5 py-4 rounded-2xl flex items-center gap-4 animate-slide-up shadow-lg mt-2 ${isWerewolf ? 'border-red-500/30 bg-red-900/10' : ''}`}>
                         <div className="p-2.5 bg-white/5 rounded-xl text-indigo-200 shrink-0 border border-white/5 shadow-inner">
@@ -697,8 +736,8 @@
                             <div className={`text-sm font-semibold leading-tight ${isWerewolf ? 'text-red-100' : 'text-white'}`}>{advice.text}</div>
                         </div>
                     </div>
-                    
-                    <div className="mt-4 animate-slide-up" style={{animationDelay: '0.1s'}}>
+
+                    <div className="mt-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                         <ClimateCard insight={climateInsight} />
                     </div>
                 </div>
@@ -718,8 +757,8 @@
             return (
                 <div className="glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden group">
                     <div className="flex justify-between text-[10px] opacity-60 font-mono font-bold uppercase tracking-wider mb-8">
-                        <span>{new Date(sunrise).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                        <span>{new Date(sunset).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                        <span>{new Date(sunrise).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>{new Date(sunset).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     <div className="relative h-16 w-full mb-1">
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 200 60" preserveAspectRatio="none">
@@ -744,10 +783,10 @@
 
         const ForecastStrip = ({ hourly }) => {
             const now = new Date().getHours();
-            const nextHours = hourly.time.map((t, i) => ({ 
-                time: t, 
-                temp: hourly.temperature_2m[i], 
-                code: hourly.weather_code[i] 
+            const nextHours = hourly.time.map((t, i) => ({
+                time: t,
+                temp: hourly.temperature_2m[i],
+                code: hourly.weather_code[i]
             })).filter(h => new Date(h.time).getHours() > now).slice(0, 5);
 
             return (
@@ -757,8 +796,8 @@
                     </h3>
                     <div className="flex justify-between items-end h-28 relative">
                         {nextHours.map((h, i) => {
-                             const config = getWeatherConfig(h.code, true);
-                             return (
+                            const config = getWeatherConfig(h.code, true);
+                            return (
                                 <div key={i} className="flex flex-col items-center justify-end z-10 gap-2 group w-full">
                                     <span className="text-xs opacity-60 font-mono font-bold mb-1">{new Date(h.time).getHours()}:00</span>
                                     <Icon name={config.icon} size={18} className="opacity-80 mb-1" />
@@ -776,17 +815,17 @@
 
         const AQICard = ({ usAqi, pm25, pm10 }) => {
             const [system, setSystem] = useState('US'); // 'US' or 'IN'
-            
+
             if (usAqi === null || usAqi === undefined) return null;
 
             const indianAqi = calculateIndianAQI(pm25, pm10);
             const displayAqi = system === 'US' ? usAqi : indianAqi;
             const status = system === 'US' ? getAQIStatus(displayAqi) : getIndianAQIStatus(displayAqi);
             const infoUrl = system === 'US' ? "https://www.airnow.gov/aqi/aqi-basics/" : "https://cpcb.nic.in/National-Air-Quality-Index/";
-            
+
             // Indian AQI also nominally goes up to 500
             const percentage = Math.min((displayAqi / 500) * 100, 100);
-            
+
             return (
                 <div className={`glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden ${status.border} group transition-colors duration-500`}>
                     <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
@@ -795,15 +834,15 @@
                             <div className="p-1.5 rounded-lg bg-white/10 border border-white/10"><Icon name="wind" size={14} /></div>
                             <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">Air Quality</span>
                         </div>
-                        
+
                         <div className="flex bg-black/30 rounded-full p-1 border border-white/5">
-                            <button 
+                            <button
                                 onClick={() => setSystem('US')}
                                 className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${system === 'US' ? 'bg-white/20 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                             >
                                 US
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setSystem('IN')}
                                 className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${system === 'IN' ? 'bg-white/20 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                             >
@@ -811,7 +850,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-end mb-4">
                         <div className="flex items-baseline gap-2">
                             <span className="text-5xl font-bold tracking-tighter text-glow animate-fade-in" key={displayAqi}>{Math.round(displayAqi)}</span>
@@ -844,8 +883,8 @@
                     </h3>
                     <div className="space-y-1">
                         {daily.time.slice(1, 7).map((t, i) => {
-                            const config = getWeatherConfig(daily.weather_code[i+1], true);
-                            const pop = daily.precipitation_probability_max ? daily.precipitation_probability_max[i+1] : 0;
+                            const config = getWeatherConfig(daily.weather_code[i + 1], true);
+                            const pop = daily.precipitation_probability_max ? daily.precipitation_probability_max[i + 1] : 0;
                             return (
                                 <div key={t} className="flex items-center justify-between p-3 hover:bg-white/5 rounded-2xl transition-colors group">
                                     <span className="w-10 font-bold text-sm opacity-90">{formatDayName(t)}</span>
@@ -854,8 +893,8 @@
                                         {pop > 20 && <div className="flex items-center gap-1 text-[10px] text-blue-300 font-bold bg-blue-500/10 px-1.5 py-0.5 rounded"><Icon name="droplets" size={8} /> {pop}%</div>}
                                     </div>
                                     <div className="flex gap-4 text-sm font-mono">
-                                        <span className="font-bold text-white w-8 text-right">{Math.round(daily.temperature_2m_max[i+1])}°</span>
-                                        <span className="opacity-40 font-semibold w-8 text-right">{Math.round(daily.temperature_2m_min[i+1])}°</span>
+                                        <span className="font-bold text-white w-8 text-right">{Math.round(daily.temperature_2m_max[i + 1])}°</span>
+                                        <span className="opacity-40 font-semibold w-8 text-right">{Math.round(daily.temperature_2m_min[i + 1])}°</span>
                                     </div>
                                 </div>
                             );
@@ -877,7 +916,7 @@
                             const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=en&format=json`);
                             const data = await res.json();
                             if (data.results) setSuggestions(data.results);
-                        } catch (e) {}
+                        } catch (e) { }
                     } else { setSuggestions([]); }
                 }, 300);
                 return () => clearTimeout(timer);
@@ -887,22 +926,22 @@
                 <div className="relative w-full mb-6 z-50 flex gap-3 items-center">
                     <div className={`relative flex-1 group transition-all duration-300 ${isFocused ? 'scale-[1.02]' : ''}`}>
                         <div className="absolute left-4 top-3.5 text-white/50 group-focus-within:text-white transition-colors"><Icon name="search" size={16} /></div>
-                        <form onSubmit={(e) => { e.preventDefault(); if(suggestions[0]) onSearch(suggestions[0]); }}>
-                            <input 
-                                type="text" 
-                                value={query} 
+                        <form onSubmit={(e) => { e.preventDefault(); if (suggestions[0]) onSearch(suggestions[0]); }}>
+                            <input
+                                type="text"
+                                value={query}
                                 onFocus={() => setIsFocused(true)}
                                 onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-                                onChange={(e) => setQuery(e.target.value)} 
-                                placeholder="Search city..." 
-                                className="w-full pl-11 pr-4 py-3 rounded-2xl glass-input text-white placeholder-white/40 focus:bg-black/40 outline-none ring-0 font-bold text-sm transition-all shadow-lg" 
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="Search city..."
+                                className="w-full pl-11 pr-4 py-3 rounded-2xl glass-input text-white placeholder-white/40 focus:bg-black/40 outline-none ring-0 font-bold text-sm transition-all shadow-lg"
                             />
                         </form>
                     </div>
-                    
-                    <button 
+
+                    <button
                         onClick={onToggleSound}
-                        className={`p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg relative overflow-hidden group ${!isMuted ? 'text-emerald-400 border-emerald-500/30' : 'text-white/50'}`} 
+                        className={`p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg relative overflow-hidden group ${!isMuted ? 'text-emerald-400 border-emerald-500/30' : 'text-white/50'}`}
                         title={isMuted ? "Enable Sound" : "Mute Sound"}
                     >
                         <div className={`absolute inset-0 bg-emerald-500/10 transition-opacity ${!isMuted ? 'opacity-100' : 'opacity-0'}`}></div>
@@ -917,7 +956,7 @@
                     </button>
 
                     <button onClick={() => onSearch('CURRENT')} className="p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all text-white/80 border border-white/10 shadow-lg" title="Use Current Location"><Icon name="crosshair" size={18} /></button>
-                    
+
                     {suggestions.length > 0 && isFocused && (
                         <div className="absolute top-full mt-2 w-full glass-panel bg-slate-900/95 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl animate-slide-up left-0 z-50 border border-white/10">
                             {suggestions.map(city => (
@@ -934,7 +973,7 @@
 
         const BentoGrid = ({ current, daily, themeMode }) => {
             const items = [
-                { icon: 'wind', label: 'Wind', val: `${Math.round(current.wind_speed_10m)}`, unit: 'km/h', sub: <div className="flex items-center gap-1 text-[9px] opacity-60 mt-1"><Icon name="compass" size={10} style={{transform: `rotate(${current.wind_direction_10m}deg)`}} /> {current.wind_direction_10m}°</div> },
+                { icon: 'wind', label: 'Wind', val: `${Math.round(current.wind_speed_10m)}`, unit: 'km/h', sub: <div className="flex items-center gap-1 text-[9px] opacity-60 mt-1"><Icon name="compass" size={10} style={{ transform: `rotate(${current.wind_direction_10m}deg)` }} /> {current.wind_direction_10m}°</div> },
                 { icon: 'droplets', label: 'Humidity', val: `${current.relative_humidity_2m}`, unit: '%', sub: null },
                 { icon: 'sun', label: 'UV Index', val: `${Math.round(daily.uv_index_max[0])}`, unit: '', sub: null },
                 { icon: 'thermometer', label: 'Feels Like', val: `${Math.round(current.apparent_temperature)}°`, unit: '', sub: null },
@@ -986,9 +1025,9 @@
             const [isMuted, setIsMuted] = useState(true);
             const [climateInsight, setClimateInsight] = useState(null);
 
-            const isWerewolf = data && data.weather && 
-                data.weather.daily.moon_phase[0] >= 0.45 && 
-                data.weather.daily.moon_phase[0] <= 0.55 && 
+            const isWerewolf = data && data.weather &&
+                data.weather.daily.moon_phase[0] >= 0.45 &&
+                data.weather.daily.moon_phase[0] <= 0.55 &&
                 data.weather.current.is_day === 0;
 
             const isPlaying = useAmbientSound(data?.weather?.current?.weather_code ?? null, isMuted, isWerewolf);
@@ -997,7 +1036,7 @@
                 const handleStatus = () => setIsOnline(navigator.onLine);
                 window.addEventListener('online', handleStatus);
                 window.addEventListener('offline', handleStatus);
-                
+
                 // Register Service Worker if available (Required for PWA)
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js')
@@ -1036,10 +1075,10 @@
                         const safeAqi = a || { current: { us_aqi: null, pm2_5: null, pm10: null } };
                         const moonPhase = calculateMoonPhase();
                         w.daily.moon_phase = [moonPhase];
-                        
+
                         // Update UI immediately with critical data
                         setData({ weather: w, aqi: safeAqi, name });
-                        setLoading(false); 
+                        setLoading(false);
 
                         // Phase 2: Non-Critical Data (Slow) - Fetch Historical data in background
                         // This prevents the slow Archive API from blocking the main UI
@@ -1065,8 +1104,8 @@
                     } else {
                         throw new Error("Weather data unavailable");
                     }
-                } catch(e) { 
-                    console.error("Fetch error:", e); 
+                } catch (e) {
+                    console.error("Fetch error:", e);
                     setError(e.message === "OFFLINE" ? "offline" : "generic");
                     setLoading(false);
                 }
@@ -1084,14 +1123,14 @@
             };
 
             useEffect(() => {
-                if(saved) {
+                if (saved) {
                     const loc = JSON.parse(saved);
                     fetchWeather(loc.lat, loc.lon, loc.name);
                 } else { handleSearch('CURRENT'); }
             }, []);
 
             const toggleSave = () => {
-                if(saved && JSON.parse(saved).name === data.name) {
+                if (saved && JSON.parse(saved).name === data.name) {
                     localStorage.removeItem('favCity');
                     setSaved(null);
                 } else {
@@ -1112,7 +1151,7 @@
                 }
             };
 
-            const severeCodes = [95, 96, 99, 75, 85]; 
+            const severeCodes = [95, 96, 99, 75, 85];
             const isSevere = data && severeCodes.includes(data.weather.current.weather_code);
             const config = data ? getWeatherConfig(data.weather.current.weather_code, data.weather.current.is_day, isSevere, isWerewolf) : { gradient: 'bg-slate-900', accent: 'shadow-none' };
 
@@ -1128,26 +1167,26 @@
                 <div className={`min-h-screen ${config.gradient} transition-colors duration-1000 p-0 relative overflow-x-hidden flex flex-col font-sans`}>
                     {isSevere && <SevereAlertBanner code={data.weather.current.weather_code} />}
                     <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[60%] bg-gradient-to-b from-white/10 to-transparent rounded-full blur-[120px] pointer-events-none"></div>
-                    
+
                     <div className="max-w-md mx-auto w-full z-20 pt-6 px-4 pb-20">
-                        <SearchBar 
-                            onSearch={handleSearch} 
-                            onToggleSound={() => setIsMuted(!isMuted)} 
-                            isMuted={isMuted} 
-                            isPlaying={isPlaying} 
+                        <SearchBar
+                            onSearch={handleSearch}
+                            onToggleSound={() => setIsMuted(!isMuted)}
+                            isMuted={isMuted}
+                            isPlaying={isPlaying}
                         />
-                        
+
                         <div className="flex-1 relative z-10 flex flex-col w-full">
                             {loading ? (
                                 <WeatherSkeleton />
                             ) : data && (
                                 <>
-                                    <MainWeather 
-                                        weather={data.weather} 
-                                        locationName={data.name} 
-                                        config={config} 
-                                        isSaved={saved && JSON.parse(saved).name === data.name} 
-                                        onToggleSave={toggleSave} 
+                                    <MainWeather
+                                        weather={data.weather}
+                                        locationName={data.name}
+                                        config={config}
+                                        isSaved={saved && JSON.parse(saved).name === data.name}
+                                        onToggleSave={toggleSave}
                                         moonPhase={data.weather.daily.moon_phase[0]}
                                         isSevere={isSevere}
                                         climateInsight={climateInsight}
@@ -1156,13 +1195,13 @@
                                     <ForecastStrip hourly={data.weather.hourly} />
                                     <BentoGrid current={data.weather.current} daily={data.weather.daily} />
                                     <SolarCycle sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
-                                    <AQICard 
-                                        usAqi={data.aqi.current.us_aqi} 
-                                        pm25={data.aqi.current.pm2_5} 
-                                        pm10={data.aqi.current.pm10} 
+                                    <AQICard
+                                        usAqi={data.aqi.current.us_aqi}
+                                        pm25={data.aqi.current.pm2_5}
+                                        pm10={data.aqi.current.pm10}
                                     />
                                     <DailyForecast daily={data.weather.daily} />
-                                    
+
                                     <div className="text-center py-8 opacity-40 hover:opacity-100 transition-opacity">
                                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Made by Abhra</div>
                                         <div className="flex justify-center gap-4">
@@ -1183,4 +1222,5 @@
         root.render(<App />);
     </script>
 </body>
+
 </html>
