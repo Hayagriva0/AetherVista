@@ -67,8 +67,8 @@
                         slideDown: { '0%': { transform: 'translateY(-100%)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
                         pulseGlow: { '0%, 100%': { opacity: '0.5', filter: 'blur(8px)' }, '50%': { opacity: '1', filter: 'blur(12px)' } },
                         pulseHeart: { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.15)' } },
-                        rainDrop: { '0%': { transform: 'translateY(-10px)', opacity: '0' }, '50%': { opacity: '1' }, '100%': { transform: 'translateY(20px)', opacity: '0' } },
-                        snowFall: { '0%': { transform: 'translateY(-10px) rotate(0deg)', opacity: '0' }, '50%': { opacity: '1' }, '100%': { transform: 'translateY(20px) rotate(180deg)', opacity: '0' } },
+                        rainDrop: { '0%': { transform: 'translateY(-100px)', opacity: '0' }, '20%': { opacity: '1' }, '100%': { transform: 'translateY(100vh)', opacity: '0.5' } },
+                        snowFall: { '0%': { transform: 'translateY(-10px) translateX(0) rotate(0deg)', opacity: '0' }, '50%': { opacity: '1', transform: 'translateY(50vh) translateX(20px) rotate(180deg)' }, '100%': { transform: 'translateY(100vh) translateX(-10px) rotate(360deg)', opacity: '0' } },
                         sneeze: { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(0.9) translateY(2px)' } },
                         bob: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(3px)' } },
                         lineCast: { '0%, 100%': { transform: 'rotate(0deg)' }, '50%': { transform: 'rotate(2deg)' } },
@@ -329,7 +329,48 @@
                 icon = "cloud-rain";
                 color = "text-blue-300";
             }
-            return { text: insightText, icon, color, trend, currentTemps, historicalTemps };
+
+            // Calculate Extreme Days (days with temps significantly above/below historical average)
+            const histStdDev = Math.sqrt(historicalTemps.reduce((sum, t) => sum + Math.pow(t - avgHist, 2), 0) / historicalTemps.length) || 3;
+            const extremeThreshold = 1.5; // 1.5 standard deviations
+            const hotDays = currentTemps.filter(t => t > avgHist + (histStdDev * extremeThreshold)).length;
+            const coldDays = currentTemps.filter(t => t < avgHist - (histStdDev * extremeThreshold)).length;
+            const extremeDays = { hot: hotDays, cold: coldDays, total: hotDays + coldDays };
+
+            // Calculate Multi-Year Trend (simulated based on year-over-year change)
+            // Positive = warming trend, Negative = cooling trend
+            const yearOverYearChange = diff; // Current year vs last year
+            const trendDirection = yearOverYearChange > 0.5 ? 'warming' : yearOverYearChange < -0.5 ? 'cooling' : 'stable';
+            const trendStrength = Math.abs(yearOverYearChange);
+
+            // Calculate a "trend score" from -100 (cooling) to +100 (warming)
+            const trendScore = Math.max(-100, Math.min(100, yearOverYearChange * 20));
+
+            // Determine multi-year trend message
+            let multiYearText = "Stable long-term pattern";
+            let multiYearIcon = "minus";
+            let multiYearColor = "text-slate-400";
+
+            if (trendStrength > 2) {
+                multiYearText = trendDirection === 'warming' ? `Strong warming trend (+${trendStrength.toFixed(1)}°C)` : `Strong cooling trend (-${trendStrength.toFixed(1)}°C)`;
+                multiYearIcon = trendDirection === 'warming' ? "flame" : "snowflake";
+                multiYearColor = trendDirection === 'warming' ? "text-red-400" : "text-cyan-400";
+            } else if (trendStrength > 1) {
+                multiYearText = trendDirection === 'warming' ? `Gradual warming trend` : `Gradual cooling trend`;
+                multiYearIcon = trendDirection === 'warming' ? "thermometer-sun" : "thermometer-snowflake";
+                multiYearColor = trendDirection === 'warming' ? "text-orange-300" : "text-blue-300";
+            }
+
+            const multiYearTrend = {
+                direction: trendDirection,
+                strength: trendStrength,
+                score: trendScore,
+                text: multiYearText,
+                icon: multiYearIcon,
+                color: multiYearColor
+            };
+
+            return { text: insightText, icon, color, trend, currentTemps, historicalTemps, extremeDays, multiYearTrend };
         };
 
         const getWeatherConfig = (code, isDay, isSevere, isWerewolf) => {
@@ -356,6 +397,186 @@
         };
 
         const formatDayName = (dateString) => new Date(dateString).toLocaleDateString('en-US', { weekday: 'short' });
+
+        // Festival Detection for Easter Eggs
+        const detectFestival = () => {
+            const now = new Date();
+            const month = now.getMonth() + 1; // 1-12
+            const day = now.getDate();
+
+            // Christmas: Dec 24-26
+            if (month === 12 && day >= 24 && day <= 26) {
+                return { name: 'Christmas', emoji: '🎄', color: 'text-red-400', bg: 'from-red-900/30 via-green-900/20 to-red-900/30', message: 'Merry Christmas!', effect: 'christmas' };
+            }
+            // New Year: Dec 31 - Jan 2
+            if ((month === 12 && day === 31) || (month === 1 && day <= 2)) {
+                return { name: 'New Year', emoji: '🎉', color: 'text-yellow-300', bg: 'from-purple-900/30 via-pink-900/20 to-blue-900/30', message: 'Happy New Year!', effect: 'newyear' };
+            }
+            // Holi: Usually March (around 14-15, varies by year)
+            if (month === 3 && day >= 13 && day <= 15) {
+                return { name: 'Holi', emoji: '🎨', color: 'text-pink-400', bg: 'from-pink-500/20 via-yellow-500/20 to-cyan-500/20', message: 'Happy Holi!', effect: 'holi' };
+            }
+            // Diwali: Usually Oct-Nov (around late Oct/early Nov, varies by year)
+            if ((month === 10 && day >= 28) || (month === 11 && day <= 5)) {
+                return { name: 'Diwali', emoji: '🪩', color: 'text-orange-400', bg: 'from-orange-900/30 via-yellow-900/20 to-red-900/30', message: 'Shubh Deepavali!', effect: 'diwali' };
+            }
+            // Saraswati Puja: Usually late Jan/Feb (Vasant Panchami)
+            if ((month === 1 && day >= 28) || (month === 2 && day <= 5)) {
+                return { name: 'Saraswati Puja', emoji: '🤚', color: 'text-yellow-300', bg: 'from-yellow-900/20 via-white/10 to-yellow-900/20', message: 'Jai Maa Saraswati!', effect: 'saraswati' };
+            }
+            return null;
+        };
+
+        // Festival Overlay Component with Animated Effects
+        const FestivalOverlay = ({ festival }) => {
+            if (!festival) return null;
+
+            return (
+                <>
+                    {/* Festival Banner */}
+                    <div className={`fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r ${festival.bg} backdrop-blur-sm border-b border-white/10 py-2 px-4`}>
+                        <div className="max-w-md mx-auto flex items-center justify-center gap-2">
+                            <span className="text-lg">{festival.emoji}</span>
+                            <span className={`text-sm font-bold ${festival.color}`}>{festival.message}</span>
+                            <span className="text-lg">{festival.emoji}</span>
+                        </div>
+                    </div>
+
+                    {/* Festival Effects */}
+                    <div className="fixed inset-0 pointer-events-none overflow-hidden z-[5]">
+                        {/* Holi - Colorful powder splashes */}
+                        {festival.effect === 'holi' && (
+                            <>
+                                {[...Array(20)].map((_, i) => (
+                                    <div
+                                        key={`holi-${i}`}
+                                        className="absolute rounded-full animate-float opacity-40"
+                                        style={{
+                                            width: `${20 + Math.random() * 40}px`,
+                                            height: `${20 + Math.random() * 40}px`,
+                                            left: `${Math.random() * 100}%`,
+                                            top: `${Math.random() * 100}%`,
+                                            background: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FF69B4'][i % 7],
+                                            filter: 'blur(8px)',
+                                            animationDelay: `${Math.random() * 5}s`,
+                                            animationDuration: `${4 + Math.random() * 4}s`
+                                        }}
+                                    />
+                                ))}
+                            </>
+                        )}
+
+                        {/* Diwali - Diyas and sparkles */}
+                        {festival.effect === 'diwali' && (
+                            <>
+                                {[...Array(15)].map((_, i) => (
+                                    <div
+                                        key={`diya-${i}`}
+                                        className="absolute animate-pulse"
+                                        style={{
+                                            left: `${Math.random() * 100}%`,
+                                            top: `${30 + Math.random() * 60}%`,
+                                            animationDelay: `${Math.random() * 2}s`
+                                        }}
+                                    >
+                                        <div className="text-2xl">🪩</div>
+                                    </div>
+                                ))}
+                                {[...Array(30)].map((_, i) => (
+                                    <div
+                                        key={`sparkle-${i}`}
+                                        className="absolute w-1 h-1 bg-yellow-300 rounded-full animate-twinkle"
+                                        style={{
+                                            left: `${Math.random() * 100}%`,
+                                            top: `${Math.random() * 100}%`,
+                                            animationDelay: `${Math.random() * 3}s`
+                                        }}
+                                    />
+                                ))}
+                            </>
+                        )}
+
+                        {/* Christmas - Snowflakes and ornaments */}
+                        {festival.effect === 'christmas' && (
+                            <>
+                                {[...Array(25)].map((_, i) => (
+                                    <div
+                                        key={`snow-xmas-${i}`}
+                                        className="absolute text-white/60 animate-snow-fall"
+                                        style={{
+                                            left: `${Math.random() * 100}%`,
+                                            fontSize: `${10 + Math.random() * 15}px`,
+                                            animationDelay: `${Math.random() * 5}s`,
+                                            animationDuration: `${5 + Math.random() * 5}s`
+                                        }}
+                                    >
+                                        ❄️
+                                    </div>
+                                ))}
+                                {[...Array(8)].map((_, i) => (
+                                    <div
+                                        key={`ornament-${i}`}
+                                        className="absolute animate-float"
+                                        style={{
+                                            left: `${10 + Math.random() * 80}%`,
+                                            top: `${Math.random() * 30}%`,
+                                            animationDelay: `${Math.random() * 3}s`
+                                        }}
+                                    >
+                                        <span className="text-xl">{['🎄', '🎁', '⭐', '🔔'][i % 4]}</span>
+                                    </div>
+                                ))}
+                            </>
+                        )}
+
+                        {/* New Year - Confetti */}
+                        {festival.effect === 'newyear' && (
+                            <>
+                                {[...Array(40)].map((_, i) => (
+                                    <div
+                                        key={`confetti-${i}`}
+                                        className="absolute animate-snow-fall"
+                                        style={{
+                                            left: `${Math.random() * 100}%`,
+                                            width: '8px',
+                                            height: '8px',
+                                            background: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFD93D', '#6BCB77', '#FF69B4', '#9B59B6'][i % 7],
+                                            transform: `rotate(${Math.random() * 360}deg)`,
+                                            animationDelay: `${Math.random() * 5}s`,
+                                            animationDuration: `${3 + Math.random() * 4}s`
+                                        }}
+                                    />
+                                ))}
+                                <div className="absolute top-20 left-1/2 -translate-x-1/2 text-4xl animate-pulse">🎉</div>
+                            </>
+                        )}
+
+                        {/* Saraswati Puja - Lotuses and books */}
+                        {festival.effect === 'saraswati' && (
+                            <>
+                                {[...Array(12)].map((_, i) => (
+                                    <div
+                                        key={`lotus-${i}`}
+                                        className="absolute animate-float"
+                                        style={{
+                                            left: `${Math.random() * 100}%`,
+                                            top: `${50 + Math.random() * 40}%`,
+                                            animationDelay: `${Math.random() * 4}s`,
+                                            animationDuration: `${5 + Math.random() * 3}s`
+                                        }}
+                                    >
+                                        <span className="text-2xl">{['🪷', '📚', '🎶', '🤚'][i % 4]}</span>
+                                    </div>
+                                ))}
+                                <div className="absolute bottom-20 left-1/2 -translate-x-1/2">
+                                    <div className="text-4xl animate-pulse">🪷</div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </>
+            );
+        };
 
         // --- Components ---
 
@@ -659,7 +880,7 @@
             );
         };
 
-        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight, isWerewolf }) => {
+        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight, isWerewolf, onShare }) => {
             const advice = isWerewolf
                 ? { text: "The moon is full. The beast awakes.", icon: "moon" }
                 : getAdvice(weather.current.weather_code, weather.current.temperature_2m);
@@ -674,6 +895,9 @@
                             <h2 className="text-xl font-bold tracking-tight text-glow">{locationName}</h2>
                             <button onClick={onToggleSave} className={`p-1.5 rounded-full hover:bg-white/10 transition-all ${isSaved ? 'text-yellow-400' : 'text-white/30 hover:text-white'}`}>
                                 <Icon name="star" size={16} fill={isSaved ? "currentColor" : "none"} />
+                            </button>
+                            <button onClick={onShare} className="p-1.5 rounded-full hover:bg-white/10 transition-all text-white/30 hover:text-emerald-400" title="Share Weather">
+                                <Icon name="share-2" size={16} />
                             </button>
                         </div>
                         <div className="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em]">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
@@ -745,7 +969,11 @@
         };
 
         const SolarCycle = ({ sunrise, sunset }) => {
+            const [countdown, setCountdown] = useState('');
+            const [nextEvent, setNextEvent] = useState('sunset');
+
             if (!sunrise || !sunset) return null;
+
             const now = new Date();
             const start = new Date(sunrise).getTime();
             const end = new Date(sunset).getTime();
@@ -754,11 +982,57 @@
             progress = Math.max(0, Math.min(100, progress));
             const isNight = current > end || current < start;
 
+            // Live countdown effect
+            useEffect(() => {
+                const updateCountdown = () => {
+                    const now = new Date().getTime();
+                    const sunriseTime = new Date(sunrise).getTime();
+                    const sunsetTime = new Date(sunset).getTime();
+
+                    let targetTime, eventName;
+                    if (now < sunriseTime) {
+                        targetTime = sunriseTime;
+                        eventName = 'sunrise';
+                    } else if (now < sunsetTime) {
+                        targetTime = sunsetTime;
+                        eventName = 'sunset';
+                    } else {
+                        // After sunset, show countdown to next sunrise (tomorrow)
+                        const tomorrowSunrise = sunriseTime + 24 * 60 * 60 * 1000;
+                        targetTime = tomorrowSunrise;
+                        eventName = 'sunrise';
+                    }
+
+                    const diff = targetTime - now;
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+                    setNextEvent(eventName);
+                };
+
+                updateCountdown();
+                const interval = setInterval(updateCountdown, 1000);
+                return () => clearInterval(interval);
+            }, [sunrise, sunset]);
+
             return (
                 <div className="glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden group">
-                    <div className="flex justify-between text-[10px] opacity-60 font-mono font-bold uppercase tracking-wider mb-8">
-                        <span>{new Date(sunrise).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span>{new Date(sunset).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                            <Icon name={nextEvent === 'sunrise' ? 'sunrise' : 'sunset'} size={14} className="text-amber-400" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Solar Cycle</span>
+                        </div>
+                        <div className="flex items-center gap-2 glass-card px-3 py-1.5 rounded-full">
+                            <Icon name="timer" size={12} className="text-amber-300" />
+                            <span className="text-xs font-mono font-bold text-amber-200">{countdown}</span>
+                            <span className="text-[9px] opacity-50 uppercase">to {nextEvent}</span>
+                        </div>
+                    </div>
+                    <div className="flex justify-between text-[10px] opacity-60 font-mono font-bold uppercase tracking-wider mb-6">
+                        <span className="flex items-center gap-1"><Icon name="sunrise" size={10} /> {new Date(sunrise).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="flex items-center gap-1"><Icon name="sunset" size={10} /> {new Date(sunset).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     <div className="relative h-16 w-full mb-1">
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 200 60" preserveAspectRatio="none">
@@ -777,6 +1051,259 @@
                             <Icon name="sun" size={14} fill="currentColor" />
                         </div>
                     </div>
+                </div>
+            );
+        };
+
+        // NEW: Golden Hour Card for Photographers
+        const GoldenHourCard = ({ sunrise, sunset }) => {
+            const [goldenHourInfo, setGoldenHourInfo] = useState(null);
+
+            useEffect(() => {
+                if (!sunrise || !sunset) return;
+
+                const updateGoldenHour = () => {
+                    const now = new Date();
+                    const sunriseTime = new Date(sunrise);
+                    const sunsetTime = new Date(sunset);
+
+                    // Golden hour is approximately 1 hour after sunrise and 1 hour before sunset
+                    const morningGoldenStart = new Date(sunriseTime);
+                    const morningGoldenEnd = new Date(sunriseTime.getTime() + 60 * 60 * 1000);
+                    const eveningGoldenStart = new Date(sunsetTime.getTime() - 60 * 60 * 1000);
+                    const eveningGoldenEnd = new Date(sunsetTime);
+
+                    // Blue hour is 20-30 mins before sunrise and after sunset
+                    const morningBlueStart = new Date(sunriseTime.getTime() - 30 * 60 * 1000);
+                    const morningBlueEnd = new Date(sunriseTime);
+                    const eveningBlueStart = new Date(sunsetTime);
+                    const eveningBlueEnd = new Date(sunsetTime.getTime() + 30 * 60 * 1000);
+
+                    let status = 'waiting';
+                    let countdown = '';
+                    let currentPeriod = null;
+                    let nextPeriod = null;
+
+                    const formatTime = (date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const getCountdown = (target) => {
+                        const diff = target - now;
+                        if (diff < 0) return null;
+                        const hours = Math.floor(diff / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                    };
+
+                    // Check current period
+                    if (now >= morningBlueStart && now < morningBlueEnd) {
+                        status = 'active';
+                        currentPeriod = { name: 'Morning Blue Hour', icon: 'sparkles', color: 'text-blue-300' };
+                    } else if (now >= morningGoldenStart && now < morningGoldenEnd) {
+                        status = 'active';
+                        currentPeriod = { name: 'Morning Golden Hour', icon: 'sun', color: 'text-amber-300' };
+                    } else if (now >= eveningGoldenStart && now < eveningGoldenEnd) {
+                        status = 'active';
+                        currentPeriod = { name: 'Evening Golden Hour', icon: 'sunset', color: 'text-orange-300' };
+                    } else if (now >= eveningBlueStart && now < eveningBlueEnd) {
+                        status = 'active';
+                        currentPeriod = { name: 'Evening Blue Hour', icon: 'moon', color: 'text-indigo-300' };
+                    }
+
+                    // Find next period
+                    if (now < morningBlueStart) {
+                        nextPeriod = { name: 'Morning Blue', time: formatTime(morningBlueStart), countdown: getCountdown(morningBlueStart) };
+                    } else if (now < morningGoldenStart) {
+                        nextPeriod = { name: 'Morning Golden', time: formatTime(morningGoldenStart), countdown: getCountdown(morningGoldenStart) };
+                    } else if (now < eveningGoldenStart) {
+                        nextPeriod = { name: 'Evening Golden', time: formatTime(eveningGoldenStart), countdown: getCountdown(eveningGoldenStart) };
+                    } else if (now < eveningBlueStart) {
+                        nextPeriod = { name: 'Evening Blue', time: formatTime(eveningBlueStart), countdown: getCountdown(eveningBlueStart) };
+                    }
+
+                    setGoldenHourInfo({
+                        status,
+                        currentPeriod,
+                        nextPeriod,
+                        morning: { golden: formatTime(morningGoldenStart) + ' - ' + formatTime(morningGoldenEnd), blue: formatTime(morningBlueStart) + ' - ' + formatTime(morningBlueEnd) },
+                        evening: { golden: formatTime(eveningGoldenStart) + ' - ' + formatTime(eveningGoldenEnd), blue: formatTime(eveningBlueStart) + ' - ' + formatTime(eveningBlueEnd) }
+                    });
+                };
+
+                updateGoldenHour();
+                const interval = setInterval(updateGoldenHour, 30000); // Update every 30 seconds
+                return () => clearInterval(interval);
+            }, [sunrise, sunset]);
+
+            if (!goldenHourInfo) return null;
+
+            return (
+                <div className={`glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden ${goldenHourInfo.status === 'active' ? 'ring-2 ring-amber-400/30' : ''}`}>
+                    {/* Animated glow for active golden hour */}
+                    {goldenHourInfo.status === 'active' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 animate-pulse"></div>
+                    )}
+
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/20">
+                                    <Icon name="camera" size={14} className="text-amber-400" />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">Golden Hour</span>
+                            </div>
+                            {goldenHourInfo.status === 'active' && goldenHourInfo.currentPeriod && (
+                                <span className={`text-[10px] font-bold px-3 py-1 rounded-full bg-amber-500/20 ${goldenHourInfo.currentPeriod.color} border border-amber-500/20 flex items-center gap-1 animate-pulse`}>
+                                    <Icon name={goldenHourInfo.currentPeriod.icon} size={10} />
+                                    NOW ACTIVE
+                                </span>
+                            )}
+                        </div>
+
+                        {goldenHourInfo.status === 'active' && goldenHourInfo.currentPeriod ? (
+                            <div className="text-center py-4">
+                                <Icon name={goldenHourInfo.currentPeriod.icon} size={32} className={`${goldenHourInfo.currentPeriod.color} mx-auto mb-2 animate-pulse`} />
+                                <p className={`text-lg font-bold ${goldenHourInfo.currentPeriod.color}`}>{goldenHourInfo.currentPeriod.name}</p>
+                                <p className="text-[11px] opacity-60 mt-1">📷 Perfect lighting for photography!</p>
+                            </div>
+                        ) : (
+                            <>
+                                {goldenHourInfo.nextPeriod && (
+                                    <div className="flex items-center justify-between bg-slate-900/40 rounded-xl p-3 mb-4 border border-white/5">
+                                        <div>
+                                            <p className="text-[10px] opacity-50 uppercase font-bold">Next Golden Hour</p>
+                                            <p className="text-sm font-bold text-amber-200">{goldenHourInfo.nextPeriod.name}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs opacity-50">{goldenHourInfo.nextPeriod.time}</p>
+                                            <p className="text-sm font-mono font-bold text-amber-300">{goldenHourInfo.nextPeriod.countdown}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
+                                        <div className="flex items-center gap-1 mb-2">
+                                            <Icon name="sunrise" size={12} className="text-amber-300" />
+                                            <span className="text-[9px] font-bold uppercase opacity-50">Morning</span>
+                                        </div>
+                                        <p className="text-[10px] text-amber-200 font-medium">☀️ {goldenHourInfo.morning.golden}</p>
+                                        <p className="text-[9px] text-blue-300 font-medium opacity-70">✨ {goldenHourInfo.morning.blue}</p>
+                                    </div>
+                                    <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
+                                        <div className="flex items-center gap-1 mb-2">
+                                            <Icon name="sunset" size={12} className="text-orange-300" />
+                                            <span className="text-[9px] font-bold uppercase opacity-50">Evening</span>
+                                        </div>
+                                        <p className="text-[10px] text-orange-200 font-medium">🌅 {goldenHourInfo.evening.golden}</p>
+                                        <p className="text-[9px] text-indigo-300 font-medium opacity-70">🌙 {goldenHourInfo.evening.blue}</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // NEW: Dynamic Weather Background with animated patterns
+        const DynamicWeatherBg = ({ weatherCode, isDay }) => {
+            const isRain = [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(weatherCode);
+            const isSnow = [71, 73, 75, 77, 85, 86].includes(weatherCode);
+            const isCloudy = [1, 2, 3, 45, 48].includes(weatherCode);
+            const isClear = weatherCode === 0;
+
+            return (
+                <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                    {/* Rain effect */}
+                    {isRain && (
+                        <div className="absolute inset-0">
+                            {[...Array(30)].map((_, i) => (
+                                <div
+                                    key={`rain-${i}`}
+                                    className="absolute w-0.5 bg-gradient-to-b from-blue-400/40 to-transparent rounded-full animate-rain-drop"
+                                    style={{
+                                        left: `${Math.random() * 100}%`,
+                                        height: `${Math.random() * 20 + 10}px`,
+                                        animationDelay: `${Math.random() * 2}s`,
+                                        animationDuration: `${0.5 + Math.random() * 0.5}s`
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Snow effect */}
+                    {isSnow && (
+                        <div className="absolute inset-0">
+                            {[...Array(25)].map((_, i) => (
+                                <div
+                                    key={`snow-${i}`}
+                                    className="absolute w-2 h-2 bg-white/50 rounded-full animate-snow-fall"
+                                    style={{
+                                        left: `${Math.random() * 100}%`,
+                                        animationDelay: `${Math.random() * 5}s`,
+                                        animationDuration: `${3 + Math.random() * 4}s`
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Floating clouds for cloudy weather */}
+                    {isCloudy && (
+                        <div className="absolute inset-0">
+                            {[...Array(5)].map((_, i) => (
+                                <div
+                                    key={`cloud-${i}`}
+                                    className="absolute opacity-10"
+                                    style={{
+                                        top: `${10 + Math.random() * 30}%`,
+                                        left: `${-20 + Math.random() * 120}%`,
+                                        animation: `drift ${30 + Math.random() * 20}s linear infinite`,
+                                        animationDelay: `${-Math.random() * 30}s`
+                                    }}
+                                >
+                                    <svg width="200" height="100" viewBox="0 0 200 100">
+                                        <ellipse cx="60" cy="60" rx="50" ry="30" fill="white" />
+                                        <ellipse cx="100" cy="50" rx="60" ry="40" fill="white" />
+                                        <ellipse cx="150" cy="60" rx="45" ry="25" fill="white" />
+                                    </svg>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Sun rays for clear day */}
+                    {isClear && isDay && (
+                        <div className="absolute top-0 right-0 w-96 h-96 opacity-20">
+                            <div className="absolute inset-0 animate-spin-slow" style={{ animationDuration: '60s' }}>
+                                {[...Array(12)].map((_, i) => (
+                                    <div
+                                        key={`ray-${i}`}
+                                        className="absolute top-1/2 left-1/2 w-2 h-48 bg-gradient-to-t from-transparent via-yellow-200/30 to-transparent origin-bottom"
+                                        style={{ transform: `translateX(-50%) rotate(${i * 30}deg)` }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Stars for clear night */}
+                    {isClear && !isDay && (
+                        <div className="absolute inset-0">
+                            {[...Array(50)].map((_, i) => (
+                                <div
+                                    key={`star-${i}`}
+                                    className="absolute w-1 h-1 bg-white rounded-full animate-twinkle"
+                                    style={{
+                                        left: `${Math.random() * 100}%`,
+                                        top: `${Math.random() * 50}%`,
+                                        animationDelay: `${Math.random() * 5}s`,
+                                        opacity: 0.3 + Math.random() * 0.7
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             );
         };
@@ -904,7 +1431,141 @@
             );
         };
 
-        const SearchBar = ({ onSearch, onToggleSound, isMuted, isPlaying }) => {
+        // NEW: Precipitation Radar Map using Windy Embed
+        const RadarMap = ({ lat, lon }) => {
+            const [isExpanded, setIsExpanded] = useState(false);
+            if (!lat || !lon) return null;
+
+            return (
+                <div className="glass-panel rounded-3xl mb-4 overflow-hidden">
+                    <div className="p-4 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/20">
+                                <Icon name="radar" size={14} className="text-blue-400" />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">Rain Radar</span>
+                        </div>
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="text-[9px] font-bold uppercase tracking-wider opacity-50 hover:opacity-100 transition-opacity flex items-center gap-1"
+                        >
+                            <Icon name={isExpanded ? "minimize-2" : "maximize-2"} size={12} />
+                            {isExpanded ? 'Collapse' : 'Expand'}
+                        </button>
+                    </div>
+                    <div className={`relative transition-all duration-500 ${isExpanded ? 'h-80' : 'h-44'}`}>
+                        <iframe
+                            src={`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&width=650&height=450&zoom=8&level=surface&overlay=rain&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`}
+                            className="w-full h-full border-0"
+                            title="Weather Radar"
+                            loading="lazy"
+                        />
+                        <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-slate-900/90 to-transparent pointer-events-none"></div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ENHANCED: Weekly History Chart with min/max range and humidity
+        const WeeklyHistoryChart = ({ daily, hourly }) => {
+            if (!daily || !daily.time || daily.time.length < 7) return null;
+
+            const temps_max = daily.temperature_2m_max.slice(0, 7);
+            const temps_min = daily.temperature_2m_min.slice(0, 7);
+            const rains = daily.precipitation_probability_max ? daily.precipitation_probability_max.slice(0, 7) : [];
+            const maxTemp = Math.max(...temps_max);
+            const minTemp = Math.min(...temps_min);
+            const range = maxTemp - minTemp || 1;
+
+            // Calculate average humidity from hourly data for each day
+            const getHumidityForDay = (dayIndex) => {
+                if (!hourly || !hourly.relative_humidity_2m) return 50;
+                const startHour = dayIndex * 24;
+                const endHour = startHour + 24;
+                const dayHumidity = hourly.relative_humidity_2m.slice(startHour, endHour);
+                return dayHumidity.length > 0 ? dayHumidity.reduce((a, b) => a + b, 0) / dayHumidity.length : 50;
+            };
+
+            // Calculate weekly stats
+            const avgMax = Math.round(temps_max.reduce((a, b) => a + b, 0) / temps_max.length);
+            const avgMin = Math.round(temps_min.reduce((a, b) => a + b, 0) / temps_min.length);
+            const totalRainDays = rains.filter(r => r > 30).length;
+
+            return (
+                <div className="glass-panel p-5 rounded-3xl mb-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-60 flex items-center gap-2">
+                            <Icon name="bar-chart-3" size={12} /> Weekly Trends
+                        </h3>
+                        <div className="flex gap-3 text-[9px] font-bold">
+                            <span className="text-orange-300">↑{avgMax}°</span>
+                            <span className="text-blue-300">↓{avgMin}°</span>
+                            <span className="text-cyan-300 flex items-center gap-1"><Icon name="droplets" size={8} />{totalRainDays}d</span>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between items-end h-36 gap-1.5">
+                        {temps_max.map((tempMax, i) => {
+                            const tempMin = temps_min[i];
+                            const topPos = ((maxTemp - tempMax) / range) * 100;
+                            const barHeight = ((tempMax - tempMin) / range) * 100;
+                            const rainChance = rains[i] || 0;
+                            const humidity = getHumidityForDay(i);
+                            const isToday = i === 0;
+
+                            return (
+                                <div key={i} className={`flex-1 flex flex-col items-center gap-1 group ${isToday ? 'scale-105' : ''}`}>
+                                    <span className="text-[9px] font-bold text-orange-300">
+                                        {Math.round(tempMax)}°
+                                    </span>
+                                    <div className="w-full h-20 flex flex-col items-center justify-start relative">
+                                        {/* Temperature range bar */}
+                                        <div
+                                            className={`w-4 rounded-full bg-gradient-to-b from-orange-400 via-amber-500 to-blue-400 transition-all duration-700 absolute ${isToday ? 'ring-2 ring-white/30' : ''}`}
+                                            style={{
+                                                top: `${topPos}%`,
+                                                height: `${Math.max(barHeight, 15)}%`,
+                                                opacity: isToday ? 1 : 0.7
+                                            }}
+                                        />
+                                        {/* Rain indicator dot */}
+                                        {rainChance > 20 && (
+                                            <div
+                                                className="absolute bottom-0 w-2 h-2 rounded-full bg-blue-400 animate-pulse"
+                                                style={{ opacity: rainChance / 100 }}
+                                            />
+                                        )}
+                                    </div>
+                                    <span className="text-[9px] font-bold text-blue-300">
+                                        {Math.round(tempMin)}°
+                                    </span>
+                                    <span className={`text-[8px] font-bold ${isToday ? 'text-white opacity-80' : 'opacity-40'}`}>
+                                        {isToday ? 'Today' : formatDayName(daily.time[i])}
+                                    </span>
+                                    {/* Humidity indicator on hover */}
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 glass-card px-2 py-0.5 rounded-full text-[8px] font-bold text-cyan-300">
+                                        <Icon name="droplet" size={8} className="inline mr-0.5" />{Math.round(humidity)}%
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="flex items-center justify-center gap-6 mt-6 pt-3 border-t border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-b from-orange-400 to-blue-400"></div>
+                            <span className="text-[9px] opacity-50 font-bold uppercase">Temp Range</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                            <span className="text-[9px] opacity-50 font-bold uppercase">Rain (&gt;30%)</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SearchBar = ({ onSearch, onToggleSound, isMuted, isPlaying, onToggleTheme, isDarkMode, notificationStatus, onRequestNotifications }) => {
             const [query, setQuery] = useState('');
             const [suggestions, setSuggestions] = useState([]);
             const [isFocused, setIsFocused] = useState(false);
@@ -923,9 +1584,9 @@
             }, [query]);
 
             return (
-                <div className="relative w-full mb-6 z-50 flex gap-3 items-center">
+                <div className="relative w-full mb-6 z-50 flex gap-2 items-center">
                     <div className={`relative flex-1 group transition-all duration-300 ${isFocused ? 'scale-[1.02]' : ''}`}>
-                        <div className="absolute left-4 top-3.5 text-white/50 group-focus-within:text-white transition-colors"><Icon name="search" size={16} /></div>
+                        <div className="absolute left-4 top-3.5 text-white/50 dark:text-slate-400 group-focus-within:text-white transition-colors"><Icon name="search" size={16} /></div>
                         <form onSubmit={(e) => { e.preventDefault(); if (suggestions[0]) onSearch(suggestions[0]); }}>
                             <input
                                 type="text"
@@ -939,6 +1600,26 @@
                         </form>
                     </div>
 
+                    {/* Theme Toggle Button */}
+                    <button
+                        onClick={onToggleTheme}
+                        className="p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg text-white/70 hover:text-yellow-300"
+                        title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                    >
+                        <Icon name={isDarkMode ? "sun" : "moon"} size={18} />
+                    </button>
+
+                    {/* Notification Button */}
+                    <button
+                        onClick={onRequestNotifications}
+                        className={`p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg relative ${notificationStatus === 'granted' ? 'text-emerald-400 border-emerald-500/30' : notificationStatus === 'denied' ? 'text-red-400 border-red-500/30' : 'text-white/50'}`}
+                        title={notificationStatus === 'granted' ? "Notifications Enabled" : notificationStatus === 'denied' ? "Notifications Blocked" : "Enable Notifications"}
+                    >
+                        <Icon name={notificationStatus === 'granted' ? "bell-ring" : notificationStatus === 'denied' ? "bell-off" : "bell"} size={18} />
+                        {notificationStatus === 'granted' && <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>}
+                    </button>
+
+                    {/* Sound Toggle Button */}
                     <button
                         onClick={onToggleSound}
                         className={`p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg relative overflow-hidden group ${!isMuted ? 'text-emerald-400 border-emerald-500/30' : 'text-white/50'}`}
@@ -1022,8 +1703,19 @@
             const [error, setError] = useState(null);
             const [saved, setSaved] = useState(localStorage.getItem('favCity'));
             const [isOnline, setIsOnline] = useState(navigator.onLine);
-            const [isMuted, setIsMuted] = useState(true);
+            const [isMuted, setIsMuted] = useState(false); // Sound ON by default
             const [climateInsight, setClimateInsight] = useState(null);
+
+            // New state for theme and notifications
+            const [isDarkMode, setIsDarkMode] = useState(() => {
+                const stored = localStorage.getItem('weatherProTheme');
+                return stored ? stored === 'dark' : true; // Default to dark
+            });
+            const [notificationStatus, setNotificationStatus] = useState(() => {
+                if ('Notification' in window) return Notification.permission;
+                return 'unsupported';
+            });
+            const [shareMessage, setShareMessage] = useState(null);
 
             const isWerewolf = data && data.weather &&
                 data.weather.daily.moon_phase[0] >= 0.45 &&
@@ -1032,10 +1724,91 @@
 
             const isPlaying = useAmbientSound(data?.weather?.current?.weather_code ?? null, isMuted, isWerewolf);
 
+            // Theme toggle handler
+            const toggleTheme = () => {
+                const newMode = !isDarkMode;
+                setIsDarkMode(newMode);
+                localStorage.setItem('weatherProTheme', newMode ? 'dark' : 'light');
+                document.documentElement.classList.toggle('dark', newMode);
+            };
+
+            // Notification request handler
+            const requestNotifications = async () => {
+                if (!('Notification' in window)) {
+                    alert('Notifications are not supported in this browser.');
+                    return;
+                }
+                if (Notification.permission === 'granted') {
+                    // Test notification
+                    new Notification('Weather Pro', {
+                        body: 'Notifications are already enabled! You\'ll receive weather alerts.',
+                        icon: './icon-192.svg'
+                    });
+                    return;
+                }
+                const permission = await Notification.requestPermission();
+                setNotificationStatus(permission);
+                if (permission === 'granted') {
+                    new Notification('Weather Pro', {
+                        body: 'Weather alerts enabled! You\'ll be notified of severe weather.',
+                        icon: './icon-192.svg'
+                    });
+                }
+            };
+
+            // Send weather notification for severe conditions
+            const sendWeatherNotification = (weatherData, locationName) => {
+                if (notificationStatus !== 'granted') return;
+                const severeCodes = [95, 96, 99, 75, 85, 86];
+                if (severeCodes.includes(weatherData.current.weather_code)) {
+                    const alertText = [95, 96, 99].includes(weatherData.current.weather_code)
+                        ? 'Severe Thunderstorm Warning!'
+                        : 'Heavy Snow Warning!';
+                    new Notification(`⚠️ ${alertText}`, {
+                        body: `${locationName}: ${Math.round(weatherData.current.temperature_2m)}°C - Take precautions!`,
+                        icon: './icon-192.svg',
+                        tag: 'weather-alert'
+                    });
+                }
+            };
+
+            // Share weather handler
+            const shareWeather = async () => {
+                if (!data) return;
+                const temp = Math.round(data.weather.current.temperature_2m);
+                const config = getWeatherConfig(data.weather.current.weather_code, data.weather.current.is_day, false, false);
+                const shareText = `🌤️ Weather in ${data.name}: ${temp}°C, ${config.label}\n\nShared via Weather Pro`;
+
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'Weather Pro',
+                            text: shareText,
+                            url: window.location.href
+                        });
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            // Fallback to clipboard
+                            await navigator.clipboard.writeText(shareText);
+                            setShareMessage('Copied to clipboard!');
+                            setTimeout(() => setShareMessage(null), 2000);
+                        }
+                    }
+                } else {
+                    // Fallback to clipboard
+                    await navigator.clipboard.writeText(shareText);
+                    setShareMessage('Copied to clipboard!');
+                    setTimeout(() => setShareMessage(null), 2000);
+                }
+            };
+
             useEffect(() => {
                 const handleStatus = () => setIsOnline(navigator.onLine);
                 window.addEventListener('online', handleStatus);
                 window.addEventListener('offline', handleStatus);
+
+                // Apply initial theme
+                document.documentElement.classList.toggle('dark', isDarkMode);
 
                 // Register Service Worker if available (Required for PWA)
                 if ('serviceWorker' in navigator) {
@@ -1067,7 +1840,7 @@
 
                     // Phase 1: Critical Data (Fast) - Fetch immediately to show UI
                     const [w, a] = await Promise.all([
-                        safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,relative_humidity_2m,apparent_temperature,surface_pressure,visibility&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto`),
+                        safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,relative_humidity_2m,apparent_temperature,surface_pressure,visibility&hourly=temperature_2m,weather_code,precipitation_probability,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto`),
                         safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10`)
                     ]);
 
@@ -1077,8 +1850,11 @@
                         w.daily.moon_phase = [moonPhase];
 
                         // Update UI immediately with critical data
-                        setData({ weather: w, aqi: safeAqi, name });
+                        setData({ weather: w, aqi: safeAqi, name, lat, lon });
                         setLoading(false);
+
+                        // Send notification for severe weather
+                        sendWeatherNotification(w, name);
 
                         // Phase 2: Non-Critical Data (Slow) - Fetch Historical data in background
                         // This prevents the slow Archive API from blocking the main UI
@@ -1155,6 +1931,9 @@
             const isSevere = data && severeCodes.includes(data.weather.current.weather_code);
             const config = data ? getWeatherConfig(data.weather.current.weather_code, data.weather.current.is_day, isSevere, isWerewolf) : { gradient: 'bg-slate-900', accent: 'shadow-none' };
 
+            // Detect current festival for Easter eggs
+            const currentFestival = detectFestival();
+
             if (error === "offline" || (!isOnline && !data && !loading)) {
                 return (
                     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
@@ -1164,16 +1943,33 @@
             }
 
             return (
-                <div className={`min-h-screen ${config.gradient} transition-colors duration-1000 p-0 relative overflow-x-hidden flex flex-col font-sans`}>
+                <div className={`min-h-screen ${config.gradient} transition-colors duration-1000 p-0 relative overflow-x-hidden flex flex-col font-sans ${currentFestival ? 'pt-10' : ''}`}>
+                    {/* Festival Easter Egg Overlay */}
+                    <FestivalOverlay festival={currentFestival} />
+
                     {isSevere && <SevereAlertBanner code={data.weather.current.weather_code} />}
+
+                    {/* Dynamic Weather Background */}
+                    {data && <DynamicWeatherBg weatherCode={data.weather.current.weather_code} isDay={data.weather.current.is_day === 1} />}
+
                     <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[60%] bg-gradient-to-b from-white/10 to-transparent rounded-full blur-[120px] pointer-events-none"></div>
 
                     <div className="max-w-md mx-auto w-full z-20 pt-6 px-4 pb-20">
+                        {/* Share Message Toast */}
+                        {shareMessage && (
+                            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] glass-panel px-4 py-2 rounded-full text-sm font-bold text-emerald-400 border border-emerald-500/30 animate-slide-down flex items-center gap-2">
+                                <Icon name="check-circle" size={16} /> {shareMessage}
+                            </div>
+                        )}
                         <SearchBar
                             onSearch={handleSearch}
                             onToggleSound={() => setIsMuted(!isMuted)}
                             isMuted={isMuted}
                             isPlaying={isPlaying}
+                            onToggleTheme={toggleTheme}
+                            isDarkMode={isDarkMode}
+                            notificationStatus={notificationStatus}
+                            onRequestNotifications={requestNotifications}
                         />
 
                         <div className="flex-1 relative z-10 flex flex-col w-full">
@@ -1191,6 +1987,7 @@
                                         isSevere={isSevere}
                                         climateInsight={climateInsight}
                                         isWerewolf={isWerewolf}
+                                        onShare={shareWeather}
                                     />
                                     <ForecastStrip hourly={data.weather.hourly} />
                                     <BentoGrid current={data.weather.current} daily={data.weather.daily} />
@@ -1201,6 +1998,9 @@
                                         pm10={data.aqi.current.pm10}
                                     />
                                     <DailyForecast daily={data.weather.daily} />
+                                    <WeeklyHistoryChart daily={data.weather.daily} hourly={data.weather.hourly} />
+                                    <RadarMap lat={data.lat} lon={data.lon} />
+                                    <GoldenHourCard sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
 
                                     <div className="text-center py-8 opacity-40 hover:opacity-100 transition-opacity">
                                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Made by Abhra</div>
