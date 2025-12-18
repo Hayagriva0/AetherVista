@@ -305,6 +305,20 @@
             const avgHist = historicalTemps.reduce((a, b) => a + b, 0) / historicalTemps.length;
             const diff = avgCurrent - avgHist;
 
+            // Detect current Indian season
+            const now = new Date();
+            const month = now.getMonth() + 1; // 1-12
+            let currentSeason = { name: 'Winter', emoji: '❄️', color: 'text-blue-300' };
+            if (month >= 3 && month <= 5) {
+                currentSeason = { name: 'Summer', emoji: '☀️', color: 'text-orange-400', hindi: 'Garmi' };
+            } else if (month >= 6 && month <= 9) {
+                currentSeason = { name: 'Monsoon', emoji: '🌧️', color: 'text-blue-400', hindi: 'Barsaat' };
+            } else if (month >= 10 && month <= 11) {
+                currentSeason = { name: 'Post-Monsoon', emoji: '🍂', color: 'text-amber-400', hindi: 'Sharad' };
+            } else {
+                currentSeason = { name: 'Winter', emoji: '❄️', color: 'text-cyan-300', hindi: 'Sardi' };
+            }
+
             let insightText = "Consistent with seasonal norms.";
             let icon = "minus";
             let color = "text-slate-300";
@@ -321,32 +335,71 @@
                 color = "text-blue-400";
                 trend = "cooler";
             }
+
+            // Calculate precipitation data
             const currentRain = (currentData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
             const histRain = (historicalData.daily.precipitation_sum || []).reduce((a, b) => a + b, 0);
-            if (currentRain > histRain + 10) {
+            const rainDiff = currentRain - histRain;
+
+            // Monsoon-specific insights (June-September)
+            if (month >= 6 && month <= 9) {
+                if (currentRain > histRain + 50) {
+                    const percent = histRain < 1 ? 100 : Math.round(((currentRain - histRain) / histRain) * 100);
+                    insightText = `Active Monsoon: +${percent}% rainfall vs last year.`;
+                    icon = "cloud-rain";
+                    color = "text-blue-300";
+                } else if (currentRain < histRain - 30) {
+                    const percent = histRain < 1 ? 0 : Math.round(((histRain - currentRain) / histRain) * 100);
+                    insightText = `Weak Monsoon: ${percent}% less rainfall than usual.`;
+                    icon = "cloud-off";
+                    color = "text-yellow-400";
+                }
+            } else if (currentRain > histRain + 10) {
                 const percent = histRain < 1 ? 100 : Math.round(((currentRain - histRain) / histRain) * 100);
                 insightText = `Significantly wetter (+${percent}%) than last year.`;
                 icon = "cloud-rain";
                 color = "text-blue-300";
             }
 
-            // Calculate Extreme Days (days with temps significantly above/below historical average)
-            const histStdDev = Math.sqrt(historicalTemps.reduce((sum, t) => sum + Math.pow(t - avgHist, 2), 0) / historicalTemps.length) || 3;
-            const extremeThreshold = 1.5; // 1.5 standard deviations
-            const hotDays = currentTemps.filter(t => t > avgHist + (histStdDev * extremeThreshold)).length;
-            const coldDays = currentTemps.filter(t => t < avgHist - (histStdDev * extremeThreshold)).length;
-            const extremeDays = { hot: hotDays, cold: coldDays, total: hotDays + coldDays };
+            // INDIA-SPECIFIC: Calculate Extreme Days with Indian thresholds
+            // Heat Wave: IMD defines heat wave as temp >= 40°C (plains) or departure from normal >= 4.5°C
+            // Cold Wave: Min temp <= 10°C or departure from normal >= 4.5°C
+            const heatWaveDays = currentTemps.filter(t => t >= 40).length;
+            const severHeatDays = currentTemps.filter(t => t >= 45).length;
+            const coldWaveDays = currentTemps.filter(t => t <= 10).length;
+            const pleasantDays = currentTemps.filter(t => t >= 20 && t <= 30).length;
 
-            // Calculate Multi-Year Trend (simulated based on year-over-year change)
-            // Positive = warming trend, Negative = cooling trend
-            const yearOverYearChange = diff; // Current year vs last year
+            // Also calculate statistical extremes
+            const histStdDev = Math.sqrt(historicalTemps.reduce((sum, t) => sum + Math.pow(t - avgHist, 2), 0) / historicalTemps.length) || 3;
+            const hotDays = currentTemps.filter(t => t > avgHist + (histStdDev * 1.5)).length;
+            const coldDays = currentTemps.filter(t => t < avgHist - (histStdDev * 1.5)).length;
+
+            const extremeDays = {
+                hot: hotDays,
+                cold: coldDays,
+                total: hotDays + coldDays,
+                heatWave: heatWaveDays,
+                severeHeat: severHeatDays,
+                coldWave: coldWaveDays,
+                pleasant: pleasantDays
+            };
+
+            // Monsoon tracking
+            const monsoonData = {
+                totalRain: Math.round(currentRain),
+                lastYearRain: Math.round(histRain),
+                deficit: Math.round(rainDiff),
+                deficitPercent: histRain > 0 ? Math.round((rainDiff / histRain) * 100) : 0,
+                isActive: month >= 6 && month <= 9,
+                status: currentRain > histRain ? 'surplus' : currentRain < histRain - 20 ? 'deficit' : 'normal'
+            };
+
+            // Calculate Multi-Year Trend
+            const yearOverYearChange = diff;
             const trendDirection = yearOverYearChange > 0.5 ? 'warming' : yearOverYearChange < -0.5 ? 'cooling' : 'stable';
             const trendStrength = Math.abs(yearOverYearChange);
-
-            // Calculate a "trend score" from -100 (cooling) to +100 (warming)
             const trendScore = Math.max(-100, Math.min(100, yearOverYearChange * 20));
 
-            // Determine multi-year trend message
             let multiYearText = "Stable long-term pattern";
             let multiYearIcon = "minus";
             let multiYearColor = "text-slate-400";
@@ -370,7 +423,18 @@
                 color: multiYearColor
             };
 
-            return { text: insightText, icon, color, trend, currentTemps, historicalTemps, extremeDays, multiYearTrend };
+            return {
+                text: insightText,
+                icon,
+                color,
+                trend,
+                currentTemps,
+                historicalTemps,
+                extremeDays,
+                multiYearTrend,
+                currentSeason,
+                monsoonData
+            };
         };
 
         const getWeatherConfig = (code, isDay, isSevere, isWerewolf) => {
@@ -615,29 +679,300 @@
 
         const ClimateCard = ({ insight }) => {
             const [showInfo, setShowInfo] = useState(false);
+            const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'extremes', 'monsoon', 'trend'
             if (!insight) return null;
+
+            const { extremeDays, multiYearTrend, currentSeason, monsoonData } = insight;
+
             return (
                 <div className="glass-panel p-4 rounded-3xl relative overflow-hidden group">
-                    <div className="flex justify-between items-start mb-2 relative z-10">
+                    {/* Header with Season Badge */}
+                    <div className="flex justify-between items-start mb-3 relative z-10">
                         <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-xl bg-white/5 border border-white/5 ${insight.color} group-hover:scale-110 transition-transform`}>
                                 <Icon name={insight.icon} size={20} />
                             </div>
                             <div>
-                                <h4 className="text-[10px] font-bold uppercase tracking-wider opacity-50 mb-0.5">Climate Context</h4>
+                                <div className="flex items-center gap-2 mb-0.5">
+                                    <h4 className="text-[10px] font-bold uppercase tracking-wider opacity-50">Climate Context</h4>
+                                    {currentSeason && (
+                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 ${currentSeason.color} flex items-center gap-1`}>
+                                            {currentSeason.emoji} {currentSeason.name}
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="text-sm font-semibold leading-tight text-white/90">{insight.text}</p>
                             </div>
                         </div>
                         <button onClick={() => setShowInfo(!showInfo)} className="text-white/30 hover:text-white transition-colors p-1"><Icon name="info" size={14} /></button>
                     </div>
+
+                    {/* Tab Navigation - India Edition */}
+                    <div className="flex gap-1 mb-3 bg-black/20 rounded-xl p-1 relative z-10">
+                        {[
+                            { id: 'overview', label: 'Overview', icon: 'bar-chart-3' },
+                            { id: 'extremes', label: 'Extremes', icon: 'flame' },
+                            { id: 'monsoon', label: 'Monsoon', icon: 'cloud-rain' },
+                            { id: 'trend', label: 'Trend', icon: 'trending-up' }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg text-[8px] font-bold uppercase tracking-wide transition-all ${activeTab === tab.id
+                                    ? 'bg-white/10 text-white shadow-sm'
+                                    : 'text-white/40 hover:text-white/70'
+                                    }`}
+                            >
+                                <Icon name={tab.icon} size={9} />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Overview Tab - Original Graph */}
+                    {activeTab === 'overview' && (
+                        <ClimateGraph current={insight.currentTemps} past={insight.historicalTemps} trend={insight.trend} />
+                    )}
+
+                    {/* Extreme Days Tab - India Focused */}
+                    {activeTab === 'extremes' && extremeDays && (
+                        <div className="animate-fade-in">
+                            <div className="grid grid-cols-2 gap-2 mb-3">
+                                {/* Heat Wave Days */}
+                                <div className="bg-gradient-to-br from-red-500/20 to-orange-500/10 rounded-2xl p-3 border border-red-500/20 relative overflow-hidden group/card">
+                                    <div className="absolute -right-4 -top-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
+                                        <Icon name="flame" size={50} />
+                                    </div>
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <div className="p-1 bg-red-500/20 rounded-lg">
+                                            <Icon name="thermometer-sun" size={12} className="text-red-400" />
+                                        </div>
+                                        <span className="text-[8px] font-bold uppercase tracking-wider text-red-300/80">Heat Wave</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl font-bold text-red-300">{extremeDays.heatWave || 0}</span>
+                                        <span className="text-[9px] text-red-300/60 font-medium">days</span>
+                                    </div>
+                                    <p className="text-[8px] text-white/50 mt-0.5">≥40°C (IMD)</p>
+                                </div>
+
+                                {/* Cold Wave Days */}
+                                <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/10 rounded-2xl p-3 border border-cyan-500/20 relative overflow-hidden group/card">
+                                    <div className="absolute -right-4 -top-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
+                                        <Icon name="snowflake" size={50} />
+                                    </div>
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <div className="p-1 bg-cyan-500/20 rounded-lg">
+                                            <Icon name="thermometer-snowflake" size={12} className="text-cyan-400" />
+                                        </div>
+                                        <span className="text-[8px] font-bold uppercase tracking-wider text-cyan-300/80">Cold Wave</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl font-bold text-cyan-300">{extremeDays.coldWave || 0}</span>
+                                        <span className="text-[9px] text-cyan-300/60 font-medium">days</span>
+                                    </div>
+                                    <p className="text-[8px] text-white/50 mt-0.5">≤10°C</p>
+                                </div>
+
+                                {/* Severe Heat */}
+                                <div className="bg-gradient-to-br from-purple-500/20 to-red-500/10 rounded-2xl p-3 border border-purple-500/20 relative overflow-hidden group/card">
+                                    <div className="absolute -right-4 -top-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
+                                        <Icon name="alert-triangle" size={50} />
+                                    </div>
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <div className="p-1 bg-purple-500/20 rounded-lg">
+                                            <Icon name="alert-octagon" size={12} className="text-purple-400" />
+                                        </div>
+                                        <span className="text-[8px] font-bold uppercase tracking-wider text-purple-300/80">Severe Heat</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl font-bold text-purple-300">{extremeDays.severeHeat || 0}</span>
+                                        <span className="text-[9px] text-purple-300/60 font-medium">days</span>
+                                    </div>
+                                    <p className="text-[8px] text-white/50 mt-0.5">≥45°C</p>
+                                </div>
+
+                                {/* Pleasant Days */}
+                                <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 rounded-2xl p-3 border border-green-500/20 relative overflow-hidden group/card">
+                                    <div className="absolute -right-4 -top-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
+                                        <Icon name="smile" size={50} />
+                                    </div>
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <div className="p-1 bg-green-500/20 rounded-lg">
+                                            <Icon name="sun" size={12} className="text-green-400" />
+                                        </div>
+                                        <span className="text-[8px] font-bold uppercase tracking-wider text-green-300/80">Pleasant</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl font-bold text-green-300">{extremeDays.pleasant || 0}</span>
+                                        <span className="text-[9px] text-green-300/60 font-medium">days</span>
+                                    </div>
+                                    <p className="text-[8px] text-white/50 mt-0.5">20-30°C</p>
+                                </div>
+                            </div>
+
+                            {/* Summary */}
+                            <div className="bg-slate-800/50 rounded-xl p-2.5 border border-white/5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[8px] font-bold uppercase tracking-wider text-white/50">Last 30 Days Summary</span>
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${extremeDays.heatWave > 5 ? 'bg-red-500/20 text-red-300' :
+                                            extremeDays.coldWave > 5 ? 'bg-cyan-500/20 text-cyan-300' :
+                                                extremeDays.pleasant > 15 ? 'bg-green-500/20 text-green-300' :
+                                                    'bg-yellow-500/20 text-yellow-300'
+                                        }`}>
+                                        {extremeDays.heatWave > 5 ? '🔥 Heat Alert' :
+                                            extremeDays.coldWave > 5 ? '❄️ Cold Alert' :
+                                                extremeDays.pleasant > 15 ? '😊 Comfortable' : '⚡ Variable'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Monsoon Tab - India Specific */}
+                    {activeTab === 'monsoon' && monsoonData && (
+                        <div className="animate-fade-in">
+                            {/* Monsoon Status */}
+                            <div className={`rounded-2xl p-4 mb-3 border ${monsoonData.isActive
+                                    ? 'bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-blue-500/30'
+                                    : 'bg-gradient-to-br from-slate-500/20 to-slate-600/10 border-slate-500/30'
+                                }`}>
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`p-2 rounded-xl ${monsoonData.isActive ? 'bg-blue-500/20' : 'bg-slate-500/20'}`}>
+                                            <Icon name={monsoonData.isActive ? "cloud-rain" : "cloud"} size={20} className={monsoonData.isActive ? "text-blue-400" : "text-slate-400"} />
+                                        </div>
+                                        <div>
+                                            <h5 className={`text-sm font-bold ${monsoonData.isActive ? 'text-blue-300' : 'text-slate-300'}`}>
+                                                {monsoonData.isActive ? '🌧️ Monsoon Active' : '☁️ Off-Season'}
+                                            </h5>
+                                            <p className="text-[9px] text-white/50">
+                                                {monsoonData.isActive ? 'June - September' : 'Monsoon resumes in June'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className={`text-[9px] font-bold px-2 py-1 rounded-full ${monsoonData.status === 'surplus' ? 'bg-green-500/20 text-green-300' :
+                                            monsoonData.status === 'deficit' ? 'bg-red-500/20 text-red-300' :
+                                                'bg-slate-500/20 text-slate-300'
+                                        }`}>
+                                        {monsoonData.status === 'surplus' ? '↑ Surplus' :
+                                            monsoonData.status === 'deficit' ? '↓ Deficit' : '— Normal'}
+                                    </span>
+                                </div>
+
+                                {/* Rainfall Stats */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-black/20 rounded-xl p-2.5 text-center">
+                                        <p className="text-[8px] text-white/40 font-bold uppercase mb-1">This Period</p>
+                                        <p className="text-xl font-bold text-blue-300">{monsoonData.totalRain}<span className="text-[10px] text-blue-300/60 ml-0.5">mm</span></p>
+                                    </div>
+                                    <div className="bg-black/20 rounded-xl p-2.5 text-center">
+                                        <p className="text-[8px] text-white/40 font-bold uppercase mb-1">Last Year</p>
+                                        <p className="text-xl font-bold text-slate-400">{monsoonData.lastYearRain}<span className="text-[10px] text-slate-400/60 ml-0.5">mm</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Deficit/Surplus Meter */}
+                            <div className="bg-slate-800/50 rounded-xl p-3 border border-white/5">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-white/50">Rainfall vs Last Year</span>
+                                    <span className={`text-[10px] font-bold ${monsoonData.deficit > 0 ? 'text-green-400' : monsoonData.deficit < -20 ? 'text-red-400' : 'text-slate-400'
+                                        }`}>
+                                        {monsoonData.deficit > 0 ? '+' : ''}{monsoonData.deficitPercent}%
+                                    </span>
+                                </div>
+                                <div className="relative h-2.5 bg-slate-900/50 rounded-full overflow-hidden">
+                                    <div className="absolute inset-0 flex">
+                                        <div className="w-1/2 bg-gradient-to-r from-red-500/50 to-slate-600/50" />
+                                        <div className="w-1/2 bg-gradient-to-r from-slate-600/50 to-green-500/50" />
+                                    </div>
+                                    <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white/50 -translate-x-1/2" />
+                                    <div
+                                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg border-2 border-slate-900 transition-all duration-700"
+                                        style={{ left: `calc(${Math.max(5, Math.min(95, 50 + (monsoonData.deficitPercent / 2)))}% - 6px)` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between mt-1.5 text-[8px] text-white/40">
+                                    <span>Deficit</span>
+                                    <span>Normal</span>
+                                    <span>Surplus</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Multi-Year Trend Tab */}
+                    {activeTab === 'trend' && multiYearTrend && (
+                        <div className="animate-fade-in">
+                            {/* Trend Gauge */}
+                            <div className="relative mb-4">
+                                <div className="flex items-center justify-center mb-3">
+                                    <div className={`p-3 rounded-2xl bg-gradient-to-br ${multiYearTrend.direction === 'warming' ? 'from-orange-500/20 to-red-500/10 border-orange-500/30' :
+                                        multiYearTrend.direction === 'cooling' ? 'from-blue-500/20 to-cyan-500/10 border-blue-500/30' :
+                                            'from-slate-500/20 to-slate-600/10 border-slate-500/30'
+                                        } border`}>
+                                        <Icon name={multiYearTrend.icon} size={28} className={multiYearTrend.color} />
+                                    </div>
+                                </div>
+                                <h5 className={`text-center text-sm font-bold ${multiYearTrend.color} mb-1`}>{multiYearTrend.text}</h5>
+                                <p className="text-center text-[10px] text-white/50">Year-over-year comparison</p>
+                            </div>
+
+                            {/* Trend Meter */}
+                            <div className="bg-slate-800/50 rounded-xl p-3 border border-white/5">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-blue-300 flex items-center gap-1">
+                                        <Icon name="snowflake" size={10} /> Cooling
+                                    </span>
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1">
+                                        Warming <Icon name="flame" size={10} />
+                                    </span>
+                                </div>
+                                <div className="relative h-3 bg-gradient-to-r from-blue-500 via-slate-500 to-orange-500 rounded-full overflow-hidden">
+                                    <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white/50 -translate-x-1/2" />
+                                    <div
+                                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg border-2 border-slate-900 transition-all duration-700"
+                                        style={{ left: `calc(${50 + (multiYearTrend.score / 2)}% - 6px)` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between mt-2 text-[8px] text-white/40 font-mono">
+                                    <span>-5°C</span>
+                                    <span>0°C</span>
+                                    <span>+5°C</span>
+                                </div>
+                            </div>
+
+                            {/* Trend Insight */}
+                            <div className={`mt-3 p-3 rounded-xl border ${multiYearTrend.direction === 'warming' ? 'bg-orange-500/10 border-orange-500/20' :
+                                multiYearTrend.direction === 'cooling' ? 'bg-blue-500/10 border-blue-500/20' :
+                                    'bg-slate-500/10 border-slate-500/20'
+                                }`}>
+                                <div className="flex items-start gap-2">
+                                    <Icon name="lightbulb" size={14} className={multiYearTrend.color} />
+                                    <p className="text-[10px] text-white/70 leading-relaxed">
+                                        {multiYearTrend.direction === 'warming'
+                                            ? 'Temperatures trending higher. In India, this could mean earlier/stronger summer heat and delayed monsoon onset.'
+                                            : multiYearTrend.direction === 'cooling'
+                                                ? 'Temperatures trending lower. This may indicate extended winter or La Niña influence on Indian weather.'
+                                                : 'Stable pattern matching last year. Seasonal transitions expected as per normal Indian climate cycle.'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {showInfo && (
-                        <div className="absolute inset-0 z-20 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in cursor-pointer" onClick={() => setShowInfo(false)}>
-                            <Icon name="history" size={24} className="text-indigo-400 mb-3" />
-                            <p className="text-xs text-white/80 leading-relaxed font-medium">Comparing last 30 days temperature against same period last year.</p>
+                        <div className="absolute inset-0 z-20 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center animate-fade-in cursor-pointer" onClick={() => setShowInfo(false)}>
+                            <Icon name="map-pin" size={24} className="text-orange-400 mb-3" />
+                            <h5 className="text-sm font-bold text-white mb-2">🇮🇳 India Climate Context</h5>
+                            <p className="text-[10px] text-white/70 leading-relaxed mb-2"><strong>Heat Wave:</strong> IMD defines as ≥40°C for plains, Severe ≥45°C</p>
+                            <p className="text-[10px] text-white/70 leading-relaxed mb-2"><strong>Cold Wave:</strong> Min temp ≤10°C or departure ≥4.5°C below normal</p>
+                            <p className="text-[10px] text-white/70 leading-relaxed mb-2"><strong>Monsoon:</strong> Southwest monsoon (Jun-Sep), tracks rainfall surplus/deficit</p>
+                            <p className="text-[10px] text-white/70 leading-relaxed"><strong>Seasons:</strong> Summer (Mar-May), Monsoon (Jun-Sep), Post-Monsoon (Oct-Nov), Winter (Dec-Feb)</p>
                             <span className="text-[9px] uppercase tracking-widest text-white/40 mt-4">Tap to close</span>
                         </div>
                     )}
-                    <ClimateGraph current={insight.currentTemps} past={insight.historicalTemps} trend={insight.trend} />
                 </div>
             );
         };
