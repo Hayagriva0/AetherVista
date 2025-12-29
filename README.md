@@ -16,7 +16,7 @@
   
   <br/>
   
-  [**🌐 Live Demo**](#-quick-start) • [**🎯 Features**](#-the-magic-inside) • [**📸 Screenshots**](#-eye-candy) • [**🛠️ Installation**](#%EF%B8%8F-installation)
+  [**🌐 Live Demo**](https://hayagriva0.github.io/AetherVista/) • [**🎯 Features**](#-the-magic-inside) • [**📸 Screenshots**](#-eye-candy) • [**🛠️ Installation**](#%EF%B8%8F-installation)
 
 </div>
 
