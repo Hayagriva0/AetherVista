@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src https://api.open-meteo.com https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com https://archive-api.open-meteo.com https://actions.google.com; frame-src https://embed.windy.com; media-src https://actions.google.com;">
     <title>Weather Pro</title>
     <!-- Updated "Cool" Apple/Samsung Style Icon (Embedded SVG) -->
     <link rel="icon"
@@ -169,6 +171,49 @@
             background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0) 100%);
             background-size: 1000px 100%;
         }
+
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .desktop-grid-2 {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .desktop-grid-3 {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
+
+            .desktop-wide-container {
+                max-width: 56rem !important;
+            }
+
+            .desktop-search-compact {
+                max-width: 28rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .desktop-xl-container {
+                max-width: 72rem !important;
+            }
+        }
+
+        /* Hide on mobile, show on desktop */
+        @media (max-width: 767px) {
+            .desktop-only {
+                display: none !important;
+            }
+        }
+
+        /* Hide on desktop, show on mobile */
+        @media (min-width: 768px) {
+            .mobile-only {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -177,6 +222,37 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- Security Helper: Sanitize text to prevent XSS ---
+        const sanitizeText = (text) => {
+            if (typeof text !== 'string') return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        // --- Safe localStorage helpers ---
+        const safeGetItem = (key, defaultValue = null) => {
+            try {
+                const item = localStorage.getItem(key);
+                if (!item) return defaultValue;
+                return JSON.parse(item);
+            } catch (e) {
+                console.warn(`Failed to parse localStorage key "${key}":`, e);
+                localStorage.removeItem(key); // Clean up corrupted data
+                return defaultValue;
+            }
+        };
+
+        const safeSetItem = (key, value) => {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                console.error(`Failed to save to localStorage key "${key}":`, e);
+                return false;
+            }
+        };
 
         // --- Icon Component ---
         const Icon = ({ name, size = 24, className = "", fill = "none", color }) => {
@@ -205,7 +281,14 @@
             useEffect(() => {
                 audioRef.current = new Audio();
                 audioRef.current.loop = true;
-                return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
+                return () => {
+                    if (audioRef.current) {
+                        audioRef.current.pause();
+                        audioRef.current.src = '';
+                        audioRef.current.load(); // Reset audio element
+                        audioRef.current = null;
+                    }
+                };
             }, []);
 
             useEffect(() => {
@@ -816,9 +899,9 @@
                                 <div className="flex items-center justify-between">
                                     <span className="text-[8px] font-bold uppercase tracking-wider text-white/50">Last 30 Days Summary</span>
                                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${extremeDays.heatWave > 5 ? 'bg-red-500/20 text-red-300' :
-                                            extremeDays.coldWave > 5 ? 'bg-cyan-500/20 text-cyan-300' :
-                                                extremeDays.pleasant > 15 ? 'bg-green-500/20 text-green-300' :
-                                                    'bg-yellow-500/20 text-yellow-300'
+                                        extremeDays.coldWave > 5 ? 'bg-cyan-500/20 text-cyan-300' :
+                                            extremeDays.pleasant > 15 ? 'bg-green-500/20 text-green-300' :
+                                                'bg-yellow-500/20 text-yellow-300'
                                         }`}>
                                         {extremeDays.heatWave > 5 ? '🔥 Heat Alert' :
                                             extremeDays.coldWave > 5 ? '❄️ Cold Alert' :
@@ -834,8 +917,8 @@
                         <div className="animate-fade-in">
                             {/* Monsoon Status */}
                             <div className={`rounded-2xl p-4 mb-3 border ${monsoonData.isActive
-                                    ? 'bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-blue-500/30'
-                                    : 'bg-gradient-to-br from-slate-500/20 to-slate-600/10 border-slate-500/30'
+                                ? 'bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-blue-500/30'
+                                : 'bg-gradient-to-br from-slate-500/20 to-slate-600/10 border-slate-500/30'
                                 }`}>
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
@@ -852,8 +935,8 @@
                                         </div>
                                     </div>
                                     <span className={`text-[9px] font-bold px-2 py-1 rounded-full ${monsoonData.status === 'surplus' ? 'bg-green-500/20 text-green-300' :
-                                            monsoonData.status === 'deficit' ? 'bg-red-500/20 text-red-300' :
-                                                'bg-slate-500/20 text-slate-300'
+                                        monsoonData.status === 'deficit' ? 'bg-red-500/20 text-red-300' :
+                                            'bg-slate-500/20 text-slate-300'
                                         }`}>
                                         {monsoonData.status === 'surplus' ? '↑ Surplus' :
                                             monsoonData.status === 'deficit' ? '↓ Deficit' : '— Normal'}
@@ -1248,24 +1331,24 @@
                     )}
 
                     {/* New Horizontal Alignment: Temp -> Frog -> Celestial */}
-                    <div className="flex flex-row items-center justify-between px-6 mb-8 relative z-10 w-full">
+                    <div className="flex flex-row items-center justify-between px-4 sm:px-6 md:px-8 mb-8 relative z-10 w-full">
 
                         {/* 1. Temperature Section */}
                         <div className="flex flex-col items-center w-1/3">
                             <div className="relative flex items-start">
-                                <h1 className="text-6xl font-bold leading-none tracking-tighter text-glow bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">
+                                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tighter text-glow bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">
                                     {Math.round(weather.current.temperature_2m)}
                                 </h1>
-                                <span className="text-3xl font-bold text-white mt-1 ml-1 drop-shadow-md">°</span>
+                                <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mt-1 ml-1 drop-shadow-md">°</span>
                             </div>
                             <div className="glass-panel px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 mt-2 backdrop-blur-md border-white/10 shadow-lg cursor-default">
                                 <span className={`w-2 h-2 rounded-full ${isSevere ? 'bg-red-500 animate-flash' : 'bg-emerald-400'} shadow-[0_0_8px_rgba(52,211,153,0.8)]`}></span>
-                                <span className="text-[9px] font-bold uppercase tracking-wider opacity-90">{config.label}</span>
+                                <span className="text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-wider opacity-90">{config.label}</span>
                             </div>
                         </div>
 
                         {/* 2. Frog Section (Small) */}
-                        <div className="relative w-32 h-32 flex justify-center items-center">
+                        <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 flex justify-center items-center">
                             <WeatherFrog
                                 weatherCode={weatherCode}
                                 isDay={isDay}
@@ -1276,7 +1359,7 @@
                         </div>
 
                         {/* 3. Celestial Section (Small) */}
-                        <div className="relative w-24 h-24 flex justify-center items-center">
+                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 flex justify-center items-center">
                             <CelestialWidget
                                 isDay={isDay}
                                 moonPhase={moonPhase}
@@ -1539,6 +1622,7 @@
             );
         };
 
+
         // NEW: Dynamic Weather Background with animated patterns
         const DynamicWeatherBg = ({ weatherCode, isDay }) => {
             const isRain = [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(weatherCode);
@@ -1652,21 +1736,21 @@
             })).filter(h => new Date(h.time).getHours() > now).slice(0, 5);
 
             return (
-                <div className="glass-panel p-6 rounded-3xl mb-4">
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-4 flex items-center gap-2">
+                <div className="glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl mb-4">
+                    <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-60 mb-3 sm:mb-4 flex items-center gap-2">
                         <Icon name="clock" size={12} /> Hourly
                     </h3>
-                    <div className="flex justify-between items-end h-28 relative">
+                    <div className="flex justify-between items-end h-24 sm:h-28 md:h-32 relative">
                         {nextHours.map((h, i) => {
                             const config = getWeatherConfig(h.code, true);
                             return (
-                                <div key={i} className="flex flex-col items-center justify-end z-10 gap-2 group w-full">
-                                    <span className="text-xs opacity-60 font-mono font-bold mb-1">{new Date(h.time).getHours()}:00</span>
-                                    <Icon name={config.icon} size={18} className="opacity-80 mb-1" />
-                                    <div className="w-1.5 bg-white/10 rounded-full relative overflow-hidden border border-white/5 h-16 group-hover:bg-white/20 transition-colors">
+                                <div key={i} className="flex flex-col items-center justify-end z-10 gap-1.5 sm:gap-2 group w-full">
+                                    <span className="text-[10px] sm:text-xs opacity-60 font-mono font-bold mb-0.5 sm:mb-1">{new Date(h.time).getHours()}:00</span>
+                                    <Icon name={config.icon} size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 opacity-80 mb-0.5 sm:mb-1" />
+                                    <div className="w-1 sm:w-1.5 md:w-2 bg-white/10 rounded-full relative overflow-hidden border border-white/5 h-12 sm:h-16 md:h-20 group-hover:bg-white/20 transition-colors">
                                         <div className="absolute bottom-0 left-0 right-0 bg-indigo-400 rounded-full shadow-[0_0_10px_rgba(129,140,248,0.5)] transition-all duration-1000" style={{ height: `${Math.min((h.temp / 40) * 100, 100)}%` }}></div>
                                     </div>
-                                    <span className="text-sm font-bold mt-1">{Math.round(h.temp)}°</span>
+                                    <span className="text-xs sm:text-sm md:text-base font-bold mt-0.5 sm:mt-1">{Math.round(h.temp)}°</span>
                                 </div>
                             );
                         })}
@@ -1739,24 +1823,24 @@
 
         const DailyForecast = ({ daily }) => {
             return (
-                <div className="glass-panel p-5 rounded-3xl mb-4">
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-5 flex items-center gap-2">
+                <div className="glass-panel p-4 sm:p-5 rounded-2xl sm:rounded-3xl mb-4">
+                    <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-60 mb-4 sm:mb-5 flex items-center gap-2">
                         <Icon name="calendar-days" size={12} /> 7-Day Forecast
                     </h3>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5 sm:space-y-1">
                         {daily.time.slice(1, 7).map((t, i) => {
                             const config = getWeatherConfig(daily.weather_code[i + 1], true);
                             const pop = daily.precipitation_probability_max ? daily.precipitation_probability_max[i + 1] : 0;
                             return (
-                                <div key={t} className="flex items-center justify-between p-3 hover:bg-white/5 rounded-2xl transition-colors group">
-                                    <span className="w-10 font-bold text-sm opacity-90">{formatDayName(t)}</span>
-                                    <div className="flex items-center gap-3 flex-1 px-4">
-                                        <Icon name={config.icon} size={20} color={config.iconColor} className="drop-shadow-sm group-hover:scale-110 transition-transform" />
-                                        {pop > 20 && <div className="flex items-center gap-1 text-[10px] text-blue-300 font-bold bg-blue-500/10 px-1.5 py-0.5 rounded"><Icon name="droplets" size={8} /> {pop}%</div>}
+                                <div key={t} className="flex items-center justify-between p-2.5 sm:p-3 md:p-4 hover:bg-white/5 rounded-xl sm:rounded-2xl transition-colors group">
+                                    <span className="w-8 sm:w-10 md:w-12 font-bold text-xs sm:text-sm md:text-base opacity-90">{formatDayName(t)}</span>
+                                    <div className="flex items-center gap-2 sm:gap-3 flex-1 px-2 sm:px-4">
+                                        <Icon name={config.icon} size={18} color={config.iconColor} className="sm:w-5 sm:h-5 md:w-6 md:h-6 drop-shadow-sm group-hover:scale-110 transition-transform" />
+                                        {pop > 20 && <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-blue-300 font-bold bg-blue-500/10 px-1 sm:px-1.5 py-0.5 rounded"><Icon name="droplets" size={8} /> {pop}%</div>}
                                     </div>
-                                    <div className="flex gap-4 text-sm font-mono">
-                                        <span className="font-bold text-white w-8 text-right">{Math.round(daily.temperature_2m_max[i + 1])}°</span>
-                                        <span className="opacity-40 font-semibold w-8 text-right">{Math.round(daily.temperature_2m_min[i + 1])}°</span>
+                                    <div className="flex gap-2 sm:gap-4 text-xs sm:text-sm md:text-base font-mono">
+                                        <span className="font-bold text-white w-6 sm:w-8 text-right">{Math.round(daily.temperature_2m_max[i + 1])}°</span>
+                                        <span className="opacity-40 font-semibold w-6 sm:w-8 text-right">{Math.round(daily.temperature_2m_min[i + 1])}°</span>
                                     </div>
                                 </div>
                             );
@@ -1900,7 +1984,7 @@
             );
         };
 
-        const SearchBar = ({ onSearch, onToggleSound, isMuted, isPlaying, onToggleTheme, isDarkMode, notificationStatus, onRequestNotifications }) => {
+        const SearchBar = ({ onSearch, onToggleSound, isMuted, isPlaying, onToggleTheme, isDarkMode, notificationStatus, onRequestNotifications, hasUpdate }) => {
             const [query, setQuery] = useState('');
             const [suggestions, setSuggestions] = useState([]);
             const [isFocused, setIsFocused] = useState(false);
@@ -1919,9 +2003,9 @@
             }, [query]);
 
             return (
-                <div className="relative w-full mb-6 z-50 flex gap-2 items-center">
-                    <div className={`relative flex-1 group transition-all duration-300 ${isFocused ? 'scale-[1.02]' : ''}`}>
-                        <div className="absolute left-4 top-3.5 text-white/50 dark:text-slate-400 group-focus-within:text-white transition-colors"><Icon name="search" size={16} /></div>
+                <div className="relative w-full mb-4 sm:mb-6 z-50 flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                    <div className={`relative flex-1 min-w-[180px] group transition-all duration-300 ${isFocused ? 'scale-[1.02]' : ''}`}>
+                        <div className="absolute left-3 sm:left-4 top-3 sm:top-3.5 text-white/50 dark:text-slate-400 group-focus-within:text-white transition-colors"><Icon name="search" size={16} /></div>
                         <form onSubmit={(e) => { e.preventDefault(); if (suggestions[0]) onSearch(suggestions[0]); }}>
                             <input
                                 type="text"
@@ -1930,7 +2014,7 @@
                                 onBlur={() => setTimeout(() => setIsFocused(false), 200)}
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder="Search city..."
-                                className="w-full pl-11 pr-4 py-3 rounded-2xl glass-input text-white placeholder-white/40 focus:bg-black/40 outline-none ring-0 font-bold text-sm transition-all shadow-lg"
+                                className="w-full pl-10 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl glass-input text-white placeholder-white/40 focus:bg-black/40 outline-none ring-0 font-bold text-sm transition-all shadow-lg"
                             />
                         </form>
                     </div>
@@ -1940,6 +2024,7 @@
                         onClick={onToggleTheme}
                         className="p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg text-white/70 hover:text-yellow-300"
                         title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                        aria-label={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
                     >
                         <Icon name={isDarkMode ? "sun" : "moon"} size={18} />
                     </button>
@@ -1948,10 +2033,12 @@
                     <button
                         onClick={onRequestNotifications}
                         className={`p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg relative ${notificationStatus === 'granted' ? 'text-emerald-400 border-emerald-500/30' : notificationStatus === 'denied' ? 'text-red-400 border-red-500/30' : 'text-white/50'}`}
-                        title={notificationStatus === 'granted' ? "Notifications Enabled" : notificationStatus === 'denied' ? "Notifications Blocked" : "Enable Notifications"}
+                        title={hasUpdate ? "Update Available!" : notificationStatus === 'granted' ? "Notification Settings" : notificationStatus === 'denied' ? "Notifications Blocked" : "Enable Notifications"}
+                        aria-label={hasUpdate ? "Update Available!" : notificationStatus === 'granted' ? "Notification Settings" : notificationStatus === 'denied' ? "Notifications Blocked" : "Enable Notifications"}
                     >
                         <Icon name={notificationStatus === 'granted' ? "bell-ring" : notificationStatus === 'denied' ? "bell-off" : "bell"} size={18} />
-                        {notificationStatus === 'granted' && <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>}
+                        {notificationStatus === 'granted' && !hasUpdate && <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" aria-hidden="true"></span>}
+                        {hasUpdate && <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-[8px] font-bold text-white animate-bounce" aria-hidden="true">!</span>}
                     </button>
 
                     {/* Sound Toggle Button */}
@@ -1959,11 +2046,12 @@
                         onClick={onToggleSound}
                         className={`p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg relative overflow-hidden group ${!isMuted ? 'text-emerald-400 border-emerald-500/30' : 'text-white/50'}`}
                         title={isMuted ? "Enable Sound" : "Mute Sound"}
+                        aria-label={isMuted ? "Enable ambient sound" : "Mute ambient sound"}
                     >
-                        <div className={`absolute inset-0 bg-emerald-500/10 transition-opacity ${!isMuted ? 'opacity-100' : 'opacity-0'}`}></div>
+                        <div className={`absolute inset-0 bg-emerald-500/10 transition-opacity ${!isMuted ? 'opacity-100' : 'opacity-0'}`} aria-hidden="true"></div>
                         <Icon name={isMuted ? "volume-x" : "volume-2"} size={18} className="relative z-10" />
                         {!isMuted && isPlaying && (
-                            <div className="absolute bottom-1 right-1 flex gap-0.5 items-end h-2 z-10">
+                            <div className="absolute bottom-1 right-1 flex gap-0.5 items-end h-2 z-10" aria-hidden="true">
                                 <div className="w-0.5 bg-emerald-400 animate-[bounce_1s_infinite] h-1.5"></div>
                                 <div className="w-0.5 bg-emerald-400 animate-[bounce_1.2s_infinite] h-2.5"></div>
                                 <div className="w-0.5 bg-emerald-400 animate-[bounce_0.8s_infinite] h-1"></div>
@@ -1971,7 +2059,7 @@
                         )}
                     </button>
 
-                    <button onClick={() => onSearch('CURRENT')} className="p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all text-white/80 border border-white/10 shadow-lg" title="Use Current Location"><Icon name="crosshair" size={18} /></button>
+                    <button onClick={() => onSearch('CURRENT')} className="p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all text-white/80 border border-white/10 shadow-lg" title="Use Current Location" aria-label="Use current location"><Icon name="crosshair" size={18} /></button>
 
                     {suggestions.length > 0 && isFocused && (
                         <div className="absolute top-full mt-2 w-full glass-panel bg-slate-900/95 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl animate-slide-up left-0 z-50 border border-white/10">
@@ -1998,25 +2086,188 @@
             ];
 
             return (
-                <div className="grid grid-cols-3 gap-3 w-full mb-4">
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 w-full mb-4">
                     {items.map((item, i) => (
-                        <div key={i} className="glass-card p-3 rounded-2xl flex flex-col justify-between h-24 hover:bg-white/5 relative overflow-hidden group">
+                        <div key={i} className="glass-card p-2.5 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl flex flex-col justify-between h-20 sm:h-24 md:h-28 hover:bg-white/5 relative overflow-hidden group">
                             <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">
                                 <Icon name={item.icon} size={64} />
                             </div>
                             <div className="flex w-full justify-between opacity-50 mb-1">
-                                <Icon name={item.icon} size={14} />
+                                <Icon name={item.icon} size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
                             </div>
                             <div>
                                 <div className="flex items-baseline gap-0.5">
-                                    <span className="text-xl font-bold tracking-tight">{item.val}</span>
-                                    <span className="text-[10px] font-medium opacity-50">{item.unit}</span>
+                                    <span className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight">{item.val}</span>
+                                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium opacity-50">{item.unit}</span>
                                 </div>
-                                <div className="text-[9px] font-bold uppercase tracking-wider opacity-40 mt-1">{item.label}</div>
+                                <div className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider opacity-40 mt-0.5 sm:mt-1">{item.label}</div>
                                 {item.sub}
                             </div>
                         </div>
                     ))}
+                </div>
+            );
+        };
+
+        // --- Notification Panel Component ---
+        const NotificationPanel = ({
+            isOpen,
+            onClose,
+            notificationSettings,
+            onUpdateSettings,
+            notificationStatus,
+            onRequestPermission,
+            hasUpdate
+        }) => {
+            if (!isOpen) return null;
+
+            const handleTimeChange = (e) => {
+                onUpdateSettings({ ...notificationSettings, dailyTime: e.target.value });
+            };
+
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+                    <div className="relative glass-panel bg-slate-900/95 rounded-3xl p-6 w-full max-w-sm animate-slide-up shadow-2xl border border-white/10">
+                        {/* Header */}
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
+                                    <Icon name="bell" size={20} className="text-emerald-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg">Notifications</h3>
+                                    <p className="text-[10px] opacity-50 uppercase tracking-wider font-bold">Manage Alerts</p>
+                                </div>
+                            </div>
+                            <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/10 transition-colors">
+                                <Icon name="x" size={18} className="opacity-60" />
+                            </button>
+                        </div>
+
+                        {/* Permission Status */}
+                        {notificationStatus !== 'granted' && (
+                            <div className="mb-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+                                <Icon name="alert-triangle" size={18} className="text-amber-400" />
+                                <div className="flex-1">
+                                    <p className="text-xs font-bold text-amber-200">Permission Required</p>
+                                    <p className="text-[10px] opacity-60">Enable notifications to receive alerts</p>
+                                </div>
+                                <button
+                                    onClick={onRequestPermission}
+                                    className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-bold hover:bg-amber-500/30 transition-colors"
+                                >
+                                    Enable
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Update Available Banner */}
+                        {hasUpdate && (
+                            <div className="mb-4 p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3 animate-pulse">
+                                <Icon name="download" size={18} className="text-blue-400" />
+                                <div className="flex-1">
+                                    <p className="text-xs font-bold text-blue-200">Update Available!</p>
+                                    <p className="text-[10px] opacity-60">Refresh to get the latest version</p>
+                                </div>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="px-3 py-1.5 rounded-xl bg-blue-500/20 text-blue-300 text-xs font-bold hover:bg-blue-500/30 transition-colors"
+                                >
+                                    Update
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Notification Settings */}
+                        <div className="space-y-3">
+                            {/* Daily Weather Summary */}
+                            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-1.5 rounded-lg bg-indigo-500/20">
+                                            <Icon name="sunrise" size={14} className="text-indigo-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold">Daily Weather</p>
+                                            <p className="text-[10px] opacity-50">Morning weather summary</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => onUpdateSettings({ ...notificationSettings, dailyEnabled: !notificationSettings.dailyEnabled })}
+                                        className={`w-12 h-7 rounded-full transition-all relative ${notificationSettings.dailyEnabled ? 'bg-emerald-500' : 'bg-white/10'}`}
+                                    >
+                                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-lg transition-all ${notificationSettings.dailyEnabled ? 'left-6' : 'left-1'}`}></div>
+                                    </button>
+                                </div>
+                                {notificationSettings.dailyEnabled && (
+                                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
+                                        <Icon name="clock" size={12} className="opacity-40" />
+                                        <span className="text-xs opacity-60">Notify at:</span>
+                                        <input
+                                            type="time"
+                                            value={notificationSettings.dailyTime}
+                                            onChange={handleTimeChange}
+                                            className="bg-white/10 rounded-lg px-2 py-1 text-xs font-mono font-bold border border-white/10 focus:border-indigo-500/50 outline-none"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Weather Alerts */}
+                            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-1.5 rounded-lg bg-red-500/20">
+                                            <Icon name="alert-circle" size={14} className="text-red-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold">Weather Alerts</p>
+                                            <p className="text-[10px] opacity-50">Storms, temp, UV, rain, AQI</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => onUpdateSettings({ ...notificationSettings, alertsEnabled: !notificationSettings.alertsEnabled })}
+                                        className={`w-12 h-7 rounded-full transition-all relative ${notificationSettings.alertsEnabled ? 'bg-emerald-500' : 'bg-white/10'}`}
+                                    >
+                                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-lg transition-all ${notificationSettings.alertsEnabled ? 'left-6' : 'left-1'}`}></div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* App Updates */}
+                            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-1.5 rounded-lg bg-blue-500/20">
+                                            <Icon name="sparkles" size={14} className="text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold">App Updates</p>
+                                            <p className="text-[10px] opacity-50">New version notifications</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => onUpdateSettings({ ...notificationSettings, updatesEnabled: !notificationSettings.updatesEnabled })}
+                                        className={`w-12 h-7 rounded-full transition-all relative ${notificationSettings.updatesEnabled ? 'bg-emerald-500' : 'bg-white/10'}`}
+                                    >
+                                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-lg transition-all ${notificationSettings.updatesEnabled ? 'left-6' : 'left-1'}`}></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Alert Thresholds Info */}
+                        <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/5">
+                            <p className="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-2">Alert Conditions</p>
+                            <div className="grid grid-cols-2 gap-2 text-[10px] opacity-60">
+                                <div className="flex items-center gap-1"><Icon name="thermometer" size={10} />Temp &lt;10°C or &gt;30°C</div>
+                                <div className="flex items-center gap-1"><Icon name="sun" size={10} />UV Index &gt;8</div>
+                                <div className="flex items-center gap-1"><Icon name="cloud-rain" size={10} />Rain &gt;80%</div>
+                                <div className="flex items-center gap-1"><Icon name="wind" size={10} />AQI &gt;200</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             );
         };
@@ -2032,18 +2283,63 @@
             </div>
         );
 
+        // --- Error Boundary Component ---
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null };
+            }
+
+            static getDerivedStateFromError(error) {
+                return { hasError: true, error };
+            }
+
+            componentDidCatch(error, errorInfo) {
+                console.error('Weather Pro Error:', error, errorInfo);
+            }
+
+            handleReload = () => {
+                this.setState({ hasError: false, error: null });
+                window.location.reload();
+            };
+
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
+                            <div className="text-center animate-fade-in max-w-md">
+                                <div className="glass-panel p-6 rounded-full mx-auto w-24 h-24 flex items-center justify-center mb-6">
+                                    <Icon name="alert-triangle" size={40} className="text-red-400" />
+                                </div>
+                                <h2 className="text-2xl font-bold mb-3">Something went wrong</h2>
+                                <p className="text-sm text-white/60 mb-6">The app encountered an unexpected error. Please try refreshing the page.</p>
+                                <button
+                                    onClick={this.handleReload}
+                                    className="glass-panel px-6 py-3 rounded-xl font-bold hover:bg-white/10 transition-all active:scale-95 flex items-center gap-2 mx-auto"
+                                >
+                                    <Icon name="refresh-cw" size={16} /> Reload App
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
         const App = () => {
             const [data, setData] = useState(null);
             const [loading, setLoading] = useState(true);
             const [error, setError] = useState(null);
-            const [saved, setSaved] = useState(localStorage.getItem('favCity'));
+            const [saved, setSaved] = useState(() => safeGetItem('favCity'));
             const [isOnline, setIsOnline] = useState(navigator.onLine);
             const [isMuted, setIsMuted] = useState(false); // Sound ON by default
             const [climateInsight, setClimateInsight] = useState(null);
+            const [geoError, setGeoError] = useState(null);
 
             // New state for theme and notifications
             const [isDarkMode, setIsDarkMode] = useState(() => {
-                const stored = localStorage.getItem('weatherProTheme');
+                const stored = safeGetItem('weatherProTheme');
                 return stored ? stored === 'dark' : true; // Default to dark
             });
             const [notificationStatus, setNotificationStatus] = useState(() => {
@@ -2052,6 +2348,17 @@
             });
             const [shareMessage, setShareMessage] = useState(null);
 
+            // Notification settings state
+            const [notificationSettings, setNotificationSettings] = useState(() => safeGetItem('weatherProNotifications', {
+                dailyEnabled: false,
+                dailyTime: '06:00',
+                alertsEnabled: true,
+                updatesEnabled: true
+            }));
+            const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+            const [hasUpdate, setHasUpdate] = useState(false);
+            const [lastDailyNotification, setLastDailyNotification] = useState(() => safeGetItem('lastDailyNotification', null));
+
             const isWerewolf = data && data.weather &&
                 data.weather.daily.moon_phase[0] >= 0.45 &&
                 data.weather.daily.moon_phase[0] <= 0.55 &&
@@ -2059,11 +2366,17 @@
 
             const isPlaying = useAmbientSound(data?.weather?.current?.weather_code ?? null, isMuted, isWerewolf);
 
+            // Save notification settings when changed
+            const updateNotificationSettings = (newSettings) => {
+                setNotificationSettings(newSettings);
+                safeSetItem('weatherProNotifications', newSettings);
+            };
+
             // Theme toggle handler
             const toggleTheme = () => {
                 const newMode = !isDarkMode;
                 setIsDarkMode(newMode);
-                localStorage.setItem('weatherProTheme', newMode ? 'dark' : 'light');
+                safeSetItem('weatherProTheme', newMode ? 'dark' : 'light');
                 document.documentElement.classList.toggle('dark', newMode);
             };
 
@@ -2074,33 +2387,88 @@
                     return;
                 }
                 if (Notification.permission === 'granted') {
-                    // Test notification
-                    new Notification('Weather Pro', {
-                        body: 'Notifications are already enabled! You\'ll receive weather alerts.',
-                        icon: './icon-192.svg'
-                    });
+                    setIsNotificationPanelOpen(true);
                     return;
                 }
                 const permission = await Notification.requestPermission();
                 setNotificationStatus(permission);
                 if (permission === 'granted') {
                     new Notification('Weather Pro', {
-                        body: 'Weather alerts enabled! You\'ll be notified of severe weather.',
+                        body: 'Notifications enabled! Configure your alert preferences.',
                         icon: './icon-192.svg'
                     });
+                    setIsNotificationPanelOpen(true);
                 }
             };
 
-            // Send weather notification for severe conditions
-            const sendWeatherNotification = (weatherData, locationName) => {
-                if (notificationStatus !== 'granted') return;
+            // Send daily weather notification
+            const sendDailyNotification = (weatherData, locationName) => {
+                if (notificationStatus !== 'granted' || !notificationSettings.dailyEnabled) return;
+
+                const today = new Date().toDateString();
+                if (lastDailyNotification === today) return; // Already sent today
+
+                const temp = Math.round(weatherData.current.temperature_2m);
+                const config = getWeatherConfig(weatherData.current.weather_code, weatherData.current.is_day, false, false);
+                const high = Math.round(weatherData.daily.temperature_2m_max[0]);
+                const low = Math.round(weatherData.daily.temperature_2m_min[0]);
+                const rainChance = weatherData.daily.precipitation_probability_max?.[0] || 0;
+
+                new Notification(`☀️ Good Morning! ${locationName}`, {
+                    body: `${temp}°C - ${config.label}\n🌡️ High ${high}° / Low ${low}°${rainChance > 30 ? `\n🌧️ ${rainChance}% chance of rain` : ''}`,
+                    icon: './icon-192.svg',
+                    tag: 'daily-weather'
+                });
+
+                setLastDailyNotification(today);
+                safeSetItem('lastDailyNotification', today);
+            };
+
+            // Send weather notification for severe conditions (enhanced)
+            const sendWeatherNotification = (weatherData, locationName, aqiData) => {
+                if (notificationStatus !== 'granted' || !notificationSettings.alertsEnabled) return;
+
+                const alerts = [];
+                const temp = weatherData.current.temperature_2m;
+                const uv = weatherData.daily.uv_index_max?.[0] || 0;
+                const rainChance = weatherData.daily.precipitation_probability_max?.[0] || 0;
+                const aqi = aqiData?.current?.us_aqi || 0;
+
+                // Severe weather codes (storms, heavy snow)
                 const severeCodes = [95, 96, 99, 75, 85, 86];
                 if (severeCodes.includes(weatherData.current.weather_code)) {
                     const alertText = [95, 96, 99].includes(weatherData.current.weather_code)
-                        ? 'Severe Thunderstorm Warning!'
-                        : 'Heavy Snow Warning!';
-                    new Notification(`⚠️ ${alertText}`, {
-                        body: `${locationName}: ${Math.round(weatherData.current.temperature_2m)}°C - Take precautions!`,
+                        ? '⛈️ Severe Thunderstorm Warning!'
+                        : '❄️ Heavy Snow Warning!';
+                    alerts.push(alertText);
+                }
+
+                // Temperature alerts (<10°C or >30°C)
+                if (temp < 10) {
+                    alerts.push(`🥶 Cold Alert: ${Math.round(temp)}°C`);
+                } else if (temp > 30) {
+                    alerts.push(`🔥 Heat Alert: ${Math.round(temp)}°C`);
+                }
+
+                // UV Index alert (>8)
+                if (uv > 8) {
+                    alerts.push(`☀️ High UV Alert: ${Math.round(uv)}`);
+                }
+
+                // Heavy rain probability (>80%)
+                if (rainChance > 80) {
+                    alerts.push(`🌧️ Heavy Rain: ${rainChance}% chance`);
+                }
+
+                // Poor AQI alert (>200)
+                if (aqi > 200) {
+                    alerts.push(`💨 Poor Air Quality: AQI ${Math.round(aqi)}`);
+                }
+
+                // Send notification if any alerts
+                if (alerts.length > 0) {
+                    new Notification(`⚠️ Weather Alert - ${locationName}`, {
+                        body: alerts.join('\n'),
                         icon: './icon-192.svg',
                         tag: 'weather-alert'
                     });
@@ -2148,15 +2516,55 @@
                 // Register Service Worker if available (Required for PWA)
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js')
-                        .then(reg => console.log('SW Registered'))
+                        .then(reg => {
+                            console.log('SW Registered');
+
+                            // Check for updates periodically
+                            reg.addEventListener('updatefound', () => {
+                                const newWorker = reg.installing;
+                                newWorker?.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // New update available
+                                        setHasUpdate(true);
+                                        if (notificationSettings.updatesEnabled && notificationStatus === 'granted') {
+                                            new Notification('🎉 Weather Pro Update Available!', {
+                                                body: 'A new version is ready. Click the bell icon to update.',
+                                                icon: './icon-192.svg',
+                                                tag: 'app-update'
+                                            });
+                                        }
+                                    }
+                                });
+                            });
+                        })
                         .catch(err => console.log('SW Error:', err));
                 }
+
+                // Daily notification scheduler
+                const checkDailyNotification = () => {
+                    if (!notificationSettings.dailyEnabled || notificationStatus !== 'granted' || !data) return;
+
+                    const now = new Date();
+                    const [targetHour, targetMinute] = notificationSettings.dailyTime.split(':').map(Number);
+                    const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
+
+                    // Check if we're within 5 minutes of the target time
+                    if (currentHour === targetHour && Math.abs(currentMinute - targetMinute) <= 5) {
+                        sendDailyNotification(data.weather, data.name);
+                    }
+                };
+
+                // Check every minute for daily notification
+                const dailyInterval = setInterval(checkDailyNotification, 60000);
+                checkDailyNotification(); // Check immediately
 
                 return () => {
                     window.removeEventListener('online', handleStatus);
                     window.removeEventListener('offline', handleStatus);
+                    clearInterval(dailyInterval);
                 };
-            }, []);
+            }, [notificationSettings, notificationStatus, data]);
 
             const fetchWeather = async (lat, lon, name) => {
                 setLoading(true);
@@ -2165,15 +2573,24 @@
 
                 try {
                     if (!navigator.onLine) throw new Error("OFFLINE");
-                    const safeFetch = async (url) => {
+                    const safeFetch = async (url, timeoutMs = 15000) => {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
                         try {
-                            const res = await fetch(url);
+                            const res = await fetch(url, { signal: controller.signal });
+                            clearTimeout(timeoutId);
                             if (!res.ok) throw new Error(res.statusText);
                             return await res.json();
-                        } catch (e) { return null; }
+                        } catch (e) {
+                            clearTimeout(timeoutId);
+                            if (e.name === 'AbortError') {
+                                console.warn('API request timed out:', url);
+                            }
+                            return null;
+                        }
                     };
 
-                    // Phase 1: Critical Data (Fast) - Fetch immediately to show UI
+                    // Phase 1: Critical Data (Fast)
                     const [w, a] = await Promise.all([
                         safeFetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,relative_humidity_2m,apparent_temperature,surface_pressure,visibility&hourly=temperature_2m,weather_code,precipitation_probability,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto`),
                         safeFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10`)
@@ -2189,7 +2606,7 @@
                         setLoading(false);
 
                         // Send notification for severe weather
-                        sendWeatherNotification(w, name);
+                        sendWeatherNotification(w, name, safeAqi);
 
                         // Phase 2: Non-Critical Data (Slow) - Fetch Historical data in background
                         // This prevents the slow Archive API from blocking the main UI
@@ -2223,40 +2640,53 @@
             };
 
             const handleSearch = (loc) => {
+                setGeoError(null);
                 if (loc === 'CURRENT') {
+                    if (!navigator.geolocation) {
+                        setGeoError('Geolocation not supported');
+                        fetchWeather(28.61, 77.23, "New Delhi"); // Default to New Delhi
+                        return;
+                    }
                     navigator.geolocation.getCurrentPosition(
                         p => fetchWeather(p.coords.latitude, p.coords.longitude, "Current Location"),
-                        () => fetchWeather(40.71, -74.00, "New York")
+                        (err) => {
+                            let errorMsg = 'Location access denied';
+                            if (err.code === 2) errorMsg = 'Location unavailable';
+                            if (err.code === 3) errorMsg = 'Location request timed out';
+                            setGeoError(errorMsg);
+                            fetchWeather(28.61, 77.23, "New Delhi"); // Default to New Delhi
+                        },
+                        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
                     );
                 } else {
-                    fetchWeather(loc.latitude, loc.longitude, loc.name);
+                    fetchWeather(loc.latitude, loc.longitude, sanitizeText(loc.name));
                 }
             };
 
             useEffect(() => {
                 if (saved) {
-                    const loc = JSON.parse(saved);
-                    fetchWeather(loc.lat, loc.lon, loc.name);
+                    fetchWeather(saved.lat, saved.lon, saved.name);
                 } else { handleSearch('CURRENT'); }
             }, []);
 
             const toggleSave = () => {
-                if (saved && JSON.parse(saved).name === data.name) {
+                if (!data) return;
+                if (saved && saved.name === data.name) {
                     localStorage.removeItem('favCity');
                     setSaved(null);
                 } else {
-                    const loc = { lat: data.weather.latitude, lon: data.weather.longitude, name: data.name };
-                    localStorage.setItem('favCity', JSON.stringify(loc));
-                    setSaved(JSON.stringify(loc));
+                    const loc = { lat: data.lat, lon: data.lon, name: data.name };
+                    safeSetItem('favCity', loc);
+                    setSaved(loc);
                 }
             };
 
             const retry = () => {
                 setLoading(true);
                 setError(null);
+                setGeoError(null);
                 if (saved) {
-                    const loc = JSON.parse(saved);
-                    fetchWeather(loc.lat, loc.lon, loc.name);
+                    fetchWeather(saved.lat, saved.lon, saved.name);
                 } else {
                     handleSearch('CURRENT');
                 }
@@ -2289,7 +2719,7 @@
 
                     <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[60%] bg-gradient-to-b from-white/10 to-transparent rounded-full blur-[120px] pointer-events-none"></div>
 
-                    <div className="max-w-md mx-auto w-full z-20 pt-6 px-4 pb-20">
+                    <div className="max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto w-full z-20 pt-4 sm:pt-6 px-3 sm:px-4 md:px-6 lg:px-8 pb-16 sm:pb-20">
                         {/* Share Message Toast */}
                         {shareMessage && (
                             <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] glass-panel px-4 py-2 rounded-full text-sm font-bold text-emerald-400 border border-emerald-500/30 animate-slide-down flex items-center gap-2">
@@ -2305,6 +2735,18 @@
                             isDarkMode={isDarkMode}
                             notificationStatus={notificationStatus}
                             onRequestNotifications={requestNotifications}
+                            hasUpdate={hasUpdate}
+                        />
+
+                        {/* Notification Panel */}
+                        <NotificationPanel
+                            isOpen={isNotificationPanelOpen}
+                            onClose={() => setIsNotificationPanelOpen(false)}
+                            notificationSettings={notificationSettings}
+                            onUpdateSettings={updateNotificationSettings}
+                            notificationStatus={notificationStatus}
+                            onRequestPermission={requestNotifications}
+                            hasUpdate={hasUpdate}
                         />
 
                         <div className="flex-1 relative z-10 flex flex-col w-full">
@@ -2316,7 +2758,7 @@
                                         weather={data.weather}
                                         locationName={data.name}
                                         config={config}
-                                        isSaved={saved && JSON.parse(saved).name === data.name}
+                                        isSaved={saved && saved.name === data.name}
                                         onToggleSave={toggleSave}
                                         moonPhase={data.weather.daily.moon_phase[0]}
                                         isSevere={isSevere}
@@ -2354,7 +2796,11 @@
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(
+            <ErrorBoundary>
+                <App />
+            </ErrorBoundary>
+        );
     </script>
 </body>
 
