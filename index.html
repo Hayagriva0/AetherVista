@@ -2403,75 +2403,92 @@
 
             // Send daily weather notification
             const sendDailyNotification = (weatherData, locationName) => {
-                if (notificationStatus !== 'granted' || !notificationSettings.dailyEnabled) return;
+                try {
+                    // Early validation
+                    if (notificationStatus !== 'granted' || !notificationSettings?.dailyEnabled) return;
+                    if (!weatherData?.current || !weatherData?.daily) {
+                        console.warn('sendDailyNotification: Invalid weather data');
+                        return;
+                    }
 
-                const today = new Date().toDateString();
-                if (lastDailyNotification === today) return; // Already sent today
+                    const today = new Date().toDateString();
+                    if (lastDailyNotification === today) return; // Already sent today
 
-                const temp = Math.round(weatherData.current.temperature_2m);
-                const config = getWeatherConfig(weatherData.current.weather_code, weatherData.current.is_day, false, false);
-                const high = Math.round(weatherData.daily.temperature_2m_max[0]);
-                const low = Math.round(weatherData.daily.temperature_2m_min[0]);
-                const rainChance = weatherData.daily.precipitation_probability_max?.[0] || 0;
+                    const temp = Math.round(weatherData.current.temperature_2m);
+                    const config = getWeatherConfig(weatherData.current.weather_code, weatherData.current.is_day, false, false);
+                    const high = Math.round(weatherData.daily.temperature_2m_max?.[0] ?? 0);
+                    const low = Math.round(weatherData.daily.temperature_2m_min?.[0] ?? 0);
+                    const rainChance = weatherData.daily.precipitation_probability_max?.[0] || 0;
 
-                new Notification(`☀️ Good Morning! ${locationName}`, {
-                    body: `${temp}°C - ${config.label}\n🌡️ High ${high}° / Low ${low}°${rainChance > 30 ? `\n🌧️ ${rainChance}% chance of rain` : ''}`,
-                    icon: './icon-192.svg',
-                    tag: 'daily-weather'
-                });
+                    new Notification(`☀️ Good Morning! ${locationName || 'Your Location'}`, {
+                        body: `${temp}°C - ${config.label}\n🌡️ High ${high}° / Low ${low}°${rainChance > 30 ? `\n🌧️ ${rainChance}% chance of rain` : ''}`,
+                        icon: './icon-192.svg',
+                        tag: 'daily-weather'
+                    });
 
-                setLastDailyNotification(today);
-                safeSetItem('lastDailyNotification', today);
+                    setLastDailyNotification(today);
+                    safeSetItem('lastDailyNotification', today);
+                } catch (error) {
+                    console.error('Error sending daily notification:', error);
+                }
             };
 
             // Send weather notification for severe conditions (enhanced)
             const sendWeatherNotification = (weatherData, locationName, aqiData) => {
-                if (notificationStatus !== 'granted' || !notificationSettings.alertsEnabled) return;
+                try {
+                    if (notificationStatus !== 'granted' || !notificationSettings?.alertsEnabled) return;
+                    if (!weatherData?.current || !weatherData?.daily) {
+                        console.warn('sendWeatherNotification: Invalid weather data');
+                        return;
+                    }
 
-                const alerts = [];
-                const temp = weatherData.current.temperature_2m;
-                const uv = weatherData.daily.uv_index_max?.[0] || 0;
-                const rainChance = weatherData.daily.precipitation_probability_max?.[0] || 0;
-                const aqi = aqiData?.current?.us_aqi || 0;
+                    const alerts = [];
+                    const temp = weatherData.current.temperature_2m ?? 0;
+                    const uv = weatherData.daily.uv_index_max?.[0] || 0;
+                    const rainChance = weatherData.daily.precipitation_probability_max?.[0] || 0;
+                    const aqi = aqiData?.current?.us_aqi || 0;
 
-                // Severe weather codes (storms, heavy snow)
-                const severeCodes = [95, 96, 99, 75, 85, 86];
-                if (severeCodes.includes(weatherData.current.weather_code)) {
-                    const alertText = [95, 96, 99].includes(weatherData.current.weather_code)
-                        ? '⛈️ Severe Thunderstorm Warning!'
-                        : '❄️ Heavy Snow Warning!';
-                    alerts.push(alertText);
-                }
+                    // Severe weather codes (storms, heavy snow)
+                    const severeCodes = [95, 96, 99, 75, 85, 86];
+                    if (severeCodes.includes(weatherData.current.weather_code)) {
+                        const alertText = [95, 96, 99].includes(weatherData.current.weather_code)
+                            ? '⛈️ Severe Thunderstorm Warning!'
+                            : '❄️ Heavy Snow Warning!';
+                        alerts.push(alertText);
+                    }
 
-                // Temperature alerts (<10°C or >30°C)
-                if (temp < 10) {
-                    alerts.push(`🥶 Cold Alert: ${Math.round(temp)}°C`);
-                } else if (temp > 30) {
-                    alerts.push(`🔥 Heat Alert: ${Math.round(temp)}°C`);
-                }
+                    // Temperature alerts (<10°C or >30°C)
+                    if (temp < 10) {
+                        alerts.push(`🥶 Cold Alert: ${Math.round(temp)}°C`);
+                    } else if (temp > 30) {
+                        alerts.push(`🔥 Heat Alert: ${Math.round(temp)}°C`);
+                    }
 
-                // UV Index alert (>8)
-                if (uv > 8) {
-                    alerts.push(`☀️ High UV Alert: ${Math.round(uv)}`);
-                }
+                    // UV Index alert (>8)
+                    if (uv > 8) {
+                        alerts.push(`☀️ High UV Alert: ${Math.round(uv)}`);
+                    }
 
-                // Heavy rain probability (>80%)
-                if (rainChance > 80) {
-                    alerts.push(`🌧️ Heavy Rain: ${rainChance}% chance`);
-                }
+                    // Heavy rain probability (>80%)
+                    if (rainChance > 80) {
+                        alerts.push(`🌧️ Heavy Rain: ${rainChance}% chance`);
+                    }
 
-                // Poor AQI alert (>200)
-                if (aqi > 200) {
-                    alerts.push(`💨 Poor Air Quality: AQI ${Math.round(aqi)}`);
-                }
+                    // Poor AQI alert (>200)
+                    if (aqi > 200) {
+                        alerts.push(`💨 Poor Air Quality: AQI ${Math.round(aqi)}`);
+                    }
 
-                // Send notification if any alerts
-                if (alerts.length > 0) {
-                    new Notification(`⚠️ Weather Alert - ${locationName}`, {
-                        body: alerts.join('\n'),
-                        icon: './icon-192.svg',
-                        tag: 'weather-alert'
-                    });
+                    // Send notification if any alerts
+                    if (alerts.length > 0) {
+                        new Notification(`⚠️ Weather Alert - ${locationName || 'Your Location'}`, {
+                            body: alerts.join('\n'),
+                            icon: './icon-192.svg',
+                            tag: 'weather-alert'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error sending weather notification:', error);
                 }
             };
 
@@ -2542,16 +2559,39 @@
 
                 // Daily notification scheduler
                 const checkDailyNotification = () => {
-                    if (!notificationSettings.dailyEnabled || notificationStatus !== 'granted' || !data) return;
+                    try {
+                        // Early return with proper null checks
+                        if (!notificationSettings?.dailyEnabled || notificationStatus !== 'granted' || !data) return;
 
-                    const now = new Date();
-                    const [targetHour, targetMinute] = notificationSettings.dailyTime.split(':').map(Number);
-                    const currentHour = now.getHours();
-                    const currentMinute = now.getMinutes();
+                        // Validate dailyTime format before parsing
+                        const dailyTime = notificationSettings?.dailyTime;
+                        if (!dailyTime || typeof dailyTime !== 'string' || !dailyTime.includes(':')) {
+                            console.warn('Invalid dailyTime format:', dailyTime);
+                            return;
+                        }
 
-                    // Check if we're within 5 minutes of the target time
-                    if (currentHour === targetHour && Math.abs(currentMinute - targetMinute) <= 5) {
-                        sendDailyNotification(data.weather, data.name);
+                        const now = new Date();
+                        const timeParts = dailyTime.split(':');
+                        const targetHour = parseInt(timeParts[0], 10);
+                        const targetMinute = parseInt(timeParts[1], 10);
+
+                        // Validate parsed values
+                        if (isNaN(targetHour) || isNaN(targetMinute) ||
+                            targetHour < 0 || targetHour > 23 ||
+                            targetMinute < 0 || targetMinute > 59) {
+                            console.warn('Invalid time values:', targetHour, targetMinute);
+                            return;
+                        }
+
+                        const currentHour = now.getHours();
+                        const currentMinute = now.getMinutes();
+
+                        // Check if we're within 5 minutes of the target time
+                        if (currentHour === targetHour && Math.abs(currentMinute - targetMinute) <= 5) {
+                            sendDailyNotification(data.weather, data.name);
+                        }
+                    } catch (error) {
+                        console.error('Error in daily notification scheduler:', error);
                     }
                 };
 
