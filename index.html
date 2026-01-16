@@ -172,6 +172,83 @@
             background-size: 1000px 100%;
         }
 
+        /* Enhanced Shimmer Skeleton */
+        .skeleton-shimmer {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .skeleton-shimmer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0.08) 50%,
+                    transparent 100%);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* Light Mode Styles */
+        :root.light-mode body,
+        body.light-mode {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #e0f7fa 100%) !important;
+            color: #1e293b !important;
+        }
+
+        .light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            border-color: rgba(100, 116, 139, 0.2) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .light-mode .glass-card {
+            background: rgba(255, 255, 255, 0.5) !important;
+            border-color: rgba(100, 116, 139, 0.15) !important;
+        }
+
+        .light-mode .glass-input {
+            background: rgba(255, 255, 255, 0.8) !important;
+            border-color: rgba(100, 116, 139, 0.2) !important;
+            color: #1e293b !important;
+        }
+
+        .light-mode .glass-input::placeholder {
+            color: rgba(100, 116, 139, 0.6) !important;
+        }
+
+        .light-mode .text-glow {
+            text-shadow: none;
+        }
+
+        /* Enhanced Card Hover Effects */
+        .glass-card-interactive {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card-interactive:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card-interactive:active {
+            transform: scale(0.98);
+        }
+
         /* Responsive Design */
         @media (min-width: 768px) {
             .desktop-grid-2 {
@@ -729,32 +806,131 @@
 
         const ClimateGraph = ({ current, past, trend }) => {
             if (!current || !past || current.length === 0) return null;
-            const allVals = [...current, ...past];
-            const min = Math.min(...allVals) - 2;
-            const max = Math.max(...allVals) + 2;
-            const range = max - min || 1;
-            const width = 100;
-            const height = 40;
-            const getPoints = (arr) => arr.map((val, i) => `${(i / (arr.length - 1)) * width},${height - ((val - min) / range) * height}`).join(' ');
-            const strokeColor = trend === 'warmer' ? '#fb923c' : trend === 'cooler' ? '#60a5fa' : '#94a3b8';
+
+            // Calculate averages for comparison
+            const currentAvg = current.reduce((a, b) => a + b, 0) / current.length;
+            const pastAvg = past.reduce((a, b) => a + b, 0) / past.length;
+            const diff = currentAvg - pastAvg;
+            const maxTemp = Math.max(...current, ...past);
+            const minTemp = Math.min(...current, ...past);
+
+            const trendColor = trend === 'warmer' ? 'orange' : trend === 'cooler' ? 'blue' : 'slate';
+            const trendIcon = trend === 'warmer' ? 'trending-up' : trend === 'cooler' ? 'trending-down' : 'minus';
+            const glowColor = trend === 'warmer' ? 'rgba(251,146,60,0.4)' : trend === 'cooler' ? 'rgba(96,165,250,0.4)' : 'rgba(148,163,184,0.3)';
+
+            // Show last 7 days comparison
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = new Date().getDay();
+            const displayDays = current.slice(-7).map((temp, i) => {
+                const dayIndex = (today - 6 + i + 7) % 7;
+                return {
+                    day: i === 6 ? 'Today' : days[dayIndex],
+                    current: temp,
+                    past: past[past.length - 7 + i] || past[i]
+                };
+            });
 
             return (
-                <div className="w-full h-20 relative mt-3">
-                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
-                        <line x1="0" y1={height / 2} x2={width} y2={height / 2} stroke="white" strokeWidth="0.2" strokeDasharray="2 2" opacity="0.3" />
-                        <polyline points={getPoints(past)} fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
-                        <polyline points={getPoints(current)} fill="none" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" className="drop-shadow-md" />
-                        <path d={`M0,${height} L0,${height - ((current[0] - min) / range) * height} ${getPoints(current).split(' ').map(p => 'L' + p).join(' ')} L${width},${height} Z`} fill={`url(#grad-${trend})`} opacity="0.2" />
-                        <defs>
-                            <linearGradient id={`grad-${trend}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stopColor={strokeColor} stopOpacity="0.8" />
-                                <stop offset="100%" stopColor={strokeColor} stopOpacity="0" />
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                    <div className="absolute top-0 right-0 flex gap-2 text-[9px] font-bold bg-black/40 px-2 py-1 rounded-full backdrop-blur-md border border-white/10">
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: strokeColor }}></span> 2025</span>
-                        <span className="flex items-center gap-1 opacity-50"><span className="w-1.5 h-1.5 rounded-full bg-white"></span> 2024</span>
+                <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/5">
+                    {/* Summary Header */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div
+                                className={`p-2 rounded-xl bg-gradient-to-br ${trend === 'warmer' ? 'from-orange-500/30 to-red-500/20' :
+                                    trend === 'cooler' ? 'from-blue-500/30 to-cyan-500/20' :
+                                        'from-slate-500/30 to-slate-600/20'
+                                    } border border-white/10`}
+                                style={{ boxShadow: `0 0 20px ${glowColor}` }}
+                            >
+                                <Icon name={trendIcon} size={16} className={`text-${trendColor}-400`} />
+                            </div>
+                            <div>
+                                <div className="flex items-baseline gap-1">
+                                    <span className={`text-lg font-bold text-${trendColor}-300`}>
+                                        {diff > 0 ? '+' : ''}{diff.toFixed(1)}°
+                                    </span>
+                                    <span className="text-xs opacity-70">
+                                        {trend === 'warmer' ? 'warmer' : trend === 'cooler' ? 'cooler' : 'same'}
+                                    </span>
+                                </div>
+                                <span className="text-[9px] opacity-40">compared to 2025</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-1 text-[9px] font-bold">
+                            <span className="flex items-center gap-1.5">
+                                <span className={`w-3 h-1.5 rounded-full bg-gradient-to-r ${trend === 'warmer' ? 'from-orange-500 to-orange-300' :
+                                    trend === 'cooler' ? 'from-blue-500 to-blue-300' :
+                                        'from-slate-500 to-slate-300'
+                                    }`}></span>
+                                <span className="opacity-80">2026</span>
+                            </span>
+                            <span className="flex items-center gap-1.5 opacity-40">
+                                <span className="w-3 h-1.5 rounded-full bg-white/30"></span>
+                                <span>2025</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Temperature Comparison Bars */}
+                    <div className="grid grid-cols-7 gap-2">
+                        {displayDays.map((d, i) => {
+                            const range = maxTemp - minTemp || 1;
+                            const currentHeight = 20 + ((d.current - minTemp) / range) * 80;
+                            const pastHeight = 20 + ((d.past - minTemp) / range) * 80;
+                            const isToday = i === 6;
+                            const diffTemp = d.current - d.past;
+
+                            return (
+                                <div
+                                    key={i}
+                                    className={`flex flex-col items-center p-2 rounded-xl transition-all ${isToday
+                                        ? `bg-${trendColor}-500/10 border border-${trendColor}-500/20`
+                                        : 'hover:bg-white/5'
+                                        }`}
+                                >
+                                    <span className={`text-[9px] font-bold mb-2 ${isToday ? `text-${trendColor}-300` : 'opacity-50'}`}>
+                                        {d.day}
+                                    </span>
+
+                                    {/* Dual Bar Container */}
+                                    <div className="relative h-20 w-full flex justify-center gap-1">
+                                        {/* Past Year Bar */}
+                                        <div className="w-2.5 bg-white/5 rounded-full overflow-hidden relative">
+                                            <div
+                                                className="absolute bottom-0 w-full bg-gradient-to-t from-white/30 to-white/10 rounded-full transition-all duration-700"
+                                                style={{ height: `${pastHeight}%` }}
+                                            />
+                                        </div>
+
+                                        {/* Current Year Bar */}
+                                        <div className="w-2.5 bg-white/5 rounded-full overflow-hidden relative">
+                                            <div
+                                                className={`absolute bottom-0 w-full rounded-full transition-all duration-700 ${trend === 'warmer' ? 'bg-gradient-to-t from-orange-600 via-orange-400 to-yellow-300' :
+                                                    trend === 'cooler' ? 'bg-gradient-to-t from-blue-600 via-blue-400 to-cyan-300' :
+                                                        'bg-gradient-to-t from-slate-600 via-slate-400 to-slate-300'
+                                                    }`}
+                                                style={{
+                                                    height: `${currentHeight}%`,
+                                                    boxShadow: isToday ? `0 0 12px ${glowColor}` : 'none'
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Temperature Display */}
+                                    <div className="mt-2 text-center">
+                                        <span className={`text-sm font-bold ${isToday ? `text-${trendColor}-200` : ''}`}>
+                                            {Math.round(d.current)}°
+                                        </span>
+                                        {isToday && diffTemp !== 0 && (
+                                            <div className={`text-[8px] font-bold ${diffTemp > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
+                                                {diffTemp > 0 ? '↑' : '↓'}{Math.abs(diffTemp).toFixed(0)}°
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             );
@@ -768,7 +944,7 @@
             const { extremeDays, multiYearTrend, currentSeason, monsoonData } = insight;
 
             return (
-                <div className="glass-panel p-4 rounded-3xl relative overflow-hidden group">
+                <div className="glass-panel p-4 rounded-3xl relative overflow-hidden group mb-4">
                     {/* Header with Season Badge */}
                     <div className="flex justify-between items-start mb-3 relative z-10">
                         <div className="flex items-center gap-3">
@@ -1298,7 +1474,7 @@
             );
         };
 
-        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight, isWerewolf, onShare }) => {
+        const MainWeather = ({ weather, locationName, config, isSaved, onToggleSave, moonPhase, isSevere, climateInsight, isWerewolf, onShare, tempDiff }) => {
             const advice = isWerewolf
                 ? { text: "The moon is full. The beast awakes.", icon: "moon" }
                 : getAdvice(weather.current.weather_code, weather.current.temperature_2m);
@@ -1318,7 +1494,21 @@
                                 <Icon name="share-2" size={16} />
                             </button>
                         </div>
-                        <div className="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em]">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+                        <div className="flex items-center gap-2">
+                            <div className="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em]">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+                            {/* Today vs Yesterday Badge */}
+                            {tempDiff !== null && tempDiff !== undefined && (
+                                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold ${tempDiff > 0
+                                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                                    : tempDiff < 0
+                                        ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                        : 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
+                                    }`}>
+                                    <Icon name={tempDiff > 0 ? "trending-up" : tempDiff < 0 ? "trending-down" : "minus"} size={10} />
+                                    <span>{tempDiff > 0 ? '+' : ''}{Math.round(tempDiff)}° vs yesterday</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {isWerewolf && (
@@ -1728,29 +1918,64 @@
         };
 
         const ForecastStrip = ({ hourly }) => {
-            const now = new Date().getHours();
+            const now = new Date();
             const nextHours = hourly.time.map((t, i) => ({
                 time: t,
                 temp: hourly.temperature_2m[i],
                 code: hourly.weather_code[i]
-            })).filter(h => new Date(h.time).getHours() > now).slice(0, 5);
+            })).filter(h => new Date(h.time) > now).slice(0, 8);
+
+            if (nextHours.length === 0) return null;
+
+            const temps = nextHours.map(h => h.temp);
+            const minTemp = Math.min(...temps);
+            const maxTemp = Math.max(...temps);
+            const range = maxTemp - minTemp || 1;
 
             return (
                 <div className="glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl mb-4">
-                    <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-60 mb-3 sm:mb-4 flex items-center gap-2">
-                        <Icon name="clock" size={12} /> Hourly
+                    <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-60 mb-4 flex items-center gap-2">
+                        <Icon name="clock" size={12} /> Hourly Forecast
                     </h3>
-                    <div className="flex justify-between items-end h-24 sm:h-28 md:h-32 relative">
+
+                    {/* Scrollable horizontal card layout */}
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         {nextHours.map((h, i) => {
                             const config = getWeatherConfig(h.code, true);
+                            const hour = new Date(h.time).getHours();
+                            const isNow = i === 0;
+                            const barHeight = 20 + ((h.temp - minTemp) / range) * 40;
+
                             return (
-                                <div key={i} className="flex flex-col items-center justify-end z-10 gap-1.5 sm:gap-2 group w-full">
-                                    <span className="text-[10px] sm:text-xs opacity-60 font-mono font-bold mb-0.5 sm:mb-1">{new Date(h.time).getHours()}:00</span>
-                                    <Icon name={config.icon} size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 opacity-80 mb-0.5 sm:mb-1" />
-                                    <div className="w-1 sm:w-1.5 md:w-2 bg-white/10 rounded-full relative overflow-hidden border border-white/5 h-12 sm:h-16 md:h-20 group-hover:bg-white/20 transition-colors">
-                                        <div className="absolute bottom-0 left-0 right-0 bg-indigo-400 rounded-full shadow-[0_0_10px_rgba(129,140,248,0.5)] transition-all duration-1000" style={{ height: `${Math.min((h.temp / 40) * 100, 100)}%` }}></div>
+                                <div
+                                    key={i}
+                                    className={`flex-shrink-0 w-16 sm:w-20 flex flex-col items-center p-3 rounded-2xl transition-all ${isNow
+                                        ? 'bg-indigo-500/20 border border-indigo-500/30'
+                                        : 'bg-white/5 border border-white/5 hover:bg-white/10'
+                                        }`}
+                                >
+                                    <span className={`text-[10px] font-mono font-bold mb-2 ${isNow ? 'text-indigo-300' : 'opacity-50'}`}>
+                                        {isNow ? 'Now' : `${hour}:00`}
+                                    </span>
+
+                                    <Icon
+                                        name={config.icon}
+                                        size={22}
+                                        className="mb-2 opacity-80"
+                                        color={config.iconColor}
+                                    />
+
+                                    {/* Temperature bar */}
+                                    <div className="w-2 h-16 bg-white/10 rounded-full relative overflow-hidden mb-2">
+                                        <div
+                                            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-indigo-500 to-indigo-300 rounded-full transition-all duration-500"
+                                            style={{ height: `${barHeight}px` }}
+                                        />
                                     </div>
-                                    <span className="text-xs sm:text-sm md:text-base font-bold mt-0.5 sm:mt-1">{Math.round(h.temp)}°</span>
+
+                                    <span className={`text-sm font-bold ${isNow ? 'text-indigo-200' : ''}`}>
+                                        {Math.round(h.temp)}°
+                                    </span>
                                 </div>
                             );
                         })}
@@ -1984,7 +2209,231 @@
             );
         };
 
-        const SearchBar = ({ onSearch, onToggleSound, isMuted, isPlaying, onToggleTheme, isDarkMode, notificationStatus, onRequestNotifications, hasUpdate }) => {
+        // NEW: Comfort Index Card - 0-100 score based on temperature, humidity, wind
+        const ComfortIndexCard = ({ current, daily }) => {
+            if (!current) return null;
+
+            const temp = current.temperature_2m;
+            const humidity = current.relative_humidity_2m;
+            const wind = current.wind_speed_10m;
+            const uv = daily?.uv_index_max?.[0] || 0;
+
+            // Calculate comfort score (100 = perfect, 0 = terrible)
+            // Ideal: 20-25°C, 40-60% humidity, <15 km/h wind, UV < 6
+            const tempScore = Math.max(0, 100 - Math.abs(temp - 22) * 4);
+            const humidityScore = Math.max(0, 100 - Math.abs(humidity - 50) * 1.5);
+            const windScore = Math.max(0, 100 - wind * 2);
+            const uvScore = Math.max(0, 100 - uv * 10);
+
+            const comfortScore = Math.round((tempScore * 0.4 + humidityScore * 0.25 + windScore * 0.2 + uvScore * 0.15));
+
+            const getComfortLevel = (score) => {
+                if (score >= 80) return { label: 'Excellent', color: 'text-emerald-400', bg: 'bg-emerald-500', emoji: '😊', desc: 'Perfect weather conditions!' };
+                if (score >= 60) return { label: 'Good', color: 'text-lime-400', bg: 'bg-lime-500', emoji: '🙂', desc: 'Pleasant with minor issues.' };
+                if (score >= 40) return { label: 'Fair', color: 'text-yellow-400', bg: 'bg-yellow-500', emoji: '😐', desc: 'Some discomfort possible.' };
+                if (score >= 20) return { label: 'Poor', color: 'text-orange-400', bg: 'bg-orange-500', emoji: '😕', desc: 'Consider staying indoors.' };
+                return { label: 'Bad', color: 'text-red-400', bg: 'bg-red-500', emoji: '😫', desc: 'Uncomfortable conditions.' };
+            };
+
+            const level = getComfortLevel(comfortScore);
+            const circumference = 2 * Math.PI * 45;
+            const offset = circumference - (comfortScore / 100) * circumference;
+
+            return (
+                <div className="glass-panel p-5 rounded-3xl mb-4 relative overflow-hidden group">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/20">
+                                <Icon name="smile" size={14} className="text-emerald-400" />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">Comfort Index</span>
+                        </div>
+                        <span className={`text-[10px] font-bold px-3 py-1 rounded-full bg-white/5 ${level.color} border border-white/5`}>
+                            {level.emoji} {level.label}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        {/* Circular Progress */}
+                        <div className="relative w-28 h-28 flex-shrink-0">
+                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+                                <circle
+                                    cx="50" cy="50" r="45" fill="none"
+                                    stroke={`url(#comfortGrad)`}
+                                    strokeWidth="8"
+                                    strokeLinecap="round"
+                                    strokeDasharray={circumference}
+                                    strokeDashoffset={offset}
+                                    className="transition-all duration-1000"
+                                />
+                                <defs>
+                                    <linearGradient id="comfortGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#10b981" />
+                                        <stop offset="100%" stopColor="#22c55e" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-3xl font-bold text-glow">{comfortScore}</span>
+                                <span className="text-[9px] opacity-50 uppercase font-bold">/100</span>
+                            </div>
+                        </div>
+
+                        {/* Breakdown */}
+                        <div className="flex-1 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] opacity-50 flex items-center gap-1"><Icon name="thermometer" size={10} /> Temp</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                        <div className="h-full bg-orange-400 rounded-full" style={{ width: `${tempScore}%` }}></div>
+                                    </div>
+                                    <span className="text-[9px] font-mono font-bold">{Math.round(tempScore)}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] opacity-50 flex items-center gap-1"><Icon name="droplets" size={10} /> Humidity</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                        <div className="h-full bg-blue-400 rounded-full" style={{ width: `${humidityScore}%` }}></div>
+                                    </div>
+                                    <span className="text-[9px] font-mono font-bold">{Math.round(humidityScore)}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] opacity-50 flex items-center gap-1"><Icon name="wind" size={10} /> Wind</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                        <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${windScore}%` }}></div>
+                                    </div>
+                                    <span className="text-[9px] font-mono font-bold">{Math.round(windScore)}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] opacity-50 flex items-center gap-1"><Icon name="sun" size={10} /> UV</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                        <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${uvScore}%` }}></div>
+                                    </div>
+                                    <span className="text-[9px] font-mono font-bold">{Math.round(uvScore)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p className="text-[10px] opacity-50 mt-3 text-center">{level.desc}</p>
+                </div>
+            );
+        };
+
+        // NEW: Activity Suggestions Card - Best time for activities
+        const ActivitySuggestionsCard = ({ hourly, daily }) => {
+            if (!hourly || !daily) return null;
+
+            const now = new Date();
+            const sunrise = new Date(daily.sunrise[0]);
+            const sunset = new Date(daily.sunset[0]);
+            const rainProb = daily.precipitation_probability_max?.[0] || 0;
+            const uv = daily.uv_index_max?.[0] || 0;
+
+            // Find best hours for activities
+            const getActivityBestTime = (activity) => {
+                const futureHours = hourly.time
+                    .map((t, i) => ({
+                        time: new Date(t),
+                        temp: hourly.temperature_2m[i],
+                        humidity: hourly.relative_humidity_2m?.[i] || 50,
+                        rain: hourly.precipitation_probability?.[i] || 0,
+                        code: hourly.weather_code[i]
+                    }))
+                    .filter(h => h.time > now && h.time < new Date(now.getTime() + 24 * 60 * 60 * 1000));
+
+                let criteria;
+                switch (activity) {
+                    case 'running':
+                        criteria = (h) => h.rain < 20 && h.temp >= 10 && h.temp <= 25 && h.humidity < 80;
+                        break;
+                    case 'photography':
+                        // Golden hour: 1hr after sunrise, 1hr before sunset
+                        const morningGolden = new Date(sunrise.getTime() + 30 * 60 * 1000);
+                        const eveningGolden = new Date(sunset.getTime() - 60 * 60 * 1000);
+                        criteria = (h) =>
+                            (h.time >= sunrise && h.time <= morningGolden) ||
+                            (h.time >= eveningGolden && h.time <= sunset);
+                        break;
+                    case 'picnic':
+                        criteria = (h) => h.rain < 10 && h.temp >= 18 && h.temp <= 28 && h.code < 50;
+                        break;
+                    case 'stargazing':
+                        criteria = (h) => h.time > sunset && h.code === 0;
+                        break;
+                    default:
+                        criteria = () => true;
+                }
+
+                const goodHours = futureHours.filter(criteria);
+                if (goodHours.length === 0) return null;
+                return goodHours[0];
+            };
+
+            const activities = [
+                { id: 'running', icon: 'footprints', name: 'Running', color: 'text-green-400', bg: 'bg-green-500/20' },
+                { id: 'photography', icon: 'camera', name: 'Photography', color: 'text-amber-400', bg: 'bg-amber-500/20' },
+                { id: 'picnic', icon: 'trees', name: 'Picnic', color: 'text-lime-400', bg: 'bg-lime-500/20' },
+                { id: 'stargazing', icon: 'star', name: 'Stargazing', color: 'text-indigo-400', bg: 'bg-indigo-500/20' }
+            ].map(a => ({
+                ...a,
+                bestTime: getActivityBestTime(a.id)
+            }));
+
+            const formatTime = (date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            return (
+                <div className="glass-panel p-5 rounded-3xl mb-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-lg bg-purple-500/20 border border-purple-500/20">
+                                <Icon name="calendar-check" size={14} className="text-purple-400" />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">Best Time Today</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        {activities.map((activity) => (
+                            <div key={activity.id} className={`p-3 rounded-2xl ${activity.bg} border border-white/5 group hover:scale-[1.02] transition-transform`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Icon name={activity.icon} size={14} className={activity.color} />
+                                    <span className="text-xs font-bold">{activity.name}</span>
+                                </div>
+                                {activity.bestTime ? (
+                                    <div className="flex items-center gap-1">
+                                        <Icon name="clock" size={10} className="opacity-40" />
+                                        <span className="text-[11px] font-mono font-bold opacity-80">
+                                            {formatTime(activity.bestTime.time)}
+                                        </span>
+                                        <span className={`text-[9px] ${activity.color}`}>
+                                            {Math.round(activity.bestTime.temp)}°
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <span className="text-[10px] opacity-40">Not ideal today</span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {rainProb > 50 && (
+                        <div className="mt-3 p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-2">
+                            <Icon name="umbrella" size={12} className="text-blue-400" />
+                            <span className="text-[10px] opacity-70">High chance of rain ({rainProb}%) - plan indoor activities</span>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const SearchBar = ({ onSearch, onToggleSound, isMuted, isPlaying, onToggleTheme, isDarkMode }) => {
             const [query, setQuery] = useState('');
             const [suggestions, setSuggestions] = useState([]);
             const [isFocused, setIsFocused] = useState(false);
@@ -2029,17 +2478,6 @@
                         <Icon name={isDarkMode ? "sun" : "moon"} size={18} />
                     </button>
 
-                    {/* Notification Button */}
-                    <button
-                        onClick={onRequestNotifications}
-                        className={`p-3 rounded-2xl glass-input hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg relative ${notificationStatus === 'granted' ? 'text-emerald-400 border-emerald-500/30' : notificationStatus === 'denied' ? 'text-red-400 border-red-500/30' : 'text-white/50'}`}
-                        title={hasUpdate ? "Update Available!" : notificationStatus === 'granted' ? "Notification Settings" : notificationStatus === 'denied' ? "Notifications Blocked" : "Enable Notifications"}
-                        aria-label={hasUpdate ? "Update Available!" : notificationStatus === 'granted' ? "Notification Settings" : notificationStatus === 'denied' ? "Notifications Blocked" : "Enable Notifications"}
-                    >
-                        <Icon name={notificationStatus === 'granted' ? "bell-ring" : notificationStatus === 'denied' ? "bell-off" : "bell"} size={18} />
-                        {notificationStatus === 'granted' && !hasUpdate && <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" aria-hidden="true"></span>}
-                        {hasUpdate && <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-[8px] font-bold text-white animate-bounce" aria-hidden="true">!</span>}
-                    </button>
 
                     {/* Sound Toggle Button */}
                     <button
@@ -2109,177 +2547,33 @@
             );
         };
 
-        // --- Notification Panel Component ---
-        const NotificationPanel = ({
-            isOpen,
-            onClose,
-            notificationSettings,
-            onUpdateSettings,
-            notificationStatus,
-            onRequestPermission,
-            hasUpdate
-        }) => {
-            if (!isOpen) return null;
-
-            const handleTimeChange = (e) => {
-                onUpdateSettings({ ...notificationSettings, dailyTime: e.target.value });
-            };
-
-            return (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-                    <div className="relative glass-panel bg-slate-900/95 rounded-3xl p-6 w-full max-w-sm animate-slide-up shadow-2xl border border-white/10">
-                        {/* Header */}
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
-                                    <Icon name="bell" size={20} className="text-emerald-400" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg">Notifications</h3>
-                                    <p className="text-[10px] opacity-50 uppercase tracking-wider font-bold">Manage Alerts</p>
-                                </div>
-                            </div>
-                            <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/10 transition-colors">
-                                <Icon name="x" size={18} className="opacity-60" />
-                            </button>
-                        </div>
-
-                        {/* Permission Status */}
-                        {notificationStatus !== 'granted' && (
-                            <div className="mb-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
-                                <Icon name="alert-triangle" size={18} className="text-amber-400" />
-                                <div className="flex-1">
-                                    <p className="text-xs font-bold text-amber-200">Permission Required</p>
-                                    <p className="text-[10px] opacity-60">Enable notifications to receive alerts</p>
-                                </div>
-                                <button
-                                    onClick={onRequestPermission}
-                                    className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-bold hover:bg-amber-500/30 transition-colors"
-                                >
-                                    Enable
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Update Available Banner */}
-                        {hasUpdate && (
-                            <div className="mb-4 p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3 animate-pulse">
-                                <Icon name="download" size={18} className="text-blue-400" />
-                                <div className="flex-1">
-                                    <p className="text-xs font-bold text-blue-200">Update Available!</p>
-                                    <p className="text-[10px] opacity-60">Refresh to get the latest version</p>
-                                </div>
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className="px-3 py-1.5 rounded-xl bg-blue-500/20 text-blue-300 text-xs font-bold hover:bg-blue-500/30 transition-colors"
-                                >
-                                    Update
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Notification Settings */}
-                        <div className="space-y-3">
-                            {/* Daily Weather Summary */}
-                            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-1.5 rounded-lg bg-indigo-500/20">
-                                            <Icon name="sunrise" size={14} className="text-indigo-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold">Daily Weather</p>
-                                            <p className="text-[10px] opacity-50">Morning weather summary</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => onUpdateSettings({ ...notificationSettings, dailyEnabled: !notificationSettings.dailyEnabled })}
-                                        className={`w-12 h-7 rounded-full transition-all relative ${notificationSettings.dailyEnabled ? 'bg-emerald-500' : 'bg-white/10'}`}
-                                    >
-                                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-lg transition-all ${notificationSettings.dailyEnabled ? 'left-6' : 'left-1'}`}></div>
-                                    </button>
-                                </div>
-                                {notificationSettings.dailyEnabled && (
-                                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
-                                        <Icon name="clock" size={12} className="opacity-40" />
-                                        <span className="text-xs opacity-60">Notify at:</span>
-                                        <input
-                                            type="time"
-                                            value={notificationSettings.dailyTime}
-                                            onChange={handleTimeChange}
-                                            className="bg-white/10 rounded-lg px-2 py-1 text-xs font-mono font-bold border border-white/10 focus:border-indigo-500/50 outline-none"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Weather Alerts */}
-                            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-1.5 rounded-lg bg-red-500/20">
-                                            <Icon name="alert-circle" size={14} className="text-red-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold">Weather Alerts</p>
-                                            <p className="text-[10px] opacity-50">Storms, temp, UV, rain, AQI</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => onUpdateSettings({ ...notificationSettings, alertsEnabled: !notificationSettings.alertsEnabled })}
-                                        className={`w-12 h-7 rounded-full transition-all relative ${notificationSettings.alertsEnabled ? 'bg-emerald-500' : 'bg-white/10'}`}
-                                    >
-                                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-lg transition-all ${notificationSettings.alertsEnabled ? 'left-6' : 'left-1'}`}></div>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* App Updates */}
-                            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-1.5 rounded-lg bg-blue-500/20">
-                                            <Icon name="sparkles" size={14} className="text-blue-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold">App Updates</p>
-                                            <p className="text-[10px] opacity-50">New version notifications</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => onUpdateSettings({ ...notificationSettings, updatesEnabled: !notificationSettings.updatesEnabled })}
-                                        className={`w-12 h-7 rounded-full transition-all relative ${notificationSettings.updatesEnabled ? 'bg-emerald-500' : 'bg-white/10'}`}
-                                    >
-                                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-lg transition-all ${notificationSettings.updatesEnabled ? 'left-6' : 'left-1'}`}></div>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Alert Thresholds Info */}
-                        <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/5">
-                            <p className="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-2">Alert Conditions</p>
-                            <div className="grid grid-cols-2 gap-2 text-[10px] opacity-60">
-                                <div className="flex items-center gap-1"><Icon name="thermometer" size={10} />Temp &lt;10°C or &gt;30°C</div>
-                                <div className="flex items-center gap-1"><Icon name="sun" size={10} />UV Index &gt;8</div>
-                                <div className="flex items-center gap-1"><Icon name="cloud-rain" size={10} />Rain &gt;80%</div>
-                                <div className="flex items-center gap-1"><Icon name="wind" size={10} />AQI &gt;200</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
         const WeatherSkeleton = () => (
             <div className="flex flex-col items-center w-full animate-fade-in px-4">
-                <div className="w-40 h-8 skeleton bg-white/5 rounded-full mb-8 animate-pulse"></div>
-                <div className="w-full aspect-square max-w-[200px] skeleton bg-white/5 rounded-full mb-8 animate-pulse opacity-50"></div>
-                <div className="w-full h-24 skeleton bg-white/5 rounded-3xl mb-4 animate-pulse opacity-30"></div>
-                <div className="grid grid-cols-3 gap-3 w-full mb-8">
-                    {[...Array(6)].map((_, i) => <div key={i} className="h-24 skeleton bg-white/5 rounded-2xl animate-pulse opacity-20"></div>)}
+                {/* Location Skeleton */}
+                <div className="w-40 h-6 skeleton-shimmer rounded-full mb-2"></div>
+                <div className="w-24 h-3 skeleton-shimmer rounded-full mb-6"></div>
+
+                {/* Main Weather Row Skeleton */}
+                <div className="flex w-full justify-between items-center mb-6 px-4">
+                    <div className="w-24 h-20 skeleton-shimmer rounded-2xl"></div>
+                    <div className="w-28 h-28 skeleton-shimmer rounded-full"></div>
+                    <div className="w-20 h-20 skeleton-shimmer rounded-full"></div>
                 </div>
+
+                {/* Advice Card Skeleton */}
+                <div className="w-full h-20 skeleton-shimmer rounded-2xl mb-4"></div>
+
+                {/* Hourly Forecast Skeleton */}
+                <div className="w-full h-32 skeleton-shimmer rounded-3xl mb-4"></div>
+
+                {/* Bento Grid Skeleton */}
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 w-full mb-4">
+                    {[...Array(6)].map((_, i) => <div key={i} className="h-24 skeleton-shimmer rounded-2xl"></div>)}
+                </div>
+
+                {/* Additional Cards Skeleton */}
+                <div className="w-full h-40 skeleton-shimmer rounded-3xl mb-4"></div>
+                <div className="w-full h-32 skeleton-shimmer rounded-3xl mb-4"></div>
             </div>
         );
 
@@ -2337,27 +2631,12 @@
             const [climateInsight, setClimateInsight] = useState(null);
             const [geoError, setGeoError] = useState(null);
 
-            // New state for theme and notifications
+            // Theme state
             const [isDarkMode, setIsDarkMode] = useState(() => {
                 const stored = safeGetItem('weatherProTheme');
                 return stored ? stored === 'dark' : true; // Default to dark
             });
-            const [notificationStatus, setNotificationStatus] = useState(() => {
-                if ('Notification' in window) return Notification.permission;
-                return 'unsupported';
-            });
             const [shareMessage, setShareMessage] = useState(null);
-
-            // Notification settings state
-            const [notificationSettings, setNotificationSettings] = useState(() => safeGetItem('weatherProNotifications', {
-                dailyEnabled: false,
-                dailyTime: '06:00',
-                alertsEnabled: true,
-                updatesEnabled: true
-            }));
-            const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
-            const [hasUpdate, setHasUpdate] = useState(false);
-            const [lastDailyNotification, setLastDailyNotification] = useState(() => safeGetItem('lastDailyNotification', null));
 
             const isWerewolf = data && data.weather &&
                 data.weather.daily.moon_phase[0] >= 0.45 &&
@@ -2366,130 +2645,13 @@
 
             const isPlaying = useAmbientSound(data?.weather?.current?.weather_code ?? null, isMuted, isWerewolf);
 
-            // Save notification settings when changed
-            const updateNotificationSettings = (newSettings) => {
-                setNotificationSettings(newSettings);
-                safeSetItem('weatherProNotifications', newSettings);
-            };
-
             // Theme toggle handler
             const toggleTheme = () => {
                 const newMode = !isDarkMode;
                 setIsDarkMode(newMode);
                 safeSetItem('weatherProTheme', newMode ? 'dark' : 'light');
                 document.documentElement.classList.toggle('dark', newMode);
-            };
-
-            // Notification request handler
-            const requestNotifications = async () => {
-                if (!('Notification' in window)) {
-                    alert('Notifications are not supported in this browser.');
-                    return;
-                }
-                if (Notification.permission === 'granted') {
-                    setIsNotificationPanelOpen(true);
-                    return;
-                }
-                const permission = await Notification.requestPermission();
-                setNotificationStatus(permission);
-                if (permission === 'granted') {
-                    new Notification('Weather Pro', {
-                        body: 'Notifications enabled! Configure your alert preferences.',
-                        icon: './icon-192.svg'
-                    });
-                    setIsNotificationPanelOpen(true);
-                }
-            };
-
-            // Send daily weather notification
-            const sendDailyNotification = (weatherData, locationName) => {
-                try {
-                    // Early validation
-                    if (notificationStatus !== 'granted' || !notificationSettings?.dailyEnabled) return;
-                    if (!weatherData?.current || !weatherData?.daily) {
-                        console.warn('sendDailyNotification: Invalid weather data');
-                        return;
-                    }
-
-                    const today = new Date().toDateString();
-                    if (lastDailyNotification === today) return; // Already sent today
-
-                    const temp = Math.round(weatherData.current.temperature_2m);
-                    const config = getWeatherConfig(weatherData.current.weather_code, weatherData.current.is_day, false, false);
-                    const high = Math.round(weatherData.daily.temperature_2m_max?.[0] ?? 0);
-                    const low = Math.round(weatherData.daily.temperature_2m_min?.[0] ?? 0);
-                    const rainChance = weatherData.daily.precipitation_probability_max?.[0] || 0;
-
-                    new Notification(`☀️ Good Morning! ${locationName || 'Your Location'}`, {
-                        body: `${temp}°C - ${config.label}\n🌡️ High ${high}° / Low ${low}°${rainChance > 30 ? `\n🌧️ ${rainChance}% chance of rain` : ''}`,
-                        icon: './icon-192.svg',
-                        tag: 'daily-weather'
-                    });
-
-                    setLastDailyNotification(today);
-                    safeSetItem('lastDailyNotification', today);
-                } catch (error) {
-                    console.error('Error sending daily notification:', error);
-                }
-            };
-
-            // Send weather notification for severe conditions (enhanced)
-            const sendWeatherNotification = (weatherData, locationName, aqiData) => {
-                try {
-                    if (notificationStatus !== 'granted' || !notificationSettings?.alertsEnabled) return;
-                    if (!weatherData?.current || !weatherData?.daily) {
-                        console.warn('sendWeatherNotification: Invalid weather data');
-                        return;
-                    }
-
-                    const alerts = [];
-                    const temp = weatherData.current.temperature_2m ?? 0;
-                    const uv = weatherData.daily.uv_index_max?.[0] || 0;
-                    const rainChance = weatherData.daily.precipitation_probability_max?.[0] || 0;
-                    const aqi = aqiData?.current?.us_aqi || 0;
-
-                    // Severe weather codes (storms, heavy snow)
-                    const severeCodes = [95, 96, 99, 75, 85, 86];
-                    if (severeCodes.includes(weatherData.current.weather_code)) {
-                        const alertText = [95, 96, 99].includes(weatherData.current.weather_code)
-                            ? '⛈️ Severe Thunderstorm Warning!'
-                            : '❄️ Heavy Snow Warning!';
-                        alerts.push(alertText);
-                    }
-
-                    // Temperature alerts (<10°C or >30°C)
-                    if (temp < 10) {
-                        alerts.push(`🥶 Cold Alert: ${Math.round(temp)}°C`);
-                    } else if (temp > 30) {
-                        alerts.push(`🔥 Heat Alert: ${Math.round(temp)}°C`);
-                    }
-
-                    // UV Index alert (>8)
-                    if (uv > 8) {
-                        alerts.push(`☀️ High UV Alert: ${Math.round(uv)}`);
-                    }
-
-                    // Heavy rain probability (>80%)
-                    if (rainChance > 80) {
-                        alerts.push(`🌧️ Heavy Rain: ${rainChance}% chance`);
-                    }
-
-                    // Poor AQI alert (>200)
-                    if (aqi > 200) {
-                        alerts.push(`💨 Poor Air Quality: AQI ${Math.round(aqi)}`);
-                    }
-
-                    // Send notification if any alerts
-                    if (alerts.length > 0) {
-                        new Notification(`⚠️ Weather Alert - ${locationName || 'Your Location'}`, {
-                            body: alerts.join('\n'),
-                            icon: './icon-192.svg',
-                            tag: 'weather-alert'
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error sending weather notification:', error);
-                }
+                document.body.classList.toggle('light-mode', !newMode);
             };
 
             // Share weather handler
@@ -2535,76 +2697,15 @@
                     navigator.serviceWorker.register('sw.js')
                         .then(reg => {
                             console.log('SW Registered');
-
-                            // Check for updates periodically
-                            reg.addEventListener('updatefound', () => {
-                                const newWorker = reg.installing;
-                                newWorker?.addEventListener('statechange', () => {
-                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                        // New update available
-                                        setHasUpdate(true);
-                                        if (notificationSettings.updatesEnabled && notificationStatus === 'granted') {
-                                            new Notification('🎉 Weather Pro Update Available!', {
-                                                body: 'A new version is ready. Click the bell icon to update.',
-                                                icon: './icon-192.svg',
-                                                tag: 'app-update'
-                                            });
-                                        }
-                                    }
-                                });
-                            });
                         })
                         .catch(err => console.log('SW Error:', err));
                 }
 
-                // Daily notification scheduler
-                const checkDailyNotification = () => {
-                    try {
-                        // Early return with proper null checks
-                        if (!notificationSettings?.dailyEnabled || notificationStatus !== 'granted' || !data) return;
-
-                        // Validate dailyTime format before parsing
-                        const dailyTime = notificationSettings?.dailyTime;
-                        if (!dailyTime || typeof dailyTime !== 'string' || !dailyTime.includes(':')) {
-                            console.warn('Invalid dailyTime format:', dailyTime);
-                            return;
-                        }
-
-                        const now = new Date();
-                        const timeParts = dailyTime.split(':');
-                        const targetHour = parseInt(timeParts[0], 10);
-                        const targetMinute = parseInt(timeParts[1], 10);
-
-                        // Validate parsed values
-                        if (isNaN(targetHour) || isNaN(targetMinute) ||
-                            targetHour < 0 || targetHour > 23 ||
-                            targetMinute < 0 || targetMinute > 59) {
-                            console.warn('Invalid time values:', targetHour, targetMinute);
-                            return;
-                        }
-
-                        const currentHour = now.getHours();
-                        const currentMinute = now.getMinutes();
-
-                        // Check if we're within 5 minutes of the target time
-                        if (currentHour === targetHour && Math.abs(currentMinute - targetMinute) <= 5) {
-                            sendDailyNotification(data.weather, data.name);
-                        }
-                    } catch (error) {
-                        console.error('Error in daily notification scheduler:', error);
-                    }
-                };
-
-                // Check every minute for daily notification
-                const dailyInterval = setInterval(checkDailyNotification, 60000);
-                checkDailyNotification(); // Check immediately
-
                 return () => {
                     window.removeEventListener('online', handleStatus);
                     window.removeEventListener('offline', handleStatus);
-                    clearInterval(dailyInterval);
                 };
-            }, [notificationSettings, notificationStatus, data]);
+            }, [isDarkMode]);
 
             const fetchWeather = async (lat, lon, name) => {
                 setLoading(true);
@@ -2644,9 +2745,6 @@
                         // Update UI immediately with critical data
                         setData({ weather: w, aqi: safeAqi, name, lat, lon });
                         setLoading(false);
-
-                        // Send notification for severe weather
-                        sendWeatherNotification(w, name, safeAqi);
 
                         // Phase 2: Non-Critical Data (Slow) - Fetch Historical data in background
                         // This prevents the slow Archive API from blocking the main UI
@@ -2759,7 +2857,7 @@
 
                     <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[60%] bg-gradient-to-b from-white/10 to-transparent rounded-full blur-[120px] pointer-events-none"></div>
 
-                    <div className="max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto w-full z-20 pt-4 sm:pt-6 px-3 sm:px-4 md:px-6 lg:px-8 pb-16 sm:pb-20">
+                    <div className="max-w-md md:max-w-2xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto w-full z-20 pt-4 sm:pt-6 px-3 sm:px-4 md:px-6 lg:px-8 pb-16 sm:pb-20">
                         {/* Share Message Toast */}
                         {shareMessage && (
                             <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] glass-panel px-4 py-2 rounded-full text-sm font-bold text-emerald-400 border border-emerald-500/30 animate-slide-down flex items-center gap-2">
@@ -2773,20 +2871,6 @@
                             isPlaying={isPlaying}
                             onToggleTheme={toggleTheme}
                             isDarkMode={isDarkMode}
-                            notificationStatus={notificationStatus}
-                            onRequestNotifications={requestNotifications}
-                            hasUpdate={hasUpdate}
-                        />
-
-                        {/* Notification Panel */}
-                        <NotificationPanel
-                            isOpen={isNotificationPanelOpen}
-                            onClose={() => setIsNotificationPanelOpen(false)}
-                            notificationSettings={notificationSettings}
-                            onUpdateSettings={updateNotificationSettings}
-                            notificationStatus={notificationStatus}
-                            onRequestPermission={requestNotifications}
-                            hasUpdate={hasUpdate}
                         />
 
                         <div className="flex-1 relative z-10 flex flex-col w-full">
@@ -2794,6 +2878,7 @@
                                 <WeatherSkeleton />
                             ) : data && (
                                 <>
+                                    {/* Main Weather - Full Width */}
                                     <MainWeather
                                         weather={data.weather}
                                         locationName={data.name}
@@ -2805,19 +2890,41 @@
                                         climateInsight={climateInsight}
                                         isWerewolf={isWerewolf}
                                         onShare={shareWeather}
+                                        tempDiff={climateInsight?.currentTemps?.[0] && climateInsight?.historicalTemps?.[0]
+                                            ? climateInsight.currentTemps[0] - climateInsight.historicalTemps[0]
+                                            : null}
                                     />
+
+                                    {/* Hourly Forecast - Full Width */}
                                     <ForecastStrip hourly={data.weather.hourly} />
-                                    <BentoGrid current={data.weather.current} daily={data.weather.daily} />
-                                    <SolarCycle sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
-                                    <AQICard
-                                        usAqi={data.aqi.current.us_aqi}
-                                        pm25={data.aqi.current.pm2_5}
-                                        pm10={data.aqi.current.pm10}
-                                    />
-                                    <DailyForecast daily={data.weather.daily} />
-                                    <WeeklyHistoryChart daily={data.weather.daily} hourly={data.weather.hourly} />
-                                    <RadarMap lat={data.lat} lon={data.lon} />
-                                    <GoldenHourCard sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
+
+                                    {/* Two Column Grid for Large Screens */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        {/* Left Column */}
+                                        <div className="flex flex-col gap-4">
+                                            <ComfortIndexCard current={data.weather.current} daily={data.weather.daily} />
+                                            <BentoGrid current={data.weather.current} daily={data.weather.daily} />
+                                            <SolarCycle sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
+                                            <AQICard
+                                                usAqi={data.aqi.current.us_aqi}
+                                                pm25={data.aqi.current.pm2_5}
+                                                pm10={data.aqi.current.pm10}
+                                            />
+                                        </div>
+
+                                        {/* Right Column */}
+                                        <div className="flex flex-col gap-4">
+                                            <DailyForecast daily={data.weather.daily} />
+                                            <WeeklyHistoryChart daily={data.weather.daily} hourly={data.weather.hourly} />
+                                            <ActivitySuggestionsCard hourly={data.weather.hourly} daily={data.weather.daily} />
+                                        </div>
+                                    </div>
+
+                                    {/* Full Width Cards */}
+                                    <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        <RadarMap lat={data.lat} lon={data.lon} />
+                                        <GoldenHourCard sunrise={data.weather.daily.sunrise[0]} sunset={data.weather.daily.sunset[0]} />
+                                    </div>
 
                                     <div className="text-center py-8 opacity-40 hover:opacity-100 transition-opacity">
                                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Made by Abhra</div>
